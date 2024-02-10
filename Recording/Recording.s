@@ -37,7 +37,7 @@
 .set GAME_FRAME_BOOKEND_PAYLOAD_LENGTH, 8 # byte count
 .set GAME_END_PAYLOAD_LENGTH, GAME_END_TXB_SIZE - 1 # byte count
 .set SPLIT_MESSAGE_PAYLOAD_LENGTH, 516 # byte count
-.set BONES_PAYLOAD_LENGTH, (120 * 12) + 5  # byte count. hopefully nobody ever has more than 120 bones. each bone has X, Y, Z
+.set BONES_PAYLOAD_LENGTH, (118 * 40) + 8  # byte count. Zelda has the max bone count at 118. each bone has X, Y, Z for position, and scale. rotation has X, Y, Z, W
 
 .set SPLIT_MESSAGE_INTERNAL_DATA_LEN, 512
 

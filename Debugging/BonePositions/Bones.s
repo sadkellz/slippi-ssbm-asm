@@ -36,10 +36,24 @@ branchl r12, 0x8000b1cc # GetEntityPosition
 lwz r5, frameIndex(r13)
 lwz r6, 0(r27)
 mr r7, r28
-lfs f1, BKP_FREE_SPACE_OFFSET(sp) # Get posX
-lfs f2, BKP_FREE_SPACE_OFFSET+4(sp) # Get posY
-lfs f3, BKP_FREE_SPACE_OFFSET+8(sp) # Get posZ
-logf LOG_LEVEL_WARN, "[%d] [BonePosThrown] Idx: %d (0x%x), Pos: (%f, %f, %f)"
+#lfs f1, BKP_FREE_SPACE_OFFSET(sp) # Get posX
+#lfs f2, BKP_FREE_SPACE_OFFSET+4(sp) # Get posY
+#lfs f3, BKP_FREE_SPACE_OFFSET+8(sp) # Get posZ
+
+lfs f1, 56(r28) # Get local posX
+lfs f2, 60(r28) # Get local posY
+lfs f3, 64(r28) # Get local posZ
+
+lfs f4, 28(r28) # Get rotX  # Quaternion
+lfs f5, 32(r28) # Get rotY
+lfs f6, 36(r28) # Get rotZ
+lfs f7, 40(r28) # Get rotW
+
+lfs f8, 44(r28) # Get local scaleX
+lfs f9, 48(r28) # Get local scaleY
+lfs f10, 52(r28) # Get local scaleZ
+
+logf LOG_LEVEL_WARN, "[Frame: %d] [Bone Transforms] Idx: %d (0x%x), Pos: (%f, %f, %f), Rot: (%f, %f, %f, %f), Scale: (%f, %f, %f)"
 # logf LOG_LEVEL_WARN, "[%d] [BonePosThrown] %f, %f, %f"
 
 # TEMP: Print anim translation

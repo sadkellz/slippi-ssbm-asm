@@ -15,6 +15,7 @@
 .set REG_Buffer,29
 .set REG_BufferOffset,28
 .set REG_PlayerSlot,27
+.set REG_TotalBones,16
 
 backup
 
@@ -169,7 +170,7 @@ backup
 # Extract bone positions
 ################################################################################
 
-# First let's write the command and player index
+# First let's write the command and player index 8065e9e4
 lwz r3, primaryDataBuffer(r13)
 lwz REG_Buffer, RDB_TXB_ADDRESS(r3)
 add r4, REG_Buffer, REG_BufferOffset # Write position
@@ -179,8 +180,14 @@ lwz r3, frameIndex(r13)
 stw r3, 0x1(r4) # Write frame index
 stb REG_PlayerSlot, 0x5(r4) # Write player index
 
+lwz r3,0x04(REG_PlayerData) # load internal char ID
+stb r3,0x06(r4)
+
+mr r17, r4 # Backup r4 so we can save total bone count later
+li REG_TotalBones, 0 # Zero out before we count
+
 # Increment the buffer offset to skip past the command, frame index, and player index
-addi r3, REG_BufferOffset, 0x6
+addi r3, REG_BufferOffset, 0x8
 stw r3, bufferOffset(r13)
 
 # We are going to overwrite the offset after saving all the bones. This will make sure we reserved the fixed length for bones
@@ -202,25 +209,75 @@ FN_StoreBonePos_BLRL:
 blrl
 backup
 
+addi REG_TotalBones, REG_TotalBones, 1
+stb REG_TotalBones, 0x7(r17)
+
 # Do this first because r3 is already set to the JObj ptr
 li r4, 0
 addi r5, sp, BKP_FREE_SPACE_OFFSET
-branchl r12, 0x8000b1cc # GetEntityPosition
+mr r15, r3 # save jobj ptr
+branchl r12, 0x8000b1cc # GetEntityPosition 8065ea7c
 
 lwz REG_BufferOffset,bufferOffset(r13)
 lwz r3, primaryDataBuffer(r13)
 lwz REG_Buffer, RDB_TXB_ADDRESS(r3)
 add r4, REG_Buffer, REG_BufferOffset # Write position
 
-lwz r3, BKP_FREE_SPACE_OFFSET(sp) # Get posX
+
+# we want local transforms not global
+
+#lwz r3, BKP_FREE_SPACE_OFFSET(sp) # Get posX
+#stw r3, 0x0(r4)
+#lwz r3, BKP_FREE_SPACE_OFFSET+4(sp) # Get posY
+#stw r3, 0x4(r4)
+#lwz r3, BKP_FREE_SPACE_OFFSET+8(sp) # Get posZ
+#stw r3, 0x8(r4)
+
+lwz r3, 0x38(r15) # Get local posX
 stw r3, 0x0(r4)
-lwz r3, BKP_FREE_SPACE_OFFSET+4(sp) # Get posY
+lwz r3, 0x3C(r15) # Get local posY
 stw r3, 0x4(r4)
-lwz r3, BKP_FREE_SPACE_OFFSET+8(sp) # Get posZ
+lwz r3, 0x40(r15) # Get local posZ
 stw r3, 0x8(r4)
 
+lwz r3, 0x1C(r15) # Get rotX
+stw r3, 0xC(r4)
+lwz r3, 0x20(r15) # Get rotY
+stw r3, 0x10(r4)
+lwz r3, 0x24(r15) # Get rotZ
+stw r3, 0x14(r4)
+lwz r3, 0x28(r15) # Get rotW # W is last, sometimes not used
+stw r3, 0x18(r4)
+
+lwz r3, 0x2C(r15) # Get local scaleX
+stw r3, 0x1C(r4)
+lwz r3, 0x30(r15) # Get local scaleY
+stw r3, 0x20(r4)
+lwz r3, 0x34(r15) # Get local scaleZ
+stw r3, 0x24(r4)
+
+
+#lis r18, 0x2
+#ori r18, r18, 0x0000
+lwz r3, 0x14(r15) # Flags
+rlwinm. r3, r3, 0, 14, 14
+#mr r18, r5
+#mr r5, r3
+#logf LOG_LEVEL_WARN, "[%x]"
+#mr r5, r18
+bne USE_QUAT
+li r3, 0
+stb r3, 0x1C(r4)
+b QUAT_EXIT
+
+USE_QUAT:
+li r3, 1
+stb r3, 0x1C(r4)
+
+QUAT_EXIT:
+
 # Update the write offset for the next bone
-addi REG_BufferOffset, REG_BufferOffset, 0xC
+addi REG_BufferOffset, REG_BufferOffset, 0x29
 stw REG_BufferOffset, bufferOffset(r13)
 
 restore
