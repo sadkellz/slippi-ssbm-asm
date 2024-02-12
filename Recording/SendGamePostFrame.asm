@@ -184,7 +184,7 @@ backup
 #stb r3,0x06(r4)
 #
 #mr r17, r4 # Backup r4 so we can save total bone count later
-#li REG_TotalBones, 0 # Zero out before we count
+#li REG_BoneCount, 0 # Zero out before we count
 #
 ## Increment the buffer offset to skip past the command, frame index, and player index
 #addi r3, REG_BufferOffset, 0x8
@@ -209,8 +209,8 @@ backup
 #blrl
 #backup
 #
-#addi REG_TotalBones, REG_TotalBones, 1
-#stb REG_TotalBones, 0x7(r17)
+#addi REG_BoneCount, REG_BoneCount, 1
+#stb REG_BoneCount, 0x7(r17)
 #
 ## Do this first because r3 is already set to the JObj ptr
 ##li r4, 0
@@ -269,163 +269,107 @@ backup
 #restore
 #blr
 
-
+#### 0
 #-------------- Transfer Bone Data ---------------
 .set REG_BoneCopyBuffer,21
-.set REG_BoneCopyPos,22
-.set REG_BoneBuffOffset,10
-.set REG_TotalBones,23
+.set REG_BoneBuffOffset,25
+.set REG_BoneCount,23
 .set REG_BoneDataSize, 24
-.set REG_Counter,25
 
-
-# Create copy buffer
-  li r3, SPLIT_MESSAGE_BUF_LEN
+  #li REG_BoneDataSize, 4852 # Init total size of bone data for a character
+  # Create copy buffer
+  mr r3, REG_BoneDataSize
   branchl r12, HSD_MemAlloc
   mr REG_BoneCopyBuffer, r3
   mr REG_BoneBuffOffset, r3
 
-# Split msg command
-  li r3, CMD_SPLIT_MESSAGE
-  stb r3, SPLIT_MESSAGE_OFST_COMMAND(REG_BoneCopyBuffer)
+# zero out the buffer
+  mr r3, REG_BoneCopyBuffer
+  mr r4, REG_BoneDataSize
+  branchl r12, Zero_AreaLength
 
-  # Copy command
-  li r3, CMD_BONES
-  stb r3, SPLIT_MESSAGE_OFST_INTERNAL_CMD(REG_BoneCopyBuffer)
 
-  # Initialize the data size, will be overwritten once last message is sent
-  li r3, SPLIT_MESSAGE_INTERNAL_DATA_LEN
-  sth r3, SPLIT_MESSAGE_OFST_SIZE(REG_BoneCopyBuffer)
-
-  # Initialize isComplete, will be overwritten once last message is sent
-  li r3, 0
-  stb r3, SPLIT_MESSAGE_OFST_IS_COMPLETE(REG_BoneCopyBuffer)
-
-  li REG_Counter, 0
-  li REG_BoneCopyPos, 0
-  li REG_BoneDataSize, 4838 # Init total size of bone data for a character
-
-  addi r3, REG_BoneBuffOffset, SPLIT_MESSAGE_OFST_DATA # destination
-  
   lwz r3, frameIndex(r13)
-  stw r3, 0x1(REG_BoneBuffOffset) # Write frame index
+  stw r3, 0x0(REG_BoneBuffOffset) # Write frame index
   stb REG_PlayerSlot, 0x5(REG_BoneBuffOffset) # Write player index
+  lwz r3,0x04(REG_PlayerData) 
+  stb r3,0x06(REG_BoneBuffOffset) # Write char id
 
-  lwz r3,0x04(REG_PlayerData) # load internal char ID
-  stb r3,0x06(REG_BoneBuffOffset)
-
+  #b BONE_DATA_CLEANUP # check crash
   mr r17, r4 # Backup r4 so we can save total bone count later
-  li REG_TotalBones, 0 # Zero out before we count
+  li REG_BoneCount, 0 # Zero out before we count
 
   # Increment the buffer offset to skip past the command, frame index, and player index
   addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x8
-  #stw r3, bufferOffset(r13)
 
-BONE_DATA_LOOP_START:
+# Write bone data to buffer
+bl FN_StoreBonePos_BLRL
+  mflr r4
+  lwz r3, 0x0(REG_PlayerData) # Get Entity from CharData
+  lwz r3, 0x28(r3) # Get Root JObj from Entity
+  li r5, 0 # no context
+  branchl r12, 0x8036f0f0 # HSD_JObjWalkTree
 
-  sub r3, REG_BoneDataSize, REG_BoneCopyPos
-  cmpwi r3, SPLIT_MESSAGE_INTERNAL_DATA_LEN # 512
-  bgt BONE_DATA_COPY_BLOCK
+  b BONE_DATA_CLEANUP
 
-  # This is the last message, write the size
-  sth r3, SPLIT_MESSAGE_OFST_SIZE(REG_BoneCopyBuffer)
+  FN_StoreBonePos_BLRL:
+  blrl
+  backup
 
-  # Indicate last message
+  addi REG_BoneCount, REG_BoneCount, 1
+  stb REG_BoneCount, 0x7(r17)
+
+  mr r15, r3 # save jobj ptr
+  #branchl r12, 0x8000b1cc # GetEntityPosition 8065ea7c
+
+  # we want local transforms not global
+  lwz r3, 0x38(r15) # Get local posX
+  stw r3, 0(REG_BoneBuffOffset)
+  lwz r3, 0x3C(r15) # Get local posY
+  stw r3, 4(REG_BoneBuffOffset)
+  lwz r3, 0x40(r15) # Get local posZ
+  stw r3, 8(REG_BoneBuffOffset)
+
+  lwz r3, 0x1C(r15) # Get rotX
+  stw r3, 12(REG_BoneBuffOffset)
+  lwz r3, 0x20(r15) # Get rotY
+  stw r3, 16(REG_BoneBuffOffset)
+  lwz r3, 0x24(r15) # Get rotZ
+  stw r3, 20(REG_BoneBuffOffset)
+  lwz r3, 0x28(r15) # Get rotW # W is last, sometimes not used
+  stw r3, 24(REG_BoneBuffOffset)
+
+  lwz r3, 0x2C(r15) # Get local scaleX
+  stw r3, 28(REG_BoneBuffOffset)
+  lwz r3, 0x30(r15) # Get local scaleY
+  stw r3, 32(REG_BoneBuffOffset)
+  lwz r3, 0x34(r15) # Get local scaleZ
+  stw r3, 36(REG_BoneBuffOffset)
+
+  lwz r3, 0x14(r15) # Flags
+  rlwinm. r3, r3, 0, 14, 14 # USE_QUATERNION(0x20000)
+  bne USE_QUAT
+  li r3, 0
+  stb r3, 40(REG_BoneBuffOffset) # Write flag if used/not used
+  b QUAT_EXIT
+
+  USE_QUAT:
   li r3, 1
-  stb r3, SPLIT_MESSAGE_OFST_IS_COMPLETE(REG_BoneCopyBuffer)
+  stb r3, 40(REG_BoneBuffOffset)
 
-BONE_DATA_COPY_BLOCK:
-  # Check counter to skip walkjobj blr
-  cmpwi REG_Counter, 12
-  beq TRANSFER_BONE_DATA
+  QUAT_EXIT:
+  # Update the write offset for the next bone
+  addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x2C
+  #stw REG_BufferOffset, bufferOffset(r13)
+  restore
   blr
-  # Write bone data to buffer
-  
-  bl FN_StoreBonePos_BLRL
-    mflr r4
-    lwz r3, 0x0(REG_PlayerData) # Get Entity from CharData
-    lwz r3, 0x28(r3) # Get Root JObj from Entity
-    li r5, 0 # no context
-    branchl r12, 0x8036f0f0 # HSD_JObjWalkTree
 
-    # Update the write offset. The padding should all be zero'd because the whole buffer is zero'd in SendFrameStart
-    #stw REG_BufferOffset, bufferOffset(r13)
 
-    b Injection_Exit
-
-    FN_StoreBonePos_BLRL:
-    blrl
-    backup
-    #addi REG_Counter, REG_Counter, 1
-
-    addi REG_TotalBones, REG_TotalBones, 1
-    stb REG_TotalBones, 0x7(r17)
-
-    mr r15, r3 # save jobj ptr
-    #branchl r12, 0x8000b1cc # GetEntityPosition 8065ea7c
-
-    # we want local transforms not global
-    lwz r3, 0x38(r15) # Get local posX
-    stw r3, 0(REG_BoneBuffOffset)
-    lwz r3, 0x3C(r15) # Get local posY
-    stw r3, 4(REG_BoneBuffOffset)
-    lwz r3, 0x40(r15) # Get local posZ
-    stw r3, 8(REG_BoneBuffOffset)
-
-    lwz r3, 0x1C(r15) # Get rotX
-    stw r3, 12(REG_BoneBuffOffset)
-    lwz r3, 0x20(r15) # Get rotY
-    stw r3, 16(REG_BoneBuffOffset)
-    lwz r3, 0x24(r15) # Get rotZ
-    stw r3, 20(REG_BoneBuffOffset)
-    lwz r3, 0x28(r15) # Get rotW # W is last, sometimes not used
-    stw r3, 24(REG_BoneBuffOffset)
-
-    lwz r3, 0x2C(r15) # Get local scaleX
-    stw r3, 28(REG_BoneBuffOffset)
-    lwz r3, 0x30(r15) # Get local scaleY
-    stw r3, 32(REG_BoneBuffOffset)
-    lwz r3, 0x34(r15) # Get local scaleZ
-    stw r3, 36(REG_BoneBuffOffset)
-
-    lwz r3, 0x14(r15) # Flags
-    rlwinm. r3, r3, 0, 14, 14 # USE_QUATERNION(0x20000)
-    bne USE_QUAT
-    li r3, 0
-    stb r3, 40(REG_BoneBuffOffset)
-    b QUAT_EXIT
-
-    USE_QUAT:
-    li r3, 1
-    stb r3, 40(REG_BoneBuffOffset)
-
-    QUAT_EXIT:
-    # Update the write offset for the next bone
-    addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x29
-    #stw REG_BufferOffset, bufferOffset(r13)
-    restore
-    
-    addi REG_Counter, REG_Counter, 1
-    cmpwi REG_Counter, 12
-    beq TRANSFER_BONE_DATA
-    blr
-
-      TRANSFER_BONE_DATA:
-      mr r3, REG_BoneCopyBuffer
-      li r4, SPLIT_MESSAGE_BUF_LEN
-      li r5, CONST_ExiWrite
-      branchl r12, FN_EXITransferBuffer
-
-  TRANSFER_SKIP:
-  addi REG_BoneCopyPos, REG_BoneCopyPos, SPLIT_MESSAGE_INTERNAL_DATA_LEN
-  cmpw REG_BoneCopyPos, REG_BoneDataSize
-  blt BONE_DATA_LOOP_START
 
 BONE_DATA_CLEANUP:
   # Free memory
   mr r3, REG_BoneCopyBuffer
   branchl r12, HSD_Free
-
 
 Injection_Exit:
   restore
