@@ -170,7 +170,6 @@ backup
 # Extract bone positions
 ################################################################################
 
-
 #-------------- Save Bone Data ---------------
 .set REG_BoneBuf, 21
 .set REG_BoneCopyPos, 22
@@ -197,9 +196,8 @@ backup
   stb REG_PlayerSlot, 0x4(REG_BoneBuffOffset) # Write player index
   lwz r3,0x04(REG_PlayerData) 
   stb r3,0x05(REG_BoneBuffOffset) # Write char id
-  #mr r17, r4 # Backup r4 so we can save total bone count to 0x6 later
-  li REG_BoneCount, 1 # Start count at 1
 
+  li REG_BoneCount, 1 # Start count at 1
   # Increment the buffer offset to skip past the frame, player, char id, and bone count.
   addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x7
 
@@ -252,11 +250,9 @@ bl FN_StoreBonePos_BLRL
   li r3, 0
   stb r3, 40(REG_BoneBuffOffset) # Write flag if used/not used
   b QUAT_EXIT
-
   USE_QUAT:
   li r3, 1
   stb r3, 40(REG_BoneBuffOffset)
-
   QUAT_EXIT:
   # Update the write offset for the next bone
 
@@ -267,7 +263,6 @@ bl FN_StoreBonePos_BLRL
 
 #-------------- Transfer Bone Data ---------------
 SPLIT_MSG_START:
-
 # Create copy buffer
   li r3, SPLIT_MESSAGE_BUF_LEN
   branchl r12, HSD_MemAlloc
@@ -303,7 +298,7 @@ BONE_DATA_LOOP_START:
   stb r3, SPLIT_MESSAGE_OFST_IS_COMPLETE(REG_SplitMsgBuf)
 
 BONE_DATA_COPY_BLOCK:
-  # Copy next gecko list section
+  # Copy next bone data section
   addi r3, REG_SplitMsgBuf, SPLIT_MESSAGE_OFST_DATA # destination
   mr r4, REG_BoneBuf
   add r4, r4, REG_BoneCopyPos
@@ -319,8 +314,6 @@ BONE_DATA_COPY_BLOCK:
   addi REG_BoneCopyPos, REG_BoneCopyPos, SPLIT_MESSAGE_INTERNAL_DATA_LEN
   cmpw REG_BoneCopyPos, REG_BoneDataSize
   blt BONE_DATA_LOOP_START
-
-
 
 BONE_DATA_CLEANUP:
   # Free memory of both buffers
