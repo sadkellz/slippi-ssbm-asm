@@ -195,7 +195,7 @@ backup
   stw r3, 0x0(REG_BoneBuffOffset) # Write frame index
   stb REG_PlayerSlot, 0x4(REG_BoneBuffOffset) # Write player index
   lwz r3,0x04(REG_PlayerData) 
-  stb r3,0x05(REG_BoneBuffOffset) # Write char id
+  stb r3,0x05(REG_BoneBuffOffset) # Write *internal* char id
 
   li REG_BoneCount, 1 # Start count at 1
   # Increment the buffer offset to skip past the frame, player, char id, and bone count.
@@ -258,7 +258,7 @@ bl FN_StoreBonePos_BLRL
 
   restore
   addi REG_BoneCount, REG_BoneCount, 1
-  addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x28
+  addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x29
   blr
 
 #-------------- Transfer Bone Data ---------------

@@ -13,10 +13,10 @@ bne EXIT
 backup
 
 # Print the bone 2 translations
-lfs f1, 0x2174(r30)
-lfs f2, 0x2178(r30)
-lfs f3, 0x217C(r30)
-logf LOG_LEVEL_WARN, "Bone 2 Anim: (%f, %f, %f)"
+#lfs f1, 0x2174(r30)
+#lfs f2, 0x2178(r30)
+#lfs f3, 0x217C(r30)
+#logf LOG_LEVEL_WARN, "Bone 2 Anim: (%f, %f, %f)"
 
 mr r3, r31 # fighter entitity
 bl FN_PrintFighterBones
