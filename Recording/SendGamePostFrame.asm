@@ -16,7 +16,6 @@
 .set REG_BufferOffset,28
 .set REG_PlayerSlot,27
 
-
 backup
 
 # Check if VS Mode
@@ -178,6 +177,9 @@ backup
 .set REG_BoneBuffOffset, 25
 .set REG_SplitMsgBuf, 26
 
+# (Vec3 *vec, Quat *quat)
+.set HSD_EulerToQuat, 0x8037ee0c
+
   li REG_BoneDataSize, 4845 # Init total size of bone data for a character
 # Create copy buffer
   mr r3, REG_BoneDataSize
@@ -228,6 +230,22 @@ bl FN_StoreBonePos_BLRL
   lwz r3, 0x40(r15) # Get local posZ
   stw r3, 8(REG_BoneBuffOffset)
 
+  lwz r3, 0x14(r15) # Flags
+  rlwinm. r3, r3, 0, 14, 14 # USE_QUATERNION(0x20000)
+  bne USE_QUAT
+  li r3, 0
+  stb r3, 40(REG_BoneBuffOffset) # Write flag if used/not used
+
+  addi r3, r15, 0x1C # jobj euler rotation
+  addi r4, REG_BoneBuffOffset, 12 # buffer quat offset
+  branchl r12, HSD_EulerToQuat
+
+  b QUAT_EXIT
+
+  USE_QUAT:
+  li r3, 1
+  stb r3, 40(REG_BoneBuffOffset)
+
   lwz r3, 0x1C(r15) # Get rotX
   stw r3, 12(REG_BoneBuffOffset)
   lwz r3, 0x20(r15) # Get rotY
@@ -237,6 +255,7 @@ bl FN_StoreBonePos_BLRL
   lwz r3, 0x28(r15) # Get rotW # W is last, sometimes not used
   stw r3, 24(REG_BoneBuffOffset)
 
+  QUAT_EXIT:
   lwz r3, 0x2C(r15) # Get local scaleX
   stw r3, 28(REG_BoneBuffOffset)
   lwz r3, 0x30(r15) # Get local scaleY
@@ -244,16 +263,6 @@ bl FN_StoreBonePos_BLRL
   lwz r3, 0x34(r15) # Get local scaleZ
   stw r3, 36(REG_BoneBuffOffset)
 
-  lwz r3, 0x14(r15) # Flags
-  rlwinm. r3, r3, 0, 14, 14 # USE_QUATERNION(0x20000)
-  bne USE_QUAT
-  li r3, 0
-  stb r3, 40(REG_BoneBuffOffset) # Write flag if used/not used
-  b QUAT_EXIT
-  USE_QUAT:
-  li r3, 1
-  stb r3, 40(REG_BoneBuffOffset)
-  QUAT_EXIT:
   # Update the write offset for the next bone
 
   restore

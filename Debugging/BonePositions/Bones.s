@@ -50,21 +50,21 @@ branchl r12, 0x8000b1cc # GetEntityPosition
 #lfs f2, BKP_FREE_SPACE_OFFSET+4(sp) # Get posY
 #lfs f3, BKP_FREE_SPACE_OFFSET+8(sp) # Get posZ
 
-    li r3, 72
-    branchl r12, HSD_MemAlloc
-    mr REG_JobjTransforms, r3
+   #li r3, 72
+   #branchl r12, HSD_MemAlloc
+   #mr REG_JobjTransforms, r3
 
-    addi r3, REG_JobjPtr, 0x44
-    addi r4, REG_JobjTransforms, 0
-    branchl r12, HSD_MtxGetTranslate
+   #addi r3, REG_JobjPtr, 0x44
+   #addi r4, REG_JobjTransforms, 0
+   #branchl r12, HSD_MtxGetTranslate
 
-    addi r3, REG_JobjPtr, 0x44
-    addi r4, REG_JobjTransforms, 12
-    branchl r12, HSD_MtxGetRotation
+   #addi r3, REG_JobjPtr, 0x44
+   #addi r4, REG_JobjTransforms, 12
+   #branchl r12, HSD_MtxGetRotation
 
-    addi r3, REG_JobjPtr, 0x44
-    addi r4, REG_JobjTransforms, 24
-    branchl r12, HSD_MtxGetScale
+   #addi r3, REG_JobjPtr, 0x44
+   #addi r4, REG_JobjTransforms, 24
+   #branchl r12, HSD_MtxGetScale
 
 lwz r5, frameIndex(r13)
 lwz r6, 0(r27)
@@ -90,7 +90,7 @@ lfs f4, 28(REG_JobjPtr) # Get rotX  # Quaternion
 lfs f5, 32(REG_JobjPtr) # Get rotY
 lfs f6, 36(REG_JobjPtr) # Get rotZ
 lfs f7, 40(REG_JobjPtr) # Get rotW
-# 
+
 # lfs f8, 44(r28) # Get local scaleX
 # lfs f9, 48(r28) # Get local scaleY
 # lfs f10, 52(r28) # Get local scaleZ
