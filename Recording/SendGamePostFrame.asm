@@ -176,11 +176,15 @@ backup
 .set REG_BoneDataSize, 24
 .set REG_BoneBuffOffset, 25
 .set REG_SplitMsgBuf, 26
+.set REG_CObj, 27
 
-# (Vec3 *vec, Quat *quat)
-.set HSD_EulerToQuat, 0x8037ee0c
+.set CamStruct, 0x80452C68
 
-  li REG_BoneDataSize, 4845 # Init total size of bone data for a character
+.set HSD_CObjGetEyePosition, 0x80368784 # (CObj* cobj, Vec3* eye_pos)
+.set HSD_CObjGetInterest, 0x803686ac # (CObj* cobj, Vec3* interest_pos)
+.set HSD_EulerToQuat, 0x8037ee0c # (Vec3 *vec, Quat *quat)
+
+  li REG_BoneDataSize, 4873 # Init total size of bone data for a character
 # Create copy buffer
   mr r3, REG_BoneDataSize
   branchl r12, HSD_MemAlloc
@@ -199,9 +203,25 @@ backup
   lwz r3,0x04(REG_PlayerData) 
   stb r3,0x05(REG_BoneBuffOffset) # Write *internal* char id
 
+# Get our camera data
+  loadwz r3, CamStruct
+  lwz REG_CObj, 0x28(r3)
+
+  mr r3, REG_CObj
+  addi r4, REG_BoneBuffOffset, 0x07
+  branchl r12, HSD_CObjGetEyePosition # Write Eye vector
+
+  mr r3, REG_CObj
+  addi r4, REG_BoneBuffOffset, 0x13
+  branchl r12, HSD_CObjGetInterest # Write Interest vector
+
+  lwz r3, 0x40(REG_CObj)
+  stw r3, 0x1F(REG_BoneBuffOffset) # Write FOV
+
   li REG_BoneCount, 1 # Start count at 1
-  # Increment the buffer offset to skip past the frame, player, char id, and bone count.
-  addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x7
+  # Increment the buffer offset to skip past the header and camera data
+
+  addi REG_BoneBuffOffset, REG_BoneBuffOffset, 0x23
 
 # Write bone data to buffer
 bl FN_StoreBonePos_BLRL
@@ -252,10 +272,10 @@ bl FN_StoreBonePos_BLRL
   stw r3, 16(REG_BoneBuffOffset)
   lwz r3, 0x24(r15) # Get rotZ
   stw r3, 20(REG_BoneBuffOffset)
-  lwz r3, 0x28(r15) # Get rotW # W is last, sometimes not used
+  lwz r3, 0x28(r15) # Get rotW
   stw r3, 24(REG_BoneBuffOffset)
-
   QUAT_EXIT:
+  
   lwz r3, 0x2C(r15) # Get local scaleX
   stw r3, 28(REG_BoneBuffOffset)
   lwz r3, 0x30(r15) # Get local scaleY
