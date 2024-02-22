@@ -17,7 +17,13 @@
 .set  OFST_METADATA_4,OFST_METADATA_3+0x1
 .set  OFST_OWNER,OFST_METADATA_4+0x1
 .set  OFST_INSTANCE,OFST_OWNER+0x1
-.set  ITEM_STRUCT_SIZE,OFST_INSTANCE+0x2
+.set  OFST_XROT, OFST_INSTANCE+0x2
+.set  OFST_YROT, OFST_XROT+0x4
+.set  OFST_ZROT, OFST_YROT+0x4
+.set  OFST_XSCL, OFST_ZROT+0x4
+.set  OFST_YSCL, OFST_XSCL+0x4
+.set  OFST_ZSCL, OFST_YSCL+0x4
+.set  ITEM_STRUCT_SIZE,OFST_ZSCL+0x4
 
 .macro Macro_SendItemInfo
 
@@ -50,6 +56,7 @@ blrl
 .set REG_ItemGObj,29
 .set REG_ItemData,28
 .set REG_ItemCount,27
+.set REG_ItemJObj, 26
 
 backup
 
@@ -107,6 +114,23 @@ SendItemInfo_AddToBuffer:
 # store item YPos
   lwz r3,0x50(REG_ItemData)
   stw r3,OFST_YPOS(REG_Buffer)
+
+# store item rotations
+  lwz REG_ItemJObj, 0x28(REG_ItemGObj)
+  lwz r3,0x1C(REG_ItemJObj)
+  stw r3,OFST_XROT(REG_Buffer)
+  lwz r3,0x20(REG_ItemJObj)
+  stw r3,OFST_YROT(REG_Buffer)
+  lwz r3,0x24(REG_ItemJObj)
+  stw r3,OFST_ZROT(REG_Buffer)
+# store item scale
+  lwz r3,0x2C(REG_ItemJObj)
+  stw r3,OFST_XSCL(REG_Buffer)
+  lwz r3,0x30(REG_ItemJObj)
+  stw r3,OFST_YSCL(REG_Buffer)
+  lwz r3,0x34(REG_ItemJObj)
+  stw r3,OFST_ZSCL(REG_Buffer)
+
 # store item damage taken
   lwz r3,0xC9C(REG_ItemData)
   sth r3,OFST_DMGTAKEN(REG_Buffer)
