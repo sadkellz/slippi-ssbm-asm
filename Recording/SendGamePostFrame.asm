@@ -177,12 +177,66 @@ backup
 .set REG_BoneBuffOffset, 25
 .set REG_SplitMsgBuf, 26
 .set REG_CObj, 27
+.set REG_ItemGObj, 28
 
 .set CamStruct, 0x80452C68
 
 .set HSD_CObjGetEyePosition, 0x80368784 # (CObj* cobj, Vec3* eye_pos)
 .set HSD_CObjGetInterest, 0x803686ac # (CObj* cobj, Vec3* interest_pos)
 .set HSD_EulerToQuat, 0x8037ee0c # (Vec3 *vec, Quat *quat)
+
+#   Calc our buffer
+li REG_BoneDataSize, 0
+#   Bone data size
+bl FN_CountBoneData_BLRL
+  mflr r4
+  lwz r3, 0x0(REG_PlayerData) # Get Entity from CharData
+  lwz r3, 0x28(r3) # Get Root JObj from Entity
+  li r5, 0 # no context
+  branchl r12, 0x8036f0f0 # HSD_JObjWalkTree
+
+  b CountBoneData_EXIT
+
+  FN_CountBoneData_BLRL:
+  blrl
+  backup
+  restore
+#  addi REG_BoneCount, REG_BoneCount, 1
+  addi REG_BoneDataSize, REG_BoneDataSize, 0x29
+  blr
+  CountBoneData_EXIT:
+
+# item data size
+# get first created item
+  lwz r3, -0x3E74(r13)
+  lwz REG_ItemGObj, 0x24(r3)
+  cmpwi REG_ItemGObj, 0
+  beq CountItemData_EXIT
+
+  bl FN_CountItemData_BLRL
+  mflr r4
+  #lwz r3, 0x0(REG_PlayerData) # Get Entity from CharData
+  ItemListLoop:
+  mr r3, REG_ItemGObj
+  lwz r3, 0x28(r3) # Get Root JObj from Entity
+  li r5, 0 # no context
+  branchl r12, 0x8036f0f0 # HSD_JObjWalkTree
+
+# get next item
+  lwz REG_ItemGObj,0x8(REG_ItemGObj)
+  cmpwi REG_ItemGObj,0
+  bne ItemListLoop
+
+  b CountItemData_EXIT
+
+  FN_CountItemData_BLRL:
+  blrl
+  backup
+  restore
+#  addi REG_BoneCount, REG_BoneCount, 1
+  addi REG_BoneDataSize, REG_BoneDataSize, 0x29
+  blr
+  CountItemData_EXIT:
 
   li REG_BoneDataSize, 4873 # Init total size of bone data for a character
 # Create copy buffer
