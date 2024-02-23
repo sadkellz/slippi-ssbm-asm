@@ -23,7 +23,10 @@
 .set  OFST_XSCL, OFST_ZROT+0x4
 .set  OFST_YSCL, OFST_XSCL+0x4
 .set  OFST_ZSCL, OFST_YSCL+0x4
-.set  ITEM_STRUCT_SIZE,OFST_ZSCL+0x4
+.set  OFST_ZPOS, OFST_ZSCL+0x4
+.set  OFST_OWNERID, OFST_ZPOS+0x4
+.set  OFST_BONEPARENT, OFST_OWNERID+0x1
+.set  ITEM_STRUCT_SIZE,OFST_BONEPARENT+0x1
 
 .macro Macro_SendItemInfo
 
@@ -108,15 +111,32 @@ SendItemInfo_AddToBuffer:
 # store item YVel
   lwz r3,0x44(REG_ItemData)
   stw r3,OFST_YVELOCITY(REG_Buffer)
+
 # store item XPos
-  lwz r3,0x4C(REG_ItemData)
-  stw r3,OFST_XPOS(REG_Buffer)
+#  lwz r3,0x4C(REG_ItemData)
+#  stw r3,OFST_XPOS(REG_Buffer)
 # store item YPos
-  lwz r3,0x50(REG_ItemData)
+#  lwz r3,0x50(REG_ItemData)
+#  stw r3,OFST_YPOS(REG_Buffer)
+
+# store item jobj positions instead
+  # jobj0
+  lwz REG_ItemJObj, 0x28(REG_ItemGObj)
+  # jobj1
+  lwz REG_ItemJObj, 0x10(REG_ItemJObj)
+  # jobj2
+  lwz REG_ItemJObj, 0x10(REG_ItemJObj)
+  # XPos
+  lwz r3,0x50(REG_ItemJObj)
+  stw r3,OFST_XPOS(REG_Buffer)
+  # YPos
+  lwz r3,0x60(REG_ItemJObj)
   stw r3,OFST_YPOS(REG_Buffer)
+  # ZPos
+  lwz r3,0x70(REG_ItemJObj)
+  stw r3,OFST_ZPOS(REG_Buffer)
 
 # store item rotations
-  lwz REG_ItemJObj, 0x28(REG_ItemGObj)
   lwz r3,0x1C(REG_ItemJObj)
   stw r3,OFST_XROT(REG_Buffer)
   lwz r3,0x20(REG_ItemJObj)
@@ -162,6 +182,12 @@ DontFollowItemOwnerPtr:
   li r3, -1
 SendItemOwner:
   stb r3, OFST_OWNER(REG_Buffer)
+  # store owner id
+  lwz r3, 0x514(REG_ItemData)
+  stb r3, OFST_OWNERID(REG_Buffer)
+  # store bone parent
+  lwz r3, 0xDC4(REG_ItemData)
+  stb r3, OFST_BONEPARENT(REG_Buffer)
 # store item instance
   lhz r3,0xDA8(REG_ItemData)
   sth r3,OFST_INSTANCE(REG_Buffer)
