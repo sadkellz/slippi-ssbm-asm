@@ -295,8 +295,15 @@ backup
 
 lwz REG_ODB_ADDRESS, OFST_R13_ODB_ADDR(r13) # data buffer address
 
-loadwz r5, 0x803dad40 # Load minor scene data array ptr
-lwz REG_GPD_ADDR, 0x88(r5) # Load game prep minor scene data
+# loadwz r5, 0x803dad40 # Load minor scene data array ptr
+# lwz REG_GPD_ADDR, 0x88(r5) # Load game prep minor scene data
+
+# get our GPD by traversing our major data instead
+bp
+getSlippiMajor
+lwz r3, 0x10(r3) # MinorScene array
+lwz REG_GPD_ADDR, 0x88(r3)
+
 
 load REG_GAME_END_STRUCT_ADDR, 0x80479da4
 

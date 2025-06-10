@@ -333,6 +333,21 @@ divw r4, r5, r4
 add \reg, r3, r4
 .endm
 
+# This macro gets the slippi major from mex's major table
+# returns to r3
+.macro getSlippiMajor
+branchl r12, Scene_GetMajorTable # mex injection
+
+TABLE_LOOP\@:
+lbz r0, 0x1(r3) # major id
+cmpwi r0, 8 # slippi major
+beq TABLE_EXIT\@
+addi r3, r3, 0x18 # mex major stride
+b TABLE_LOOP\@
+
+TABLE_EXIT\@:
+.endm
+
 ################################################################################
 # Settings
 ################################################################################
@@ -506,6 +521,7 @@ add \reg, r3, r4
 .set Event_StoreSceneNumber,0x80229860
 .set EventMatch_Store,0x801beb74
 .set PadRead,0x8034da00
+.set Scene_GetMajorTable,0x801a50ac
 
 ## Miscellenia/Unsorted
 .set fetchAnimationHeader,0x80085fd4
