@@ -179,6 +179,7 @@ b SKIP_START_MATCH
 HANDLE_CONNECTED:
 
 # Handle disconnect when input is hold for X seconds
+lbz r3, -0x49B0(r13) # player index in control of CSS
 branchl r12, Inputs_GetPlayerHeldInputs
 rlwinm. r0, r4, 0, 0x10
 beq RESET_HOLD_TIMER # if button is no longer pressed, reset hold timer
@@ -449,6 +450,14 @@ b FN_TX_LOCK_IN_STAGE_SEND
 FN_TX_LOCK_IN_STAGE_SEND:
 sth r3, PSTB_STAGE_ID(REG_TXB_ADDR)
 stb r4, PSTB_STAGE_OPT(REG_TXB_ADDR)
+
+# Write the alt stage mode
+computeBranchTargetAddress r3, 0x8025a530
+addi r3, r3, 0x8
+lbz r3, 0(r3)
+stb r3, PSTB_ALT_STAGE_MODE(REG_TXB_ADDR)
+# mr r5, r3
+# logf LOG_LEVEL_WARN, "TXB: Alt Stage Mode: %x"
 
 # Write the online mode we are in
 lbz r3, OFST_R13_ONLINE_MODE(r13)

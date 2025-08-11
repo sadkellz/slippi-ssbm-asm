@@ -320,7 +320,9 @@
 .set MSRB_USER_CHATMSG_ID, MSRB_DELAY_FRAMES + 1 # u8
 .set MSRB_OPP_CHATMSG_ID, MSRB_USER_CHATMSG_ID + 1 # u8
 .set MSRB_CHATMSG_PLAYER_INDEX, MSRB_OPP_CHATMSG_ID + 1 # u8
-.set MSRB_VS_LEFT_PLAYERS, MSRB_CHATMSG_PLAYER_INDEX + 1 # u32 player ports 0xP1P2P3PN
+.set MSRB_USER_RANK, MSRB_CHATMSG_PLAYER_INDEX + 1 # u8
+.set MSRB_OPP_RANK, MSRB_USER_RANK + 1 # u8
+.set MSRB_VS_LEFT_PLAYERS, MSRB_OPP_RANK + 1 # u32 player ports 0xP1P2P3PN
 .set MSRB_VS_RIGHT_PLAYERS, MSRB_VS_LEFT_PLAYERS + 4 # u32 player ports 0xP1P2P3PN
 .set MSRB_LOCAL_NAME, MSRB_VS_RIGHT_PLAYERS + 4 # char[31]
 .set MSRB_P1_NAME, MSRB_LOCAL_NAME + 31 # char[31]
@@ -340,7 +342,22 @@
 .set ERROR_MESSAGE_LEN, 241
 .set MSRB_GAME_INFO_BLOCK, MSRB_ERROR_MSG + ERROR_MESSAGE_LEN # MATCH_STRUCT_LEN
 .set MSRB_MATCH_ID, MSRB_GAME_INFO_BLOCK + MATCH_STRUCT_LEN # char[51]
-.set MSRB_SIZE, MSRB_MATCH_ID + 51
+.set MSRB_ALT_STAGE_MODE, MSRB_MATCH_ID + 51 # u8
+.set MSRB_SIZE, MSRB_ALT_STAGE_MODE + 1
+
+################################################################################
+# Rank Info Response Buffer
+################################################################################
+.set RIRB_VISIBILITY, 0 # u8
+.set RIRB_STATUS, RIRB_VISIBILITY + 1 # u8
+.set RIRB_RANK, RIRB_STATUS + 1 # u8
+.set RIRB_RATING_ORDINAL, RIRB_RANK + 1 # float
+.set RIRB_GLOBAL_PLACING, RIRB_RATING_ORDINAL + 4 # u8
+.set RIRB_REGIONAL_PLACING, RIRB_GLOBAL_PLACING + 1 # u8
+.set RIRB_UPDATE_COUNT, RIRB_REGIONAL_PLACING + 1 # uint
+.set RIRB_RATING_CHANGE, RIRB_UPDATE_COUNT + 4 # float 
+.set RIRB_RANK_CHANGE, RIRB_RATING_CHANGE + 4 # int
+.set RIRB_SIZE, RIRB_RANK_CHANGE + 4
 
 ################################################################################
 # Player Selections Transfer Buffer
@@ -353,7 +370,8 @@
 .set PSTB_STAGE_ID, PSTB_CHAR_OPT + 1 # u16
 .set PSTB_STAGE_OPT, PSTB_STAGE_ID + 2 # u8, 0 = unset, 1 = merge, 2 = clear, 3 = random
 .set PSTB_ONLINE_MODE, PSTB_STAGE_OPT + 1 # u8
-.set PSTB_SIZE, PSTB_ONLINE_MODE + 1
+.set PSTB_ALT_STAGE_MODE, PSTB_ONLINE_MODE + 1 # u8
+.set PSTB_SIZE, PSTB_ALT_STAGE_MODE + 1
 
 ################################################################################
 # Chat Messages Transfer Buffer

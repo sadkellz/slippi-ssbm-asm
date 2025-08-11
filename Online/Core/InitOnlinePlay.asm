@@ -136,6 +136,11 @@ addi r4, REG_MSRB_ADDR, MSRB_GAME_INFO_BLOCK
 li r5, MATCH_STRUCT_LEN
 branchl r12, memcpy
 
+computeBranchTargetAddress r4, INJ_FREEZE_STADIUM
+lbz r3, MSRB_ALT_STAGE_MODE(REG_MSRB_ADDR)
+stb r3, 0x8(r4) # Store selection in the gecko code space
+# logf LOG_LEVEL_ERROR, "alt stage mode: %d"
+
 lbz r3, OFST_R13_ONLINE_MODE(r13)
 cmpwi r3, ONLINE_MODE_RANKED
 bne SKIP_TIEBREAK_OVERWRITE
@@ -145,7 +150,7 @@ loadwz r5, 0x803dad40 # Load minor scene data array ptr
 lwz r5, 0x88(r5) # Load game prep minor scene data
 lbz r3, GPDO_TIEBREAK_GAME_NUM(r5) # Load is_tiebreak
 cmpwi r3, 0
-beq SKIP_TIEBREAK_OVERWRITE # If not a tiebreak, do nothing
+beq HANDLE_RANKED_MATCH_START # If not a tiebreak, handle ranked match start
 lbz r3, GPDO_LAST_GAME_END_MODE(r5)
 cmpwi r3, 0x7
 beq SKIP_TIEBREAK_OVERWRITE # If last game ended with exit, desync recovery values will be used (set by dolphin)
@@ -158,6 +163,20 @@ stb r3, 0x62(REG_GAME_INFO_START)
 stb r3, 0x62 + 0x24(REG_GAME_INFO_START)
 stb r3, 0x62 + 0x24 * 2(REG_GAME_INFO_START)
 stb r3, 0x62 + 0x24 * 3(REG_GAME_INFO_START)
+
+b SKIP_TIEBREAK_OVERWRITE # Done handling tiebreak
+
+HANDLE_RANKED_MATCH_START:
+# This is a ranked match that is not a tiebreak, report to the server that the game is starting
+lwz r3, OFST_R13_SB_ADDR(r13) # Use the scene buffer, should be available to use
+li r4, CONST_SlippiCmdReportMatchStatus
+stb r4, 0(r3) # Store command byte
+lhz r4, GPDO_CUR_GAME(r5) # r5 still contains game prep minor scene data from above
+addi r4, r4, 19 # Add 19 to the game num because 20 is the offset for game_start_1
+stb r4, 1(r3) # Store message index
+li r4, 2 # Buffer length
+li r5, CONST_ExiWrite
+branchl r12, FN_EXITransferBuffer
 
 SKIP_TIEBREAK_OVERWRITE:
 

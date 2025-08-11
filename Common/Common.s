@@ -557,6 +557,9 @@ TABLE_EXIT\@:
 .set CONST_SlippiCmdSendNameEntryIndex,0xBE
 .set CONST_SlippiCmdNameEntryAutoComplete,0xBF
 .set CONST_SlippiCmdReportSetCompletion,0xC2
+.set CONST_SlippiCmdReportMatchStatus,0xC4
+.set CONST_SlippiCmdGetRank,0xE3
+.set CONST_SlippiCmdFetchRank,0xE4
 # For Slippi file loads
 .set CONST_SlippiCmdFileLength, 0xD1
 .set CONST_SlippiCmdFileLoad, 0xD2
@@ -595,6 +598,8 @@ TABLE_EXIT\@:
 .set HideWaitingForGameAddress, RtocAddress + HideWaitingForGame
 .set CFOptionsAddress, RtocAddress - ControllerFixOptions
 .set GeckoHeapPtr, 0x80005600
+
+.set INJ_FREEZE_STADIUM, 0x801d457c
 
 # Internal scenes
 .set SCENE_TRAINING_CSS, 0x001C
