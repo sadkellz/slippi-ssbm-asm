@@ -1,0 +1,28 @@
+{
+  "outputFiles": [
+    {
+      "file": "Output/Netplay/Single.ini",
+      "header": [
+      ]
+    }
+  ],
+  "codes": [
+    {
+      "name": "Far",
+      "authors": [
+        "KELLZ"
+      ],
+      "description": [
+        ""
+      ],
+      "build": [
+        {
+          "type": "injectFolder",
+          "sourceFolder": "KZ/TransformOverwrite",
+          "isRecursive": true,
+          "annotation": ""
+        }
+      ]
+    }
+  ]
+}
