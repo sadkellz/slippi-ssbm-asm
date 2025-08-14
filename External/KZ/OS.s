@@ -1,11 +1,15 @@
 .ifndef HEADER_OS
 
+# also putting archive related stuff here
+
 ################################################################################
 # Functions
 ################################################################################
 
 .set OS_DisableInterrupts, 0x80347364 #
 .set OS_RestoreInterrupts, 0x8034738c # (bool enabled)
+
+.set HSD_ArchiveLoad, 0x80016be0 # (char* path)
 
 ################################################################################
 # Structs

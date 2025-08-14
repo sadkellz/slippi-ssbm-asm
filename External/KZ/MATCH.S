@@ -19,6 +19,11 @@
 .set PAUSE_UI_STICK_BORDER, PAUSE_UI_Z + 4 # stick border jobj
 .set PAUSE_UI_SLOT, PAUSE_UI_STICK_BORDER + 4 # player slot
 
+.set IFVSCAM_ARCHIVE, 0
+.set IFVSCAM_JOBJ_UI, IFVSCAM_ARCHIVE + 4
+.set IFVSCAM_JOBJ_PROMPT, IFVSCAM_JOBJ_UI + 4
+# it continues but idk rn
+
 
 ################################################################################
 # Directives
@@ -30,6 +35,7 @@
 .set stc_gobj_pause, 0x804d6704
 .set stc_pause_data, 0x80479b10
 .set stc_pause_stickmult, 0x804da980 # 10.0
+.set stc_ifvscam, 0x80479bc8
 
 .set OFST_TINT, 0
 .set OFST_TEYE, 4

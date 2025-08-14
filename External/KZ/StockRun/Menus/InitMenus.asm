@@ -76,6 +76,10 @@ CODE_START:
   load r3, stc_pause_stickmult
   stw r0, 0(r3)
 
+
+# set up the radial menu - uses the vscam interface
+  
+
   b EXIT
 
 ################################################################################
