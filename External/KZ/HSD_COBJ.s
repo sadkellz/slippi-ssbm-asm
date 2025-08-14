@@ -122,6 +122,7 @@
 .set DevelopText_Setup, 0x80302708 # (GObjClass class,GObjPLink p_link,int p_prio,int gx_link, int render_priority,byte camera_priority)
 .set DevelopText_Show, 0x80302810 # (HSD_GObj *gobj,DevText *text)
 .set Camera_SetMode3, 0x8002f7ac # (u8 slot)
+.set Camera_SetNormal, 0x8002f474 # (u8 slot)
 .set HSD_CObjLoadDesc, 0x8036a590 # (void *desc)
 
 ################################################################################

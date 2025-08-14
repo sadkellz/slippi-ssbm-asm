@@ -3,6 +3,7 @@
 # Functions
 ################################################################################
 .set Scene_SetPauseFlag, 0x801a4634 # (u8 flag)
+.set Scene_ClearPauseFlag, 0x801a4674 # (u8 flag)
 
 .set MatchInfo_IsTeams, 0x8016b168
 .set SFX_PlayAnnouncerSFX, 0x800243f4

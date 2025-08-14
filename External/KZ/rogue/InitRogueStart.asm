@@ -9,6 +9,7 @@
 .include "External/KZ/MATCH.s"
 .include "External/KZ/PLAYER.s"
 .include "External/KZ/KZ_COMMON.s"
+.include "External/KZ/HSD_PAD.s"
 
 b CODE_START
 
@@ -17,23 +18,22 @@ blrl
 .set ACTIVE_SLOTS, 0
 .byte -1, -1
 .align 2
-.set PICKS_STATE, ACTIVE_SLOTS + 4
+.set ACTIVE_PICKER, ACTIVE_SLOTS + 4
 .long 0
 
 CODE_START:
   .set REG_GOBJ, 31
-  .set REG_COUNT, 30
-  .set REG_PLY_NUM, 29
-  .set REG_DATA, 28
-  .set REG_SLOT, 27
-  .set REG_FRAME, 26
+  .set REG_DATA, 30
+  .set REG_COUNT, 29
+  .set REG_PLY_NUM, 28
   backup
 
   bl DATA_BLRL
   mflr REG_DATA
 
 # create gobj to run our in-game code
-  gobj_create GOBJ_CLASS_ZAKO, GOBJ_PLINK_STAGE, 111, REG_GOBJ
+# ui so when we freeze players, code still runs
+  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
 
 # add proc
   mr r3, REG_GOBJ
@@ -83,20 +83,26 @@ CODE_START:
   b EXIT
 
 ################################################################################
+################################################################################
 
 FN_RogueSetupBLRL:
 blrl
+.set REG_GOBJ, 31
+.set REG_DATA, 30
+.set REG_SLOT, 29
+.set REG_FRAME, 28
 FN_RogueSetup:
   backup
 
   mr REG_GOBJ, r3
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
-
-  loadGlobalFrame REG_FRAME
-  cmpwi REG_FRAME, 66
+  load_scene_frame REG_FRAME
+  cmpwi REG_FRAME, 64 # first frame after entry
   blt FN_Exit
+  cmpwi REG_FRAME, 90 # users are now active
+  bge POST_SETUP
 
-  li r3, 5 # 5 freezes players but not camera
+  li r3, 4 # 4 freezes players but not cameras/ui
   branchl r12, Scene_SetPauseFlag
 
 # zoom in on first active player to start card picks
@@ -104,7 +110,7 @@ FN_RogueSetup:
   # lerp settings
   lfs f1, OFST_TINT(r3)
   stfs f1, OFST_TEYE(r3)
-  load r4, 0x41200000
+  load r4, 0x41200000 # 10.0
   stw r4, OFST_FOV(r3)
 
   lbz r3, ACTIVE_SLOTS(REG_DATA)
@@ -114,6 +120,25 @@ FN_RogueSetup:
   # init camera side to first active player
   # this will be updated elsewhere
   bl FN_SetCameraSide
+  b FN_Exit
+
+POST_SETUP:
+  # check if picks are done
+  lwz r3, ACTIVE_PICKER(REG_DATA)
+  cmpwi r3, 2
+  bge RESUME_MATCH
+
+  # check inputs
+  bl FN_InputThink
+  b FN_Exit
+
+RESUME_MATCH:
+  # unpause
+  li r3, 4
+  branchl r12, Scene_ClearPauseFlag
+
+  # reset camera
+  branchl r12, Camera_SetNormal
 
 FN_Exit:
   restore
@@ -151,6 +176,42 @@ FN_SetCameraSide:
     stfs f1, 0(r3) # pan/tilt camera right
 
 FN_SetCameraSide_Exit:
+  restore
+  blr
+
+################################################################################
+#
+FN_InputThink:
+  backup
+  # get the active picker
+  bp
+  lwz r3, ACTIVE_PICKER(REG_DATA)
+  cmpwi r3, 2 # there are only two players
+  beq FN_InputThink_Exit
+  lbzx REG_SLOT, REG_DATA, r3 # get the slot of the active picker
+
+  # check if we have picked a card
+  mr r3, REG_SLOT
+  branchl r12, Inputs_GetPlayerInstantInputs
+  andi. r4, r4, PAD_BTN_A
+  bne CHOOSE_CARD
+  b FN_InputThink_Exit
+
+  CHOOSE_CARD:
+    # increment the active picker
+    lwz r3, ACTIVE_PICKER(REG_DATA)
+    addi r3, r3, 1
+    stw r3, ACTIVE_PICKER(REG_DATA)
+
+    lbzx REG_SLOT, REG_DATA, r3
+    bl FN_SetCameraSide
+
+    load r3, 0x80452f2c # mode 3 slot
+    stb REG_SLOT, 0(r3)
+    logf LOG_LEVEL_ERROR, "Option Picked!\n"
+
+
+FN_InputThink_Exit:
   restore
   blr
 
