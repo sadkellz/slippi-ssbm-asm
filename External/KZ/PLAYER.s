@@ -40,6 +40,7 @@
 .set PlayerBlock_GetSlotType, 0x8003241c # (int slot)
 .set PlayerBlock_GetPortColor, 0x80036538 # (int slot)
 
+.set PlayerBlock_SetSpawnTime, 0x80035fdc # (int slot, u8 time)
 .set PlayerBlock_StoreCopiedCharacter, 0x80035df8 # (int slot,CharacterKind character)
 .set PlayerBlock_SetFlag_KirbyLoadCopy, 0x800356d0 # (int slot)
 .set PlayerBlock_PlayChant, 0x8003fda0 # (int slot)
