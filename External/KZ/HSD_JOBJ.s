@@ -10,8 +10,8 @@
 .set JOBJ_FLAGS, JOBJ_CHILD + 4
 .set JOBJ_DOBJ, JOBJ_FLAGS + 4
 .set JOBJ_ROT, JOBJ_DOBJ + 4
-.set JOBJ_SCL, JOBJ_ROT + 16
-.set JOBJ_POS, JOBJ_SCL + 12
+.set JOBJ_SCALE, JOBJ_ROT + 16
+.set JOBJ_POS, JOBJ_SCALE + 12
 .set JOBJ_MTX, JOBJ_POS + 12
 .set JOBJ_PVEC, JOBJ_MTX + 48
 .set JOBJ_VMTX, JOBJ_PVEC + 4
@@ -29,7 +29,7 @@
 ################################################################################
 
 .set HSD_JObjGetChild, 0x80011e24
-
+.set HSD_JObjSetMtxDirty, 0x800c6afc # (HSD_JObj *jobj)
 .set HSD_JObjSetFlags, 0x80371d00 # (HSD_JObj *jobj,JObjFlag flag)
 .set HSD_JObjSetFlagsAll, 0x80371d9c # (HSD_JObj *jobj,JObjFlag flag)
 .set HSD_JObjClearFlags, 0x80371f00 # (HSD_JObj *jobj,JObjFlag flag)

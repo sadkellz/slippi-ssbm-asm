@@ -20,7 +20,6 @@
 .set PAUSE_UI_SLOT, PAUSE_UI_STICK_BORDER + 4 # player slot
 
 
-
 ################################################################################
 # Directives
 ################################################################################
@@ -30,6 +29,7 @@
 .set stc_pause_scdata, 0x804d6700 # HSD_Archive*
 .set stc_gobj_pause, 0x804d6704
 .set stc_pause_data, 0x80479b10
+.set stc_pause_stickmult, 0x804da980 # 10.0
 
 .set OFST_TINT, 0
 .set OFST_TEYE, 4
