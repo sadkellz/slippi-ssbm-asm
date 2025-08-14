@@ -28,7 +28,8 @@
 .set stc_hud_vis, 0x804d6d58
 .set stc_mode3_vars, 0x803bcd04
 .set stc_pause_scdata, 0x804d6700 # HSD_Archive*
-.set stc_gobj_pause_ui, 0x804d6704
+.set stc_gobj_pause, 0x804d6704
+.set stc_pause_data, 0x80479b10
 
 .set OFST_TINT, 0
 .set OFST_TEYE, 4

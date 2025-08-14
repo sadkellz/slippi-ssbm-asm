@@ -24,8 +24,6 @@
 .set MATANIMJOINT, ANIMJOINT + 4
 .set SHAPEANIMJOINT, MATANIMJOINT + 4
 
-.set JOBJFLAG_HIDDEN, 0x10
-
 ################################################################################
 # Functions
 ################################################################################
@@ -50,20 +48,40 @@
 ################################################################################
 # Constants
 ################################################################################
+.set stc_css_jobj, 0x804d6cc0
 
-.set ptr_CSSJobj, 0x804d6cc0
-# anim
-  # li r3, 0x18 # ganon id - 1
-  # lfd	f31, -0x35F8(rtoc) # 4330000080000000
+# flags
+.set JOBJFLAG_SKELETON, 0x1
+.set JOBJFLAG_SKELETON_ROOT, 0x2
+.set JOBJFLAG_ENVELOPE_MODEL, 0x4
+.set JOBJFLAG_CLASSICAL_SCALE, 0x8
+.set JOBJFLAG_HIDDEN, 0x10
+.set JOBJFLAG_PTCL, 0x20
+.set JOBJFLAG_MTX_DIRTY, 0x40
+.set JOBJFLAG_LIGHTING, 0x80
+.set JOBJFLAG_TEXGEN, 0x100
+.set JOBJFLAG_INSTANCE, 0x1000
+.set JOBJFLAG_SPLINE, 0x4000
+.set JOBJFLAG_FLIP_IK, 0x8000
+.set JOBJFLAG_SPECULAR, 0x10000
+.set JOBJFLAG_USE_QUATERNION, 0x20000
+.set JOBJFLAG_UNK_B18, 0x40000
+.set JOBJFLAG_UNK_B19, 0x80000
+.set JOBJFLAG_UNK_B20, 0x100000
+.set JOBJFLAG_NULL_OBJ, 0x0
+.set JOBJFLAG_JOINT1, 0x200000
+.set JOBJFLAG_JOINT2, 0x400000
+.set JOBJFLAG_JOINT, 0x600000
+.set JOBJFLAG_EFFECTOR, 0x600000
+.set JOBJFLAG_USER_DEF_MTX, 0x800000
+.set JOBJFLAG_MTX_INDEP_PARENT, 0x1000000
+.set JOBJFLAG_MTX_INDEP_SRT, 0x2000000
+.set JOBJFLAG_UNK_B26, 0x4000000
+.set JOBJFLAG_UNK_B27, 0x8000000
+.set JOBJFLAG_ROOT_OPA, 0x10000000
+.set JOBJFLAG_ROOT_XLU, 0x20000000
+.set JOBJFLAG_ROOT_TEXEDGE, 0x40000000
 
-  # li r4, 0
-  # lis r4, 0x4330 # 43300000
-  # stw r4, SP_DOUBLE(sp)
- 
-  # xoris	r5, r3, 0x8000 # 80000018
-  # stw r5, SP_DOUBLE+4(sp) # double is now 4330000080000018
-  # lfd f0, SP_DOUBLE(sp)
-  # fsubs f1, f0, f31 # 24.0f
 
 .endif
 .set HEADER_JOBJ_STRUCT, 1

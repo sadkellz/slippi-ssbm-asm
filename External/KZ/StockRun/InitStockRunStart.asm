@@ -3,6 +3,7 @@
 # StartMelee after InitOnlinePlay has run but before standard Slippi stuff
 ################################################################################
 
+.include "./StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/HSD_GOBJ.s"
 .include "External/KZ/HSD_COBJ.s"
@@ -13,26 +14,13 @@
 
 b CODE_START
 
-# Constants
-.set PAUSE_BIT_MASK, 0x08
-.set OFST_RULES, 0x24C0
-.set OFST_PAUSE, 0xA # bitfield in rules
-.set MATCH_FREEZE_FLAG, 4 # wont freeze cameras/ui
-.set CAM_ZOOM, 0x41200000  # 10.0 as float
-.set SETUP_START_FRAME, 64 # first frame after entry
-.set ALLOW_INPUTS_FRAME, 144 # just as the camera settles
-.set TRANSITION_FRAMES, 80 # same amt of time as the initial transition for the 2nd picker
-.set MAX_PLAYERS, 2 # not supporting teams/ffa
-.set MAX_PORTS, 4
-.set DEBUG_PAD_UNION, 4  # will return if anyone presses a button
-
 DATA_BLRL:
 blrl
 .set ACTIVE_SLOTS, 0
 .byte -1, -1
 .align 2
 .set ACTIVE_PICKER, ACTIVE_SLOTS + 4
-.long 0
+.long -1
 .set TRANSITION_TIMER, ACTIVE_PICKER + 4
 .long TRANSITION_FRAMES
 
@@ -47,8 +35,10 @@ CODE_START:
   mflr REG_DATA
 
 # create gobj to run our in-game code
-# ui so when we freeze players, code still runs
+# ui class - so when we freeze players, code still runs
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
+  load r3, stc_sr_data
+  stw REG_GOBJ, SR_GOBJ_INIT(r3)
 
 # add proc
   mr r3, REG_GOBJ
@@ -116,10 +106,14 @@ FN_RogueSetup:
   cmpwi REG_FRAME, ALLOW_INPUTS_FRAME # users are now active
   bge POST_SETUP
 
+  # init active picker
+  li r3, 0
+  stw r3, ACTIVE_PICKER(REG_DATA)
+
   li r3, MATCH_FREEZE_FLAG # freezes players but not cameras/ui
   branchl r12, Scene_SetPauseFlag
 
-# zoom in on first active player to start card picks
+  # zoom in on first active player to start card picks
   load r3, stc_mode3_vars
   # lerp settings
   lfs f1, OFST_TINT(r3)
@@ -233,7 +227,6 @@ FN_InputThink:
     load r3, 0x80452f2c # mode 3 slot
     stb REG_SLOT, 0(r3)
     logf LOG_LEVEL_ERROR, "Option Picked!\n"
-
 
 FN_InputThink_Exit:
   restore
