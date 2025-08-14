@@ -17,12 +17,16 @@ blrl
 .set ACTIVE_SLOTS, 0
 .byte -1, -1
 .align 2
+.set PICKS_STATE, ACTIVE_SLOTS + 4
+.long 0
 
 CODE_START:
   .set REG_GOBJ, 31
   .set REG_COUNT, 30
   .set REG_PLY_NUM, 29
   .set REG_DATA, 28
+  .set REG_SLOT, 27
+  .set REG_FRAME, 26
   backup
 
   bl DATA_BLRL
@@ -88,61 +92,65 @@ FN_RogueSetup:
   mr REG_GOBJ, r3
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
 
-  loadGlobalFrame r5
-  cmpwi r5, 66
-  bne FN_Exit
+  loadGlobalFrame REG_FRAME
+  cmpwi REG_FRAME, 66
+  blt FN_Exit
 
   li r3, 5 # 5 freezes players but not camera
   branchl r12, Scene_SetPauseFlag
 
-# zoom in on p1 to start card picks
-bp
+# zoom in on first active player to start card picks
   load r3, stc_mode3_vars
-  # lerp
+  # lerp settings
   lfs f1, OFST_TINT(r3)
   stfs f1, OFST_TEYE(r3)
   load r4, 0x41200000
   stw r4, OFST_FOV(r3)
 
   lbz r3, ACTIVE_SLOTS(REG_DATA)
+  mr REG_SLOT, r3
   branchl r12, Camera_SetMode3
 
-  # clamp the offsets
-  li REG_COUNT, 0
-  GET_PLAYER_SIDE_LOOP:
-    lbzx r3, REG_COUNT, REG_DATA
-    branchl r12, PlayerBlock_GetGObj
-    
-    addi r4, sp, BKP_FREE_SPACE_OFFSET
-    branchl r12, Player_GetPosition
-
-    load r3, 0x80452f30 # offset y
-    lfs f1, RTOC_STICKTHRESH(rtoc) # 0.2
-    stfs f1, 0(r3)
-
-    lfs f1, BKP_FREE_SPACE_OFFSET(sp) # x
-    lfs f0, RTOC_ZERO(rtoc)
-    fcmpo cr0, f0, f1
-    bge RIGHT_SIDE
-
-    LEFT_SIDE:
-      load r3, 0x80452f34 # offset x
-      lfs f1, RTOC_HALF(rtoc)
-      stfs f1, 0(r3) # pan/tilt camera left
-      b END_SIDE_CHECK
-
-    RIGHT_SIDE:
-      load r3, 0x80452f34
-      lfs f1, RTOC_HALF(rtoc)
-      fneg f1, f1
-      stfs f1, 0(r3) # pan/tilt camera right
-
-    END_SIDE_CHECK:
-      addi REG_COUNT, REG_COUNT, 1
-      cmpwi REG_COUNT, 2
-      blt GET_PLAYER_SIDE_LOOP
+  # init camera side to first active player
+  # this will be updated elsewhere
+  bl FN_SetCameraSide
 
 FN_Exit:
+  restore
+  blr
+
+################################################################################
+# make sure REG_SLOT and REG_DATA are set before calling this
+FN_SetCameraSide:
+  backup
+  lbzx r3, REG_SLOT, REG_DATA
+  branchl r12, PlayerBlock_GetGObj
+  
+  addi r4, sp, BKP_FREE_SPACE_OFFSET
+  branchl r12, Player_GetPosition
+
+  load r3, 0x80452f30 # offset y
+  lfs f1, RTOC_STICKTHRESH(rtoc) # 0.2
+  stfs f1, 0(r3)
+
+  lfs f1, BKP_FREE_SPACE_OFFSET(sp) # x
+  lfs f0, RTOC_ZERO(rtoc)
+  fcmpo cr0, f1, f0
+  bge RIGHT_SIDE
+
+  LEFT_SIDE:
+    load r3, 0x80452f34 # offset x
+    lfs f1, RTOC_HALF(rtoc)
+    stfs f1, 0(r3) # pan/tilt camera left
+    b FN_SetCameraSide_Exit
+
+  RIGHT_SIDE:
+    load r3, 0x80452f34
+    lfs f1, RTOC_HALF(rtoc)
+    fneg f1, f1
+    stfs f1, 0(r3) # pan/tilt camera right
+
+FN_SetCameraSide_Exit:
   restore
   blr
 
