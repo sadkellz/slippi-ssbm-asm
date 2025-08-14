@@ -8,17 +8,17 @@
   ],
   "codes": [
     {
-      "name": "Slippi Rogue",
+      "name": "StockRun",
       "authors": [
         "KELLZ"
       ],
       "description": [
-        ""
+        "StockRun is 1v1 roguelike mode built for Slippi"
       ],
       "build": [
         {
           "type": "injectFolder",
-          "sourceFolder": "External/KZ/rogue",
+          "sourceFolder": "External/KZ/StockRun",
           "isRecursive": true,
           "annotation": ""
         }

@@ -13,6 +13,19 @@
 
 b CODE_START
 
+# Constants
+.set PAUSE_BIT_MASK, 0x08
+.set OFST_RULES, 0x24C0
+.set OFST_PAUSE, 0xA # bitfield in rules
+.set MATCH_FREEZE_FLAG, 4 # wont freeze cameras/ui
+.set CAM_ZOOM, 0x41200000  # 10.0 as float
+.set SETUP_START_FRAME, 64 # first frame after entry
+.set ALLOW_INPUTS_FRAME, 144 # just as the camera settles
+.set TRANSITION_FRAMES, 80 # same amt of time as the initial transition for the 2nd picker
+.set MAX_PLAYERS, 2 # not supporting teams/ffa
+.set MAX_PORTS, 4
+.set DEBUG_PAD_UNION, 4  # will return if anyone presses a button
+
 DATA_BLRL:
 blrl
 .set ACTIVE_SLOTS, 0
@@ -20,6 +33,8 @@ blrl
 .align 2
 .set ACTIVE_PICKER, ACTIVE_SLOTS + 4
 .long 0
+.set TRANSITION_TIMER, ACTIVE_PICKER + 4
+.long TRANSITION_FRAMES
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -51,14 +66,14 @@ CODE_START:
 
 # disable pause
   load r12, stc_match_info
-  addi r12, r12, 0x24C0
-  lbz r3, 0xA(r12)
-  ori r3, r3, 0x08
-  stb r3, 0xA(r12)
+  addi r12, r12, OFST_RULES
+  lbz r3, OFST_PAUSE(r12)
+  ori r3, r3, PAUSE_BIT_MASK
+  stb r3, OFST_PAUSE(r12)
 
 # disable hud
   load r3, stc_hud_vis
-  li r4, 1
+  li r4, TRUE
   stb r4, 0(r3)
 
 # set active slots
@@ -70,21 +85,20 @@ CODE_START:
     cmpwi r3, 1
     bgt SET_ACTIVE_SLOT_LOOP_CHECK
 
-    cmpwi REG_PLY_NUM, 2 # we should only be in direct or have two players
+    cmpwi REG_PLY_NUM, MAX_PLAYERS # we should only be in direct or have two players
     bgt SET_ACTIVE_SLOT_LOOP_CHECK
     stbx REG_COUNT, REG_PLY_NUM, REG_DATA # active slots
     addi REG_PLY_NUM, REG_PLY_NUM, 1
 
   SET_ACTIVE_SLOT_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, 4
+    cmpwi REG_COUNT, MAX_PORTS
     blt SET_ACTIVE_SLOTS_LOOP
 
   b EXIT
 
 ################################################################################
 ################################################################################
-
 FN_RogueSetupBLRL:
 blrl
 .set REG_GOBJ, 31
@@ -97,12 +111,12 @@ FN_RogueSetup:
   mr REG_GOBJ, r3
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
   load_scene_frame REG_FRAME
-  cmpwi REG_FRAME, 64 # first frame after entry
+  cmpwi REG_FRAME, SETUP_START_FRAME # first frame after entry
   blt FN_Exit
-  cmpwi REG_FRAME, 90 # users are now active
+  cmpwi REG_FRAME, ALLOW_INPUTS_FRAME # users are now active
   bge POST_SETUP
 
-  li r3, 4 # 4 freezes players but not cameras/ui
+  li r3, MATCH_FREEZE_FLAG # freezes players but not cameras/ui
   branchl r12, Scene_SetPauseFlag
 
 # zoom in on first active player to start card picks
@@ -110,7 +124,7 @@ FN_RogueSetup:
   # lerp settings
   lfs f1, OFST_TINT(r3)
   stfs f1, OFST_TEYE(r3)
-  load r4, 0x41200000 # 10.0
+  load r4, CAM_ZOOM # 10.0
   stw r4, OFST_FOV(r3)
 
   lbz r3, ACTIVE_SLOTS(REG_DATA)
@@ -125,7 +139,7 @@ FN_RogueSetup:
 POST_SETUP:
   # check if picks are done
   lwz r3, ACTIVE_PICKER(REG_DATA)
-  cmpwi r3, 2
+  cmpwi r3, MAX_PLAYERS
   bge RESUME_MATCH
 
   # check inputs
@@ -134,7 +148,7 @@ POST_SETUP:
 
 RESUME_MATCH:
   # unpause
-  li r3, 4
+  li r3, MATCH_FREEZE_FLAG
   branchl r12, Scene_ClearPauseFlag
 
   # reset camera
@@ -180,18 +194,28 @@ FN_SetCameraSide_Exit:
   blr
 
 ################################################################################
-#
 FN_InputThink:
   backup
   # get the active picker
-  bp
   lwz r3, ACTIVE_PICKER(REG_DATA)
-  cmpwi r3, 2 # there are only two players
+  cmpwi r3, MAX_PLAYERS # there are only two players
   beq FN_InputThink_Exit
+  cmpwi r3, 1 # if we are on the second picker, we need to wait for the transition to finish
+  bne LOAD_ACTIVE_PICKER
+
+  lwz r4, TRANSITION_TIMER(REG_DATA)
+  cmpwi r4, 0
+  beq LOAD_ACTIVE_PICKER
+  subi r4, r4, 1
+  stw r4, TRANSITION_TIMER(REG_DATA)
+  b FN_InputThink_Exit
+
+  LOAD_ACTIVE_PICKER:
   lbzx REG_SLOT, REG_DATA, r3 # get the slot of the active picker
 
   # check if we have picked a card
-  mr r3, REG_SLOT
+  # mr r3, REG_SLOT
+  li r3, DEBUG_PAD_UNION
   branchl r12, Inputs_GetPlayerInstantInputs
   andi. r4, r4, PAD_BTN_A
   bne CHOOSE_CARD
