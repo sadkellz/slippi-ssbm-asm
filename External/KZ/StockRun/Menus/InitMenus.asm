@@ -31,6 +31,7 @@ CODE_START:
   .set REG_STICK, 29  # jobj
   .set REG_BORDER, 28 # jobj
   .set REG_JOBJ, 27
+  .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   backup
 
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
@@ -101,7 +102,7 @@ CODE_START:
   stw r3, PROMPT_MODEL_SET(REG_DATA)
 
   # create gobj
-  gobj_create GOBJ_CLASS_UI, GOBJ_CLASS_MAINCAM, 0, REG_GOBJ
+  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
 
   # load joint
   lwz r3, PROMPT_MODEL_SET(REG_DATA)
@@ -121,6 +122,7 @@ CODE_START:
   load r4, 0x80391070
   li r5, 0xC # usually 0xB
   li r6, 0
+  branchl r12, GObj_SetupGXLink
 
   # add anims
   mr r3, REG_JOBJ
@@ -136,9 +138,14 @@ CODE_START:
   mr r3, REG_JOBJ
   branchl r12, HSD_JObjAnimAll
 
-  mr r3, REG_JOBJ
   li r4, JOBJFLAG_HIDDEN
-  branchl r12, HSD_JObjClearFlagsAll
+  branchl r12, HSD_JObjSetFlagsAll
+
+  mr r3, REG_JOBJ
+  addi r4, sp, SP_JOBJ
+  li r5, 
+  branchl r12, HSD_JObjGetChild
+
 
   b EXIT
 

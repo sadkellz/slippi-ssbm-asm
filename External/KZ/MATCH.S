@@ -44,7 +44,7 @@
 
 .set stc_ifvscam_str, 0x804d4260
 .set stc_ifvscam, 0x80479bc8
-.set stc_ifcammodel_str, 0x803da720
+.set stc_ifcammodel_str, 0x803da73c
 
 .set OFST_TINT, 0
 .set OFST_TEYE, 4
