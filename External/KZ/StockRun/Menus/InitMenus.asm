@@ -24,6 +24,8 @@ blrl
 .long 0 # DynamicModelDesc
 .set PROMPT_JOBJ, PROMPT_MODEL_SET + 4
 .long 0
+.set PANEL_Y, PROMPT_JOBJ + 4
+.float 14.0
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -31,12 +33,53 @@ CODE_START:
   .set REG_STICK, 29  # jobj
   .set REG_BORDER, 28 # jobj
   .set REG_JOBJ, 27
+  .set REG_COBJ, 26
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   backup
 
+  # CObj stuff
+  .set  COBJ_GXPRI, 8
+  .set  MY_GXPRI, 80
+  .set  MY_GXLINK, 13
+
+  # Get HUD CObjDesc
+  load  r3, 0x804d6d5c
+  lwz r3, 0x0 (r3)
+  load  r4, 0x803f94d0
+  branchl r12,0x80380358
+  # Create CObj
+  lwz r3,0x4(r3)
+  lwz r3,0x0(r3)
+  branchl r12,0x8036a590
+  mr  REG_COBJ,r3
+  # Create GObj
+  li  r3,GOBJ_CLASS_CAMERA
+  li  r4,GOBJ_PLINK_HUD
+  li  r5,0
+  branchl r12,0x803901f0
+  mr  REG_GOBJ,r3
+  # Add object
+  mr  r3,REG_GOBJ
+  lbz r4,-0x3E55(r13)
+  mr  r5,REG_COBJ
+  branchl r12,0x80390a70
+  # Init camera
+  mr  r3,REG_GOBJ
+  bl  FN_CameraGX
+  mflr  r4
+  li  r5, COBJ_GXPRI
+  branchl r12,0x8039075c
+  # Store COBJs GXLinks
+  load r3, 1 << MY_GXLINK
+  stw r3, 0x24(REG_GOBJ)
+
+  mr r5, REG_COBJ
+  logf LOG_LEVEL_WARN, "COBJ: %x"
+
+
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
   load r3, stc_sr_data
-  stw REG_GOBJ, SR_GOBJ_MENU(r3)
+  stw REG_GOBJ, SRD_GOBJ_MENU(r3)
 
 # add proc
   mr r3, REG_GOBJ
@@ -120,8 +163,8 @@ CODE_START:
   # gx link
   mr r3, REG_GOBJ
   load r4, 0x80391070
-  li r5, 0xC # usually 0xB
-  li r6, 0
+  load r5, MY_GXLINK # usually 0xB
+  li r6, MY_GXPRI
   branchl r12, GObj_SetupGXLink
 
   # add anims
@@ -138,13 +181,34 @@ CODE_START:
   mr r3, REG_JOBJ
   branchl r12, HSD_JObjAnimAll
 
+  # hide everything
+  mr r3, REG_JOBJ
   li r4, JOBJFLAG_HIDDEN
   branchl r12, HSD_JObjSetFlagsAll
 
+  # get the panel jobj
   mr r3, REG_JOBJ
   addi r4, sp, SP_JOBJ
-  li r5, 
+  li r5, IF_PANEL_IDX
+  li r6, -1
   branchl r12, HSD_JObjGetChild
+
+  # unhide the panel
+  lwz r3, SP_JOBJ(sp)
+  li r4, JOBJFLAG_HIDDEN
+  branchl r12, HSD_JObjClearFlagsAll
+
+  # hide the text dobj
+  lwz r3, SP_JOBJ(sp)
+  branchl r12, HSD_JObjGetDObj
+  lwz r3, 0x4(r3) # next dobj is the text
+  li r4, 0x1 # hidden
+  branchl r12, HSD_DObjSetFlags
+
+  # set the position
+  load r4, 0x41e00000
+  lwz r3, SP_JOBJ(sp)
+  stw r4, JOBJ_POS+Y(r3)
 
 
   b EXIT
@@ -161,7 +225,7 @@ FN_PickerDisplay:
 
   mr REG_GOBJ, r3 # store gobj just incase
   load r3, stc_sr_data # load our static data
-  lwz r3, SR_GOBJ_INIT(r3)
+  lwz r3, SRD_GOBJ_INIT(r3)
   lwz REG_DATA, GOBJ_USERDATA(r3)
 
   lwz r3, ACTIVE_PICKER(REG_DATA)
@@ -197,6 +261,20 @@ FN_PickerDisplay_Exit:
   blr
 
 ################################################################################
+
+FN_CameraGX:
+  blrl
+  backup
+  .set  REG_GOBJ,31
+  mr  REG_GOBJ, r3
+
+  # Draw camera
+  mr  r3, REG_GOBJ
+  branchl r12,0x803910d8
+
+FN_CameraGX_Exit:
+  restore
+  blr
 
 EXIT:
   restore

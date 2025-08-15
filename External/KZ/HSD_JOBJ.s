@@ -29,6 +29,7 @@
 ################################################################################
 
 .set HSD_JObjGetChild, 0x80011e24
+.set HSD_JObjGetDObj, 0x80371bec
 .set HSD_JObjSetMtxDirty, 0x800c6afc # (HSD_JObj *jobj)
 .set HSD_JObjSetFlags, 0x80371d00 # (HSD_JObj *jobj,JObjFlag flag)
 .set HSD_JObjSetFlagsAll, 0x80371d9c # (HSD_JObj *jobj,JObjFlag flag)
@@ -45,6 +46,8 @@
 .set HSD_JObjAnim, 0x80370780 # (HSD_JObj *jobj)
 .set JObj_ForEachAnim, 0x80364C08 # (JOBJ *joint, int unk, u16 flags, void *cb, int argkind, ...);
 .set HSD_JObjAddSceneAnimByIndex, 0x8016895c # (HSD_JObj *jobj, DynamicModelDesc *model,int index)
+
+.set HSD_DObjSetFlags, 0x8035ddb8 # (HSD_DObj *Dobj, DObjFlag flag)
 
 ################################################################################
 # Constants

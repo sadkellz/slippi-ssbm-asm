@@ -8,7 +8,7 @@
 ################################################################################
 # StockRun Data
 .set SRD_GOBJ_INIT, 0
-.set SRD_GOBJ_MENU, SR_GOBJ_INIT + 4
+.set SRD_GOBJ_MENU, SRD_GOBJ_INIT + 4
 
 # StockRun Context
 .set SRC_SLOT_ORDER, 0                              # int[2]
@@ -44,6 +44,7 @@
 # Menus
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input
 .set MENU_TRANSITION_FRAMES, 20 # 
+.set IF_PANEL_IDX, 5
 
 .endif
 .set HEADER_STOCKRUN, 1
