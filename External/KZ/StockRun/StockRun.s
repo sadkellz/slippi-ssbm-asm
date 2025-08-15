@@ -6,20 +6,28 @@
 ################################################################################
 # Structs
 ################################################################################
-.set SR_GOBJ_INIT, 0
-.set SR_GOBJ_MENU, SR_GOBJ_INIT + 4
+# StockRun Data
+.set SRD_GOBJ_INIT, 0
+.set SRD_GOBJ_MENU, SR_GOBJ_INIT + 4
 
-# init struct
-.set ACTIVE_SLOTS, 0
-.set ACTIVE_PICKER, ACTIVE_SLOTS + 4
-.set TRANSITION_TIMER, ACTIVE_PICKER + 4
+# StockRun Context
+.set SRC_SLOT_ORDER, 0                              # int[2]
+.set SRC_CURRENT_PICKER, SRC_SLOT_ORDER + 8         # int
+.set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
+.set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
 
 ################################################################################
 # Directives
 ################################################################################
 .set stc_sr_data, 0x804a2f48
 
-# InitStart
+# StockRun Game State
+.set SRGS_INIT, 0
+.set SRGS_CARD_SELECT, 1
+.set SRGS_TRANSITION, 2
+.set SRGS_GAME_ACTIVE, 3
+
+# StockRun main defs
 .set PAUSE_BIT_MASK, 0x08
 .set OFST_RULES, 0x24C0
 .set OFST_PAUSE, 0xA # bitfield in rules
@@ -31,6 +39,7 @@
 .set MAX_PLAYERS, 2 # not supporting teams/ffa
 .set MAX_PORTS, 4
 .set DEBUG_PAD_UNION, 4  # will return if anyone presses a button
+.set SR_GOBJ_PRIO, 111
 
 # Menus
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input

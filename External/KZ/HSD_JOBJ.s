@@ -44,6 +44,7 @@
 .set HSD_JObjAnimAll, 0x80370928 # (HSD_JObj *jobj)
 .set HSD_JObjAnim, 0x80370780 # (HSD_JObj *jobj)
 .set JObj_ForEachAnim, 0x80364C08 # (JOBJ *joint, int unk, u16 flags, void *cb, int argkind, ...);
+.set HSD_JObjAddSceneAnimByIndex, 0x8016895c # (HSD_JObj *jobj, DynamicModelDesc *model,int index)
 
 ################################################################################
 # Constants

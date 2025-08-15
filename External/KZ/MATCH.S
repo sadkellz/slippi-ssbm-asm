@@ -24,6 +24,11 @@
 .set IFVSCAM_JOBJ_PROMPT, IFVSCAM_JOBJ_UI + 4
 # it continues but idk rn
 
+.set DYN_MODEL_JOINT, 0                                     # joint *
+.set DYN_MODEL_ANIMJOINT, DYN_MODEL_JOINT + 4               # animjoint **
+.set DYN_MODEL_MATANIMJOINT, DYN_MODEL_ANIMJOINT + 4        # matanimjoint **
+.set DYN_MODEL_SHAPEANIMJOINT, DYN_MODEL_MATANIMJOINT + 4   # shapeanimjoint **
+
 
 ################################################################################
 # Directives
@@ -31,11 +36,15 @@
 .set stc_match_info, 0x8046b6a0
 .set stc_hud_vis, 0x804d6d58
 .set stc_mode3_vars, 0x803bcd04
+
 .set stc_pause_scdata, 0x804d6700 # HSD_Archive*
 .set stc_gobj_pause, 0x804d6704
 .set stc_pause_data, 0x80479b10
 .set stc_pause_stickmult, 0x804da980 # 10.0
+
+.set stc_ifvscam_str, 0x804d4260
 .set stc_ifvscam, 0x80479bc8
+.set stc_ifcammodel_str, 0x803da720
 
 .set OFST_TINT, 0
 .set OFST_TEYE, 4

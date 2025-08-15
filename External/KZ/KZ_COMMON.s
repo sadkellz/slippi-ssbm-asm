@@ -34,6 +34,17 @@
   loadwz \reg, 0x80479d5c
 .endm
 
+.macro bklr
+mflr r0
+stw r0, 0x4(r1)
+stwu r1, -0x10(r1)  # Allocate 16 bytes (8 for backchain/LR + 8 free space)
+.endm
+
+.macro rslr
+lwz r0, 0x14(r1)    # Load LR from saved location
+mtlr r0
+addi r1, r1, 0x10   # Restore stack pointer
+.endm
 
 ################################################################################
 # Constants

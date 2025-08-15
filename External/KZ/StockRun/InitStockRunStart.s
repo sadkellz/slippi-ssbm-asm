@@ -62,9 +62,9 @@ CODE_START:
   stb r3, OFST_PAUSE(r12)
 
 # disable hud
-  load r3, stc_hud_vis
-  li r4, TRUE
-  stb r4, 0(r3)
+  # load r3, stc_hud_vis
+  # li r4, TRUE
+  # stb r4, 0(r3)
 
 # set active slots
   li REG_COUNT, 0
@@ -153,10 +153,11 @@ FN_Exit:
   blr
 
 ################################################################################
-# make sure REG_SLOT and REG_DATA are set before calling this
+# make sure REG_DATA is set before calling this
 FN_SetCameraSide:
   backup
-  lbzx r3, REG_SLOT, REG_DATA
+  lwz r4, ACTIVE_PICKER(REG_DATA)
+  lbzx r3, r4, REG_DATA
   branchl r12, PlayerBlock_GetGObj
   
   addi r4, sp, BKP_FREE_SPACE_OFFSET
@@ -221,9 +222,10 @@ FN_InputThink:
     addi r3, r3, 1
     stw r3, ACTIVE_PICKER(REG_DATA)
 
-    lbzx REG_SLOT, REG_DATA, r3
     bl FN_SetCameraSide
 
+    lwz r3, ACTIVE_PICKER(REG_DATA)
+    lbzx REG_SLOT, r3, REG_DATA
     load r3, 0x80452f2c # mode 3 slot
     stb REG_SLOT, 0(r3)
     logf LOG_LEVEL_ERROR, "Option Picked!\n"

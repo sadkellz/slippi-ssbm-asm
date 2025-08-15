@@ -14,7 +14,6 @@
 
 .set PB_FLAG1, 0xAC
 
-
 .set HURTBOX_STATE, 0
 .set HURTBOX_OFST1, HURTBOX_STATE + 4
 .set HURTBOX_OFST2, HURTBOX_OFST1 + 4
@@ -74,6 +73,10 @@
 .set SZ_BONE, 0x10
 .set SZ_HURTBOX, 0x4C
 
+.set P1, 0
+.set P2, 1
+.set P3, 2
+.set P4, 3
 
 
 .endif

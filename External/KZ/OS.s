@@ -10,6 +10,7 @@
 .set OS_RestoreInterrupts, 0x8034738c # (bool enabled)
 
 .set HSD_ArchiveLoad, 0x80016be0 # (char* path)
+.set HSD_ArchiveGetSymbol, 0x80380358 # (HSD_Archive *archive, char *symbol)
 
 ################################################################################
 # Structs
