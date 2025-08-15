@@ -2,4 +2,4 @@
 # Address: 0x801a1244
 ################################################################################
 
-li r5, 0xC # 0xB is used originally, 0xC is only used for Splash Screen?
+li r5, MY_GXLINK # 0xB is used originally, 0xC is only used for Splash Screen?

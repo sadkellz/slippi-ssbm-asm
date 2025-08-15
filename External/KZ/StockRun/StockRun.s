@@ -41,6 +41,11 @@
 .set DEBUG_PAD_UNION, 4  # will return if anyone presses a button
 .set SR_GOBJ_PRIO, 111
 
+# GX
+.set  COBJ_GXPRI, 8
+.set  MY_GXPRI, 80
+.set  MY_GXLINK, 13
+
 # Menus
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input
 .set MENU_TRANSITION_FRAMES, 20 # 

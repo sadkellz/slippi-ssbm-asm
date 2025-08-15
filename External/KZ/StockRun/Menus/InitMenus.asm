@@ -37,11 +37,6 @@ CODE_START:
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   backup
 
-  # CObj stuff
-  .set  COBJ_GXPRI, 8
-  .set  MY_GXPRI, 80
-  .set  MY_GXLINK, 13
-
   # Get HUD CObjDesc
   load  r3, 0x804d6d5c
   lwz r3, 0x0 (r3)
@@ -72,12 +67,13 @@ CODE_START:
   # Store COBJs GXLinks
   load r3, 1 << MY_GXLINK
   stw r3, 0x24(REG_GOBJ)
+  load r4, stc_gobj_pause
+  stw r3, 0x3(r4)
 
   mr r5, REG_COBJ
-  logf LOG_LEVEL_WARN, "COBJ: %x"
+  logf LOG_LEVEL_ERROR, "GOBJ: %x"
 
-
-  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
+  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
   load r3, stc_sr_data
   stw REG_GOBJ, SRD_GOBJ_MENU(r3)
 
