@@ -23,7 +23,8 @@ blrl
 .set SRC_CURRENT_PICKER, SRC_SLOT_ORDER + 8         # int
 .set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
 .set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
-.long -1, -1
+.long -1
+.long -1
 .long 0
 .long TRANSITION_FRAMES
 .long 0
@@ -54,22 +55,23 @@ CODE_START:
 # add data
   mr r3, REG_GOBJ
   li r4, 0
-  bl FN_InitContextBLRL
-  mflr r5
+  li r5, 0
   mr r6, REG_DATA
   branchl r12, GObj_AddUserData
 
+  bl SR_InitContext
+
 # disable pause
-  load r12, stc_match_info
-  addi r12, r12, OFST_RULES
-  lbz r3, OFST_PAUSE(r12)
-  ori r3, r3, PAUSE_BIT_MASK
-  stb r3, OFST_PAUSE(r12)
+  # load r12, stc_match_info
+  # addi r12, r12, OFST_RULES
+  # lbz r3, OFST_PAUSE(r12)
+  # ori r3, r3, PAUSE_BIT_MASK
+  # stb r3, OFST_PAUSE(r12)
 
 # disable hud
-  # load r3, stc_hud_vis
-  # li r4, TRUE 
-  # stb r4, 0(r3)
+  load r3, stc_hud_vis
+  li r4, TRUE 
+  stb r4, 0(r3)
 
 # get slot order
   li REG_COUNT, 0
@@ -101,14 +103,11 @@ CODE_START:
 ################################################################################
 
 
-# gobj data destructor
+# data destructor
 #==============================================================================#
-FN_InitContextBLRL:
-blrl
 .set REG_DATA, 30
-FN_InitContext:
+SR_InitContext:
   backup
-  mr REG_DATA, r3
 
   li r3, -1
   stw r3, SRC_ACTIVE_SLOTS(REG_DATA)
@@ -119,7 +118,9 @@ FN_InitContext:
   stw r3, SRC_CURRENT_PICKER(REG_DATA)
   stw r3, SRC_GAME_STATE(REG_DATA)
 
-FN_InitContext_Exit:
+  logf LOG_LEVEL_ERROR, "SR Data Reset"
+
+SR_InitContext_Exit:
   restore
   blr
 
@@ -151,7 +152,7 @@ SR_Update:
     bne STATE_CARD_SELECT
       bl SR_InitCardSelect
       # update state
-      li r3, SRGS_CARD_SELECT
+      li r3, SRGS_TRANSITION
       stw r3, SRC_GAME_STATE(REG_DATA)
       b SR_Update_Exit
     
@@ -215,7 +216,7 @@ SR_IsSelectionComplete:
 
   li r3, FALSE
   lwz r4, SRC_CURRENT_PICKER(REG_DATA)
-  cmpwi r4, MAX_PLAYERS
+  cmpwi r4, MAX_PLAYERS - 1
   ble SR_IsSelectionComplete_Exit
 
   # update state
@@ -247,10 +248,12 @@ SR_EndCardSelect_Exit:
 
 SR_ProcessInput:
   bklr
+  # lwz r3, SRC_GAME_STATE(REG_DATA)
+  # cmpwi r3, SRGS_TRANSITION
+  # beq SR_ProcessInput_Exit
 
-  bp
-  lwz r3, SRC_GAME_STATE(REG_DATA)
-  cmpwi r3, SRGS_TRANSITION
+  lwz r3, SR_GetCurrentPlayerSlot(REG_DATA)
+  cmpwi r3, -1
   beq SR_ProcessInput_Exit
 
   li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
@@ -271,17 +274,20 @@ SR_ProcessInput_Exit:
 SR_SelectCard:
   bklr
 
+  # implement select logic
+  # ...
 
-  bl SR_IsSelectionComplete
-  cmpwi r3, TRUE
-  beq SR_SelectCard_Exit
+  lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
+  addi REG_PICKER, REG_PICKER, 1
+  stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
   
   bl SR_UpdateCameraTarget
   bl SR_UpdateCameraPos
 
-  # add input lockout for p2
-  cmpwi REG_PICKER, 1
-  bne SR_SelectCard_Exit
+
+  lwz r4, SRC_CURRENT_PICKER(REG_DATA)
+  cmpwi r4, MAX_PLAYERS
+  beq SR_SelectCard_Exit
 
   li r3, TRANSITION_FRAMES
   stw r3, SRC_TRANSITION_TIMER(REG_DATA)
@@ -289,10 +295,6 @@ SR_SelectCard:
   stw r3, SRC_GAME_STATE(REG_DATA)
 
 SR_SelectCard_Exit:
-  lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
-  addi REG_PICKER, REG_PICKER, 1
-  stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
-  
   rslr
   blr
 

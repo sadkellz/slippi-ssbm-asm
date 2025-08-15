@@ -86,59 +86,59 @@ CODE_START:
 
 
 # set up the radial menu - uses the vscam interface
-  # bl DATA_BLRL
-  # mflr REG_DATA
+  bl DATA_BLRL
+  mflr REG_DATA
 
-  # load r3, stc_ifvscam_str
-  # branchl r12, HSD_ArchiveLoad
-  # load r4, stc_ifvscam
-  # stw r3, 0(r4)
+  load r3, stc_ifvscam_str
+  branchl r12, HSD_ArchiveLoad
+  load r4, stc_ifvscam
+  stw r3, 0(r4)
 
-  # # get symbol
-  # loadwz r3, stc_ifvscam
-  # load r4, stc_ifcammodel_str
-  # branchl r12, HSD_ArchiveGetSymbol
-  # stw r3, PROMPT_MODEL_SET(REG_DATA)
+  # get symbol
+  loadwz r3, stc_ifvscam
+  load r4, stc_ifcammodel_str
+  branchl r12, HSD_ArchiveGetSymbol
+  stw r3, PROMPT_MODEL_SET(REG_DATA)
 
-  # # create gobj
-  # gobj_create GOBJ_CLASS_UI, GOBJ_CLASS_MAINCAM, 0, REG_GOBJ
+  # create gobj
+  gobj_create GOBJ_CLASS_UI, GOBJ_CLASS_MAINCAM, 0, REG_GOBJ
 
-  # # load joint
-  # lwz r3, PROMPT_MODEL_SET(REG_DATA)
-  # lwz r3, DYN_MODEL_JOINT(r3)
-  # branchl r12, HSD_JObjLoadJoint
-  # mr REG_JOBJ, r3
-  # stw REG_JOBJ, PROMPT_JOBJ(REG_DATA)
+  # load joint
+  lwz r3, PROMPT_MODEL_SET(REG_DATA)
+  lwz r3, DYN_MODEL_JOINT(r3)
+  branchl r12, HSD_JObjLoadJoint
+  mr REG_JOBJ, r3
+  stw REG_JOBJ, PROMPT_JOBJ(REG_DATA)
 
-  # # add to gobj
-  # mr r3, REG_GOBJ
-  # li r4, 3
-  # mr r5, REG_JOBJ
-  # branchl r12, GObj_AddToObj
+  # add to gobj
+  mr r3, REG_GOBJ
+  li r4, 3
+  mr r5, REG_JOBJ
+  branchl r12, GObj_AddToObj
 
-  # # gx link
-  # mr r3, REG_GOBJ
-  # load r4, 0x80391070
-  # li r5, 0xC # usually 0xB
-  # li r6, 0
+  # gx link
+  mr r3, REG_GOBJ
+  load r4, 0x80391070
+  li r5, 0xC # usually 0xB
+  li r6, 0
 
-  # # add anims
-  # mr r3, REG_JOBJ
-  # lwz r4, PROMPT_MODEL_SET(REG_DATA)
-  # li r5, 0
-  # branchl r12, HSD_JObjAddSceneAnimByIndex
+  # add anims
+  mr r3, REG_JOBJ
+  lwz r4, PROMPT_MODEL_SET(REG_DATA)
+  li r5, 0
+  branchl r12, HSD_JObjAddSceneAnimByIndex
 
-  # # anim
-  # mr r3, REG_JOBJ
-  # lfs f1, RTOC_ZERO(rtoc)
-  # branchl r12, HSD_JObjReqAnimAll
+  # anim
+  mr r3, REG_JOBJ
+  lfs f1, RTOC_ZERO(rtoc)
+  branchl r12, HSD_JObjReqAnimAll
 
-  # mr r3, REG_JOBJ
-  # branchl r12, HSD_JObjAnimAll
+  mr r3, REG_JOBJ
+  branchl r12, HSD_JObjAnimAll
 
-  # mr r3, REG_JOBJ
-  # li r4, JOBJFLAG_HIDDEN
-  # branchl r12, HSD_JObjClearFlagsAll
+  mr r3, REG_JOBJ
+  li r4, JOBJFLAG_HIDDEN
+  branchl r12, HSD_JObjClearFlagsAll
 
   b EXIT
 

@@ -35,7 +35,7 @@
 .set CAM_ZOOM, 0x41200000  # 10.0 as float
 .set SETUP_START_FRAME, 64 # first frame after entry
 .set ALLOW_INPUTS_FRAME, 144 # just as the camera settles
-.set TRANSITION_FRAMES, 80 # same amt of time as the initial transition for the 2nd picker
+.set TRANSITION_FRAMES, 100 # 
 .set MAX_PLAYERS, 2 # not supporting teams/ffa
 .set MAX_PORTS, 4
 .set DEBUG_PAD_UNION, 4  # will return if anyone presses a button
