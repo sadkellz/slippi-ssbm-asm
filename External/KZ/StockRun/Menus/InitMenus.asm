@@ -511,94 +511,75 @@ blrl
 .set FREG_Y, 30
 .set FREG_DEADZONE, 27
 .set FREG_SCALE, 26
-.set FREG_ALIGNMENT, 25
+.set FREG_MAGNITUDE, 25
 # stack
 .set SP_STICK_DIR, BKP_FREE_SPACE_OFFSET
-.set SP_JOBJ_DIR, SP_STICK_DIR + 12
-.set SP_REF_POS, SP_JOBJ_DIR + 12
 
-  backup
-  # init vars
-  mr REG_GOBJ, r3
-  lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
-  lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
+ backup
+ # init vars
+ mr REG_GOBJ, r3
+ lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
+ lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
+ 
+ # get stick input
+ li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+ get_port_pad r3
+ lfs FREG_X, PAD_stick_x(r3)
+ lfs FREG_Y, PAD_stick_y(r3)
+ lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
+ stick_curve FREG_X, FREG_Y
 
-  # get stick input
-  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
-  get_port_pad r3
-  lfs FREG_X, PAD_stick_x(r3)
-  lfs FREG_Y, PAD_stick_y(r3)
-  lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
-  
-  # create stick direction vector
-  stfs FREG_X, SP_STICK_DIR+X(sp)
-  stfs FREG_Y, SP_STICK_DIR+Y(sp)
-  lfs f0, RTOC_ZERO(rtoc)
-  stfs f0, SP_STICK_DIR+Z(sp)
-  
-  # check stick magnitude
-  addi r3, sp, SP_STICK_DIR
-  branchl r12, PSVECMag
-  fcmpo cr0, f1, FREG_DEADZONE
-  blt SET_MIN_SCALE
-  
-  # normalize stick direction
-  addi r3, sp, SP_STICK_DIR
-  addi r4, sp, SP_STICK_DIR
-  branchl r12, PSVECNormalize
-  
-  # use world center as reference
-  lfs f0, RTOC_ZERO(rtoc)
-  stfs f0, SP_REF_POS+X(sp)
-  stfs f0, SP_REF_POS+Y(sp)  
-  stfs f0, SP_REF_POS+Z(sp)
-  
-  # calculate direction from ref to jobj
-  addi r3, REG_DATA, PD_POS
-  addi r4, sp, SP_REF_POS
-  addi r5, sp, SP_JOBJ_DIR
-  branchl r12, PSVECSubtract
-  
-  # normalize jobj direction
-  addi r3, sp, SP_JOBJ_DIR
-  addi r4, sp, SP_JOBJ_DIR
-  branchl r12, PSVECNormalize
-  
-  # calculate alignment
-  addi r3, sp, SP_STICK_DIR
-  addi r4, sp, SP_JOBJ_DIR
-  branchl r12, PSVECDotProduct
-  fmr FREG_ALIGNMENT, f1
-  
-  # convert to [0,1]: (alignment + 1) * 0.5
-  lfs f0, RTOC_ONE(rtoc)
-  fadds FREG_ALIGNMENT, FREG_ALIGNMENT, f0
-  lfs f0, RTOC_HALF(rtoc)
-  fmuls FREG_ALIGNMENT, FREG_ALIGNMENT, f0
-  
-  # interpolate scale
-  lfs f0, MIN_SCALE(rtoc)
-  lfs f1, MAX_SCALE(rtoc)
-  fsubs f1, f1, f0  # max - min
-  fmadds FREG_SCALE, f1, FREG_ALIGNMENT, f0  # min + (max-min)*alignment
-  b SET_SCALE
+ # create stick direction vector
+ stfs FREG_X, SP_STICK_DIR+X(sp)
+ stfs FREG_Y, SP_STICK_DIR+Y(sp)
+ lfs f0, RTOC_ZERO(rtoc)
+ stfs f0, SP_STICK_DIR+Z(sp)
+
+ # get stick magnitude for scaling
+ addi r3, sp, SP_STICK_DIR
+ branchl r12, PSVECMag
+ fmr FREG_MAGNITUDE, f1
+ 
+ # check deadzone
+ fcmpo cr0, FREG_MAGNITUDE, FREG_DEADZONE
+ blt SET_MIN_SCALE
+
+ # clamp magnitude to 1.0
+ lfs f0, RTOC_ONE(rtoc)
+ fcmpo cr0, FREG_MAGNITUDE, f0
+ ble SCALE_CALCULATION
+ fmr FREG_MAGNITUDE, f0
+
+SCALE_CALCULATION:
+ # interpolate scale based on stick magnitude
+ lfs f0, MIN_SCALE(rtoc)
+ lfs f1, MAX_SCALE(rtoc)
+ fsubs f1, f1, f0  # max - min
+ fmadds FREG_SCALE, f1, FREG_MAGNITUDE, f0  # min + (max-min)*magnitude
+ b SET_SCALE
 
 SET_MIN_SCALE:
-  lfs FREG_SCALE, MIN_SCALE(rtoc)
+ lfs FREG_SCALE, MIN_SCALE(rtoc)
 
 SET_SCALE:
-  mr r3, REG_JOBJ
-  fmr f1, FREG_SCALE
-  fmr f2, FREG_SCALE
-  fmr f3, FREG_SCALE
-  branchl r12, HSD_JObjSetScale
-  
-  mr r3, REG_JOBJ
-  branchl r12, HSD_JObjSetMtxDirty
- 
+ mr r3, REG_JOBJ
+ fmr f1, FREG_SCALE
+ fmr f2, FREG_SCALE
+ fmr f3, FREG_SCALE
+ branchl r12, HSD_JObjSetScale
+
+ mr r3, REG_JOBJ
+ branchl r12, HSD_JObjSetMtxDirty
+
+ fmr f1, FREG_MAGNITUDE
+ fmr f2, FREG_SCALE
+ fmr f3, FREG_X
+ fmr f4, FREG_Y
+ logf LOG_LEVEL_ERROR, "\nMAGNITUDE: %f SCALE: %f\nSTICK_X: %f STICK_Y: %f"
+
 FN_UpdatePanel_Exit:
-  restore
-  blr
+ restore
+ blr
 
 
 
