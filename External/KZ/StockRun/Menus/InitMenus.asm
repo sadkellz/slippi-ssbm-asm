@@ -55,6 +55,7 @@ CODE_START:
 
 # Panels
 #------------------------------------------------------------------------------#
+# Panel Camera
   # Get camera descriptor from archive
   load r3, stc_ifall
   lwz r3, 0x0(r3)
@@ -83,7 +84,8 @@ CODE_START:
   mflr r6
   branchl r12, GObj_AddUserData
 
-# set up the radial menu - uses the vscam interface
+# Panel Jobj
+#------------------------------------------------------------------------------#
   bl DATA_BLRL
   mflr REG_DATA
 
@@ -120,6 +122,13 @@ CODE_START:
   load r5, PANEL_GXLINK # usually 0xB
   li r6, 128
   branchl r12, GObj_SetupGXLink
+
+  # add proc
+  mr r3, REG_GOBJ
+  bl FN_UpdatePanel
+  mflr r4
+  li r5, 0
+  branchl r12, GObj_AddProc
 
   # add anims
   mr r3, REG_JOBJ
@@ -460,7 +469,6 @@ FN_CameraProcess:
   lfs f1, SP_NEW_EYE+X(sp)
   lfs f2, SP_NEW_EYE+Y(sp)
   lfs f3, SP_NEW_EYE+Z(sp)
-  logf LOG_LEVEL_ERROR, "Camera: New Eye: (%f, %f, %f)\n"
 
     # Update camera
     mr r3, REG_COBJ
@@ -478,9 +486,27 @@ FN_CameraProcess_Exit:
 # Jobj Process
 #-----------------------------------------------------------------------------#
 FN_UpdatePanel:
-  blrl
+blrl
+.set REG_GOBJ, 31
+.set REG_JOBJ, 30
+# floats
+.set FREG_X, 31
+.set FREG_Y, 30
+.set FREG_DEADZONE, 27
+.set FREG_SCALE, 26
+# stack
+.set SP_SCALE, BKP_FREE_SPACE_OFFSET
   backup
+  # init vars
+  mr REG_GOBJ, r3
+  lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
 
+  addi r3, sp, SP_SCALE
+  jobj_set_scale REG_JOBJ, r3
+
+  mr r3, REG_JOBJ
+  branchl r12, HSD_JObjSetMtxDirty
+  
 FN_UpdatePanel_Exit:
   restore
   blr

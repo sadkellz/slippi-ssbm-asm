@@ -90,13 +90,22 @@
 # Macros
 ################################################################################
 
-.macro jobj_set_pos, jobj, vec
-  lfs f1, X(\vec)
-  lfs f2, Y(\vec)
-  lfs f3, Z(\vec)
+.macro jobj_set_pos, jobj, pos
+  lfs f1, X(\pos)
+  lfs f2, Y(\pos)
+  lfs f3, Z(\pos)
   stfs f1, JOBJ_POS+X(\jobj)
   stfs f2, JOBJ_POS+Y(\jobj)
   stfs f3, JOBJ_POS+Z(\jobj)
+.endm
+
+.macro jobj_set_scale, jobj, scale
+  lfs f1, X(\scale)
+  lfs f2, Y(\scale)
+  lfs f3, Z(\scale)
+  stfs f1, JOBJ_SCALE+X(\jobj)
+  stfs f2, JOBJ_SCALE+Y(\jobj)
+  stfs f3, JOBJ_SCALE+Z(\jobj)
 .endm
 
 .endif
