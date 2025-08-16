@@ -32,9 +32,11 @@ blrl
 PD_TOP_BLRL:
 blrl
 .set PD_POS, 0
-.float 0.0
-.float 14.0
-.float 0.0
+  .float 0.0
+  .float 14.0
+  .float 0.0
+.set PD_SPEED, PD_POS + 12
+  .float 25.0
 
 # Camera Data
 CD_PANEL_BLRL:
@@ -43,13 +45,17 @@ blrl
   .float 0.27
 .set MOVE_SPEED, DEADZONE + 4
   .float 2.0
+.set MOVE_SPEED_X, MOVE_SPEED + 4
+  .float 2.75
 
 CD_STICK_BLRL:
 blrl
 .set DEADZONE, 0
   .float 0.27
 .set MOVE_SPEED, DEADZONE + 4
-  .float 1.5
+  .float 1.75
+.set MOVE_SPEED_X, MOVE_SPEED + 4
+  .float 2.75
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -346,6 +352,7 @@ blrl
 .set FREG_YAW, 28
 .set FREG_DEADZONE, 27
 .set FREG_SCALE, 26
+.set FREG_SCALEX, 25
 FN_CameraProcess:
   backup
 
@@ -361,6 +368,7 @@ FN_CameraProcess:
   # deadzone
   lfs FREG_DEADZONE, DEADZONE(REG_DATA)
   lfs FREG_SCALE, MOVE_SPEED(REG_DATA)
+  lfs FREG_SCALEX, MOVE_SPEED_X(REG_DATA)
   
   check_deadzones FREG_X, FREG_Y, FREG_DEADZONE
   cmpwi r0, FALSE
@@ -404,9 +412,8 @@ FN_CameraProcess:
   # fmr f1, FREG_X
   # fmr f2, FREG_Y
   # logf LOG_LEVEL_ERROR, "sticks: %f, %f\n"
-
-    fmuls FREG_X, FREG_X, FREG_SCALE
-    fmuls FREG_X, FREG_X, FREG_SCALE
+    bp
+    fmuls FREG_X, FREG_X, FREG_SCALEX
     fmuls FREG_Y, FREG_Y, FREG_SCALE
     stick_curve FREG_X, FREG_Y
     fneg FREG_X, FREG_X
@@ -512,70 +519,143 @@ blrl
 .set FREG_DEADZONE, 27
 .set FREG_SCALE, 26
 .set FREG_MAGNITUDE, 25
+.set FREG_ALIGNMENT, 24
 # stack
 .set SP_STICK_DIR, BKP_FREE_SPACE_OFFSET
+.set SP_JOBJ_DIR, SP_STICK_DIR + 12
+.set SP_REF_POS, SP_JOBJ_DIR + 12
+  backup
+  # init vars
+  mr REG_GOBJ, r3
+  lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
+  lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
+  
+  # get stick input
+  li r3, DEBUG_PAD_UNION
+  get_port_pad r3
+  lfs FREG_X, PAD_stick_x(r3)
+  lfs FREG_Y, PAD_stick_y(r3)
+  lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
+  
+  # create stick direction
+  stfs FREG_X, SP_STICK_DIR+X(sp)
+  stfs FREG_Y, SP_STICK_DIR+Y(sp)
+  lfs f0, RTOC_ZERO(rtoc)
+  stfs f0, SP_STICK_DIR+Z(sp)
+  
+  # get mag and check deadzone
+  addi r3, sp, SP_STICK_DIR
+  branchl r12, PSVECMag
+  fmr FREG_MAGNITUDE, f1
+  fcmpo cr0, FREG_MAGNITUDE, FREG_DEADZONE
+  blt SET_MIN_SCALE
+  
+  # apply curve (cube)
+  stick_curve FREG_X, FREG_Y
+  
+  # normalize
+  addi r3, sp, SP_STICK_DIR
+  addi r4, sp, SP_STICK_DIR
+  branchl r12, PSVECNormalize
 
- backup
- # init vars
- mr REG_GOBJ, r3
- lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
- lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
- 
- # get stick input
- li r3, DEBUG_PAD_UNION # TODO :: use the active players port
- get_port_pad r3
- lfs FREG_X, PAD_stick_x(r3)
- lfs FREG_Y, PAD_stick_y(r3)
- lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
- stick_curve FREG_X, FREG_Y
+  # all relative to 0
+  lfs f0, RTOC_ZERO(rtoc)
+  stfs f0, SP_REF_POS+X(sp)
+  stfs f0, SP_REF_POS+Y(sp)  
+  stfs f0, SP_REF_POS+Z(sp)
 
- # create stick direction vector
- stfs FREG_X, SP_STICK_DIR+X(sp)
- stfs FREG_Y, SP_STICK_DIR+Y(sp)
- lfs f0, RTOC_ZERO(rtoc)
- stfs f0, SP_STICK_DIR+Z(sp)
+  # calculate direction from ref to jobj
+  addi r3, REG_DATA, PD_POS
+  addi r4, sp, SP_REF_POS
+  addi r5, sp, SP_JOBJ_DIR
+  branchl r12, PSVECSubtract
 
- # get stick magnitude for scaling
- addi r3, sp, SP_STICK_DIR
- branchl r12, PSVECMag
- fmr FREG_MAGNITUDE, f1
- 
- # check deadzone
- fcmpo cr0, FREG_MAGNITUDE, FREG_DEADZONE
- blt SET_MIN_SCALE
+  # normalize jobj direction
+  addi r3, sp, SP_JOBJ_DIR
+  addi r4, sp, SP_JOBJ_DIR
+  branchl r12, PSVECNormalize
 
- # clamp magnitude to 1.0
- lfs f0, RTOC_ONE(rtoc)
- fcmpo cr0, FREG_MAGNITUDE, f0
- ble SCALE_CALCULATION
- fmr FREG_MAGNITUDE, f0
+  # alignment to jobj
+  addi r3, sp, SP_STICK_DIR
+  addi r4, sp, SP_JOBJ_DIR
+  branchl r12, PSVECDotProduct
+  fmr FREG_ALIGNMENT, f1
+
+  # clamp mag
+  lfs f0, RTOC_ONE(rtoc)
+  fcmpo cr0, FREG_MAGNITUDE, f0
+  ble SCALE_CALCULATION
+  fmr FREG_MAGNITUDE, f0
 
 SCALE_CALCULATION:
- # interpolate scale based on stick magnitude
- lfs f0, MIN_SCALE(rtoc)
- lfs f1, MAX_SCALE(rtoc)
- fsubs f1, f1, f0  # max - min
- fmadds FREG_SCALE, f1, FREG_MAGNITUDE, f0  # min + (max-min)*magnitude
- b SET_SCALE
+  fmuls f0, FREG_MAGNITUDE, FREG_ALIGNMENT
+  lfs f1, RTOC_ZERO(rtoc)
+  fcmpo cr0, f0, f1
+  blt SCALE_TO_ZERO
+
+  # scale up from 1.0 to max
+  lfs f1, RTOC_ONE(rtoc)
+  lfs f2, MAX_SCALE(rtoc)
+  fsubs f2, f2, f1  # max - 1.0
+  fmadds FREG_SCALE, f2, f0, f1  # 1.0 + (max-1.0)*factor
+  b SET_SCALE
+
+SCALE_TO_ZERO:
+  # scale from min towards zero
+  fabs f0, f0
+  lfs f1, RTOC_ONE(rtoc)
+  lfs f2, RTOC_ZERO(rtoc)
+  fsubs f2, f1, f2  # min - 0
+  fmuls f2, f2, f0  # (min - 0) * factor
+  fsubs FREG_SCALE, f1, f2  # min - (min * factor)
+  b SET_SCALE
 
 SET_MIN_SCALE:
- lfs FREG_SCALE, MIN_SCALE(rtoc)
+ lfs FREG_SCALE, RTOC_ONE(rtoc)
 
 SET_SCALE:
- mr r3, REG_JOBJ
- fmr f1, FREG_SCALE
- fmr f2, FREG_SCALE
- fmr f3, FREG_SCALE
- branchl r12, HSD_JObjSetScale
+  mr r3, REG_JOBJ
+  fmr f1, FREG_SCALE
+  fmr f2, FREG_SCALE
+  fmr f3, FREG_SCALE
+  branchl r12, HSD_JObjSetScale
 
- mr r3, REG_JOBJ
- branchl r12, HSD_JObjSetMtxDirty
+  # move in opposite direction
+  lfs f1, PD_POS+X(REG_DATA)
+  lfs f2, PD_POS+Y(REG_DATA)
+  lfs f3, PD_POS+Z(REG_DATA)
+  
+  # (stick direction * magnitude * movement scale) - offset
+  lfs f4, SP_STICK_DIR+X(sp)
+  lfs f5, SP_STICK_DIR+Y(sp)
+  lfs f6, SP_STICK_DIR+Z(sp)
+  
+  # scale movement by mag and offset
+  lfs f0, PD_SPEED(REG_DATA)
+  fmuls f4, f4, FREG_MAGNITUDE
+  fmuls f4, f4, f0
+  fmuls f5, f5, FREG_MAGNITUDE
+  fmuls f5, f5, f0
+  fmuls f6, f6, FREG_MAGNITUDE
+  fmuls f6, f6, f0
+  
+  fsubs f1, f1, f4
+  fsubs f2, f2, f5
+  fsubs f3, f3, f6
+  
+  # set position
+  stfs f1, JOBJ_POS+X(REG_JOBJ)
+  stfs f2, JOBJ_POS+Y(REG_JOBJ)
+  stfs f3, JOBJ_POS+Z(REG_JOBJ)
+ 
+  mr r3, REG_JOBJ
+  branchl r12, HSD_JObjSetMtxDirty
 
- fmr f1, FREG_MAGNITUDE
- fmr f2, FREG_SCALE
- fmr f3, FREG_X
- fmr f4, FREG_Y
- logf LOG_LEVEL_ERROR, "\nMAGNITUDE: %f SCALE: %f\nSTICK_X: %f STICK_Y: %f"
+  # fmr f1, FREG_MAGNITUDE
+  # fmr f2, FREG_ALIGNMENT
+  # fmr f3, FREG_SCALE
+  # fmr f4, FREG_Y
+  # logf LOG_LEVEL_ERROR, "\nMAG: %f ALIGN: %f SCALE: %f Y: %f\n"
 
 FN_UpdatePanel_Exit:
  restore
