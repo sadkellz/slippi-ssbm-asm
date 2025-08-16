@@ -9,6 +9,7 @@
 # StockRun Data
 .set SRD_GOBJ_INIT, 0
 .set SRD_GOBJ_MENU, SRD_GOBJ_INIT + 4
+.set SRD_COBJ_DESC, SRD_GOBJ_MENU + 4
 
 # StockRun Context
 .set SRC_SLOT_ORDER, 0                              # int[2]

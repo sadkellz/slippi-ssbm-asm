@@ -25,13 +25,13 @@
 .set    PSMTXMultVecSR, 0x80342afc
 .set    PSMTXInverse, 0x80342320
 .set    PSMTXRotAxisRad, 0x80342530
-.set    PSMTXMultVec, 0x80342aa8
 .set    PSMTXCopy, 0x803421d0
 
 .set    MTXPerspective, 0x80342bec
 .set    MTXLookAt, 0x80342734
 
 .set    HSD_MtxAlloc, 0x8037a68c
+.set    HSD_MtxFree, 0x8037a6d8
 
 ################################################################################
 # Vector Functions

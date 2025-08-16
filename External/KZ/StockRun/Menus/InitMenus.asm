@@ -11,6 +11,7 @@
 .include "External/KZ/HSD_PAD.s"
 .include "External/KZ/PLAYER.s"
 .include "External/KZ/MATCH.s"
+.include "External/KZ/MATH.s"
 .include "External/KZ/OS.s"
 
 ################################################################################
@@ -45,6 +46,8 @@ CODE_START:
   # Create CObj
   lwz r3,0x4(r3)
   lwz r3,0x0(r3)
+  load r4, stc_sr_data
+  stw r3, SRD_COBJ_DESC(r4)
   branchl r12,0x8036a590
   mr  REG_COBJ,r3
   # Create GObj
@@ -285,10 +288,14 @@ FN_CameraGX_Exit:
 .set REG_GOBJ, 31
 .set REG_COBJ, 30
 .set REG_DATA, 29
+.set REG_MTX, 28
+# float regs
 .set FREG_X, 31
 .set FREG_Y, 30
 .set FREG_PITCH, 29
 .set FREG_YAW, 28
+.set FREG_DEADZONE, 27
+.set FREG_SCALE, 26
 FN_CameraProcessBLRL:
 blrl
 b FN_CameraProcess
@@ -315,12 +322,173 @@ FN_CameraProcess:
   # local data
   bl CAM_DATA_BLRL
   mflr REG_DATA
+  # deadzone
+  lfs FREG_DEADZONE, DEADZONE(REG_DATA)
+  lfs FREG_SCALE, SCALE(REG_DATA)
 
   # fmr f1, FREG_X
   # fmr f2, FREG_Y
   # logf LOG_LEVEL_ERROR, "sticks: %f, %f\n"
-
   
+  check_deadzones FREG_X, FREG_Y, FREG_DEADZONE
+  cmpwi r0, FALSE
+  beq CALCULATE_ANGLES
+  # no inputs, exit
+  lfs FREG_PITCH, RTOC_ZERO(rtoc)
+  lfs FREG_YAW, RTOC_ZERO(rtoc)
+  b EXECUTE
+
+  CALCULATE_ANGLES:
+    CHECK_X:
+      check_deadzone FREG_X, FREG_DEADZONE
+      cmpwi r0, TRUE
+      beq SET_HORIZONTAL_ZERO
+
+      lfs f0, RTOC_ZERO(rtoc)
+      fcmpo cr0, FREG_X, f0
+      blt NEGATIVE_X
+      
+      fsubs f0, FREG_X, FREG_DEADZONE
+      b SCALE_HORIZONTAL
+
+      NEGATIVE_X:
+        fneg f1, FREG_DEADZONE
+        fsub f0, FREG_X, f1
+
+      SCALE_HORIZONTAL:
+        lfs f1, ROT_SCALE(REG_DATA)
+        fmuls f0, f0, f1
+        lfs f1, INPUT_RANGE(REG_DATA)
+        fdiv FREG_YAW, f0, f1
+        b CHECK_Y
+      
+      SET_HORIZONTAL_ZERO:
+        lfs FREG_YAW, RTOC_ZERO(rtoc)
+
+    CHECK_Y:
+      check_deadzone FREG_Y, FREG_DEADZONE
+      cmpwi r0, TRUE
+      beq SET_VERTICAL_ZERO
+
+      lfs f0, RTOC_ZERO(rtoc)
+      fcmpo cr0, FREG_Y, f0
+      blt NEGATIVE_Y
+      
+      fsubs f0, FREG_Y, FREG_DEADZONE
+      b SCALE_VERTICAL
+
+      NEGATIVE_Y:
+        fneg f1, FREG_DEADZONE
+        fsub f0, FREG_Y, f1
+
+      SCALE_VERTICAL:
+        lfs f1, ROT_SCALE(REG_DATA)
+        fmuls f0, f0, f1
+        lfs f1, INPUT_RANGE(REG_DATA)
+        fdiv FREG_PITCH, f0, f1
+        b EXECUTE
+      
+      SET_VERTICAL_ZERO:
+        lfs FREG_PITCH, RTOC_ZERO(rtoc)
+
+  EXECUTE:
+    # just using the stack pointer since its there
+    .set SP_UP, BKP_FREE_SPACE_OFFSET
+    .set SP_FWD, SP_UP + 12
+    .set SP_LEFT, SP_FWD + 12
+    .set SP_EYE, SP_LEFT + 12
+    .set SP_TARGET, SP_EYE + 12
+    .set SP_OFFSET, SP_TARGET + 12
+
+    fmr f1, FREG_PITCH
+    fmr f2, FREG_YAW
+    logf LOG_LEVEL_ERROR, "pitch: %f, yaw: %f"
+
+    # alloc matrix
+    branchl r12, HSD_MtxAlloc
+    mr REG_MTX, r3
+
+    # set our up vector
+    lfs f1, RTOC_ZERO(rtoc)
+    lfs f2, RTOC_ONE(rtoc)
+    stfs f1, SP_UP+X(sp)
+    stfs f2, SP_UP+Y(sp)
+    stfs f1, SP_UP+Z(sp)
+    
+    # reset camera?
+    mr r3, REG_COBJ
+    load r4, stc_sr_data
+    lwz r4, SRD_COBJ_DESC(r4)
+    branchl r12, HSD_CObjInit
+    
+    mr r3, REG_COBJ
+    addi r4, sp, SP_FWD
+    branchl r12, HSD_CObjGetForwardVector
+
+    mr r3, REG_COBJ
+    addi r4, sp, SP_TARGET
+    branchl r12, HSD_CObjGetInterest
+
+    addi r3, sp, SP_UP
+    addi r4, sp, SP_FWD
+    addi r5, sp, SP_LEFT
+    branchl r12, PSVECCrossProduct
+
+    addi r3, sp, SP_LEFT
+    addi r4, sp, SP_LEFT
+    branchl r12, PSVECNormalize
+
+    lfs f0, RTOC_DEG2RAD(rtoc)
+    fmuls f1, FREG_PITCH, f0
+    mr r3, REG_MTX
+    addi r4, sp, SP_LEFT
+    branchl r12, PSMTXRotAxisRad
+
+    mr r3, REG_MTX
+    addi r4, sp, SP_FWD
+    addi r5, sp, SP_FWD
+    branchl r12, PSMTXMultVec
+
+    lfs f0, RTOC_DEG2RAD(rtoc)
+    fmuls f1, FREG_YAW, f0
+    mr r3, REG_MTX
+    addi r4, sp, SP_UP
+    branchl r12, PSMTXRotAxisRad
+
+    mr r3, REG_MTX
+    addi r4, sp, SP_FWD
+    addi r5, sp, SP_FWD
+    branchl r12, PSMTXMultVec
+
+    mr r3, REG_COBJ
+    branchl r12, HSD_CObjGetEyeDistance
+    addi r3, sp, SP_FWD
+    addi r4, sp, SP_FWD
+    branchl r12, PSVECScale
+
+    # lfs f1, RTOC_TEN(rtoc)
+    # addi r3, sp, SP_FWD
+    # addi r4, sp, SP_OFFSET
+    # branchl r12, PSVECScale
+
+    # addi r3, sp, SP_TARGET
+    # addi r4, sp, SP_FWD
+    # addi r5, sp, SP_EYE
+    # branchl r12, PSVECAdd
+
+    addi r3, sp, SP_TARGET
+    addi r4, sp, SP_FWD
+    addi r5, sp, SP_EYE
+    branchl r12, PSVECAdd
+
+    mr r3, REG_COBJ
+    addi r4, sp, SP_EYE
+    branchl r12, HSD_CObjSetInterest
+
+
+    mr r3, REG_MTX
+    branchl r12, HSD_MtxFree
+
 
 FN_CameraProcess_Exit:
   restore

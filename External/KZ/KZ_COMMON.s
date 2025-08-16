@@ -52,8 +52,30 @@
   addi r1, r1, 0x10   # Restore stack pointer
 .endm
 
-# .macro 
-# .endm
+# this will branch to the out_label if either stick is outside the deadzone
+# after this macro use a branch to skip the logic
+.macro check_deadzones stick_x, stick_y, deadzone
+  fabs f0, \stick_x
+  fcmpo cr0, f0, \deadzone
+  bge 1f
+  fabs f0, \stick_y
+  fcmpo cr0, f0, \deadzone
+  bge 1f
+  li r0, TRUE
+  b 2f
+  1: li r0, FALSE
+  2:
+.endm
+
+.macro check_deadzone stick_z, deadzone
+  fabs f0, \stick_z
+  fcmpo cr0, f0, \deadzone
+  bge 1f
+  li r0, TRUE
+  b 2f
+  1: li r0, FALSE
+  2:
+.endm
 
 ################################################################################
 # Constants
