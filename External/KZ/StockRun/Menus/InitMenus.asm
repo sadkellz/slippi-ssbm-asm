@@ -58,7 +58,7 @@ blrl
 .set DEADZONE, 0
   .float 0.27
 .set MOVE_SPEED_Y, DEADZONE + 4
-  .float 2.25
+  .float 2.34
 .set MOVE_SPEED_X, MOVE_SPEED_Y + 4
   .float 3.15
 
@@ -281,10 +281,9 @@ branchl r12, 0x8002063c
   stfs f1, JOBJ_ROT+4(REG_STICK)
   stfs f1, JOBJ_ROT+8(REG_STICK)
 
-  lfs f1, RTOC_ONE(rtoc)
-  fneg f1, f1
-  load r0, 0xbf666666 # -0.9 whatever dude
+  lfs f1, RTOC_NEG_1_1(rtoc)
   stfs f1, JOBJ_POS(REG_BORDER)
+  load r0, 0xbf666666 # -0.9 whatever dude
   stw r0, JOBJ_POS+4(REG_BORDER)
 
   # scale

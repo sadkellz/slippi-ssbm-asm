@@ -14,6 +14,7 @@
 .set RTOC_HUND, -0x35e8
 .set RTOC_STICKTHRESH, -0x3c98
 .set RTOC_TEN, -0x1e64
+.set RTOC_NEG_1_1, -0x125c
 
 ################################################################################
 # Directives
