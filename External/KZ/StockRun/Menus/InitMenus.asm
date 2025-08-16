@@ -45,6 +45,8 @@ CODE_START:
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   backup
 
+# Panels
+#------------------------------------------------------------------------------#
   # Get camera descriptor from archive
   load r3, stc_ifall
   lwz r3, 0x0(r3)
@@ -72,58 +74,6 @@ CODE_START:
   bl PANEL_DATA_BLRL
   mflr r6
   branchl r12, GObj_AddUserData
-
-  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
-  load r3, stc_sr_data
-  stw REG_GOBJ, SRD_GOBJ_MENU(r3)
-
-# add proc
-  mr r3, REG_GOBJ
-  bl FN_PickerDisplayBLRL
-  mflr r4
-  li r5, 0
-  branchl r12, GObj_AddProc
-
-# transform jobjs
-  load r3, stc_pause_data
-  addi r4, r3, PAUSE_UI_STICK
-  lwz REG_STICK, 0(r4)
-  lwz REG_STICK, JOBJ_PARENT(REG_STICK)
-  addi r4, r3, PAUSE_UI_STICK_BORDER
-  lwz REG_BORDER, 0(r4)
-
-  # pos
-  lfs f1, RTOC_ZERO(rtoc)
-  stfs f1, JOBJ_POS(REG_STICK)
-  stfs f1, JOBJ_POS+4(REG_STICK)
-  stfs f1, JOBJ_ROT(REG_STICK)
-  stfs f1, JOBJ_ROT+4(REG_STICK)
-  stfs f1, JOBJ_ROT+8(REG_STICK)
-
-  lfs f1, RTOC_ONE(rtoc)
-  fneg f1, f1
-  load r0, 0xbf666666 # -0.9 whatever dude
-  stfs f1, JOBJ_POS(REG_BORDER)
-  stw r0, JOBJ_POS+4(REG_BORDER)
-
-  # scale
-  lfs f1, RTOC_TWO(rtoc)
-  stfs f1, JOBJ_SCALE(REG_STICK)
-  stfs f1, JOBJ_SCALE+4(REG_STICK)
-  stfs f1, JOBJ_SCALE+8(REG_STICK)
-
-  stfs f1, JOBJ_SCALE(REG_BORDER)
-  stfs f1, JOBJ_SCALE+4(REG_BORDER)
-  stfs f1, JOBJ_SCALE+8(REG_BORDER)
-
-  mr r3, REG_STICK
-  branchl r12, HSD_JObjSetMtxDirty
-
-  # increase stick mult
-  load r0, 0x41c80000 # 25.0
-  load r3, stc_pause_stickmult
-  stw r0, 0(r3)
-
 
 # set up the radial menu - uses the vscam interface
   bl DATA_BLRL
@@ -205,6 +155,60 @@ CODE_START:
   lfs f1, PANEL_Y(REG_DATA)
   lwz r3, SP_JOBJ(sp)
   stfs f1, JOBJ_POS+Y(r3)
+
+
+# Stick Interface
+#------------------------------------------------------------------------------#
+  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
+  load r3, stc_sr_data
+  stw REG_GOBJ, SRD_GOBJ_MENU(r3)
+
+# add proc
+  mr r3, REG_GOBJ
+  bl FN_PickerDisplayBLRL
+  mflr r4
+  li r5, 0
+  branchl r12, GObj_AddProc
+
+# transform jobjs
+  load r3, stc_pause_data
+  addi r4, r3, PAUSE_UI_STICK
+  lwz REG_STICK, 0(r4)
+  lwz REG_STICK, JOBJ_PARENT(REG_STICK)
+  addi r4, r3, PAUSE_UI_STICK_BORDER
+  lwz REG_BORDER, 0(r4)
+
+  # pos
+  lfs f1, RTOC_ZERO(rtoc)
+  stfs f1, JOBJ_POS(REG_STICK)
+  stfs f1, JOBJ_POS+4(REG_STICK)
+  stfs f1, JOBJ_ROT(REG_STICK)
+  stfs f1, JOBJ_ROT+4(REG_STICK)
+  stfs f1, JOBJ_ROT+8(REG_STICK)
+
+  lfs f1, RTOC_ONE(rtoc)
+  fneg f1, f1
+  load r0, 0xbf666666 # -0.9 whatever dude
+  stfs f1, JOBJ_POS(REG_BORDER)
+  stw r0, JOBJ_POS+4(REG_BORDER)
+
+  # scale
+  lfs f1, RTOC_TWO(rtoc)
+  stfs f1, JOBJ_SCALE(REG_STICK)
+  stfs f1, JOBJ_SCALE+4(REG_STICK)
+  stfs f1, JOBJ_SCALE+8(REG_STICK)
+
+  stfs f1, JOBJ_SCALE(REG_BORDER)
+  stfs f1, JOBJ_SCALE+4(REG_BORDER)
+  stfs f1, JOBJ_SCALE+8(REG_BORDER)
+
+  mr r3, REG_STICK
+  branchl r12, HSD_JObjSetMtxDirty
+
+  # increase stick mult
+  load r0, 0x41c80000 # 25.0
+  load r3, stc_pause_stickmult
+  stw r0, 0(r3)
 
   b EXIT
 
