@@ -321,11 +321,6 @@ FN_PickerDisplay:
   lwz r3, SRD_GOBJ_INIT(r3)
   lwz REG_DATA, GOBJ_USERDATA(r3)
 
-  lwz r3, ACTIVE_PICKER(REG_DATA)
-  lbzx REG_SLOT, REG_DATA, r3 # get the slot of the active picker
-  load r4, stc_pause_data
-  stw REG_SLOT, PAUSE_UI_SLOT(r4)
-
   # load jobjs
   load r3, stc_pause_data
   addi r4, r3, PAUSE_UI_STICK
@@ -402,8 +397,9 @@ FN_CameraProcess:
   beq FN_CameraProcess_Exit
 
   # sticks
-  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
-  get_port_pad r3
+  # li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+  # get_port_pad r3
+  get_active_pad r3
   lfs FREG_X, PAD_stick_x(r3)
   lfs FREG_Y, PAD_stick_y(r3)
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
@@ -577,8 +573,9 @@ blrl
   beq FN_UpdatePanel_Exit
   
   # get stick input
-  li r3, DEBUG_PAD_UNION
-  get_port_pad r3
+  # li r3, DEBUG_PAD_UNION
+  # get_port_pad r3
+  get_active_pad r3
   lfs FREG_X, PAD_stick_x(r3)
   lfs FREG_Y, PAD_stick_y(r3)
   lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)

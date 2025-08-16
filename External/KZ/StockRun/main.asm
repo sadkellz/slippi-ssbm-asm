@@ -24,10 +24,12 @@ blrl
 .set SRC_CURRENT_PICKER, SRC_SLOT_ORDER + 8         # int
 .set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
 .set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
+.set SRC_ACTIVE_SLOT, SRC_GAME_STATE + 4            # int
 .long -1
 .long -1
 .long 0
 .long TRANSITION_FRAMES
+.long 0
 .long 0
 
 CODE_START:
@@ -63,11 +65,11 @@ CODE_START:
   bl SR_InitContext
 
 # disable pause
-  # load r12, stc_match_info
-  # addi r12, r12, OFST_RULES
-  # lbz r3, OFST_PAUSE(r12)
-  # ori r3, r3, PAUSE_BIT_MASK
-  # stb r3, OFST_PAUSE(r12)
+  load r12, stc_match_info
+  addi r12, r12, OFST_RULES
+  lbz r3, OFST_PAUSE(r12)
+  ori r3, r3, PAUSE_BIT_MASK
+  stb r3, OFST_PAUSE(r12)
 
 # disable hud
   load r3, stc_hud_vis
@@ -262,11 +264,15 @@ SR_IsSelectionComplete:
   cmpwi r4, MAX_PLAYERS - 1
   ble SR_IsSelectionComplete_Exit
 
+  # enable hud
+  load r3, stc_hud_vis
+  li r4, FALSE 
+  stb r4, 0(r3)
+
   # reset blur
   load r3, stc_blur_amt
   li r4, 0
   stw r4, 0(r3)
-
 
   # update state
   li r3, SRGS_GAME_ACTIVE
@@ -305,7 +311,8 @@ SR_ProcessInput:
   cmpwi r3, -1
   beq SR_ProcessInput_Exit
 
-  li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
+  bl SR_GetCurrentPlayerSlot
+  # li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
   branchl r12, Inputs_GetPlayerInstantInputs
   andi. r4, r4, PAD_BTN_A
   bne CHOOSE_CARD
@@ -420,6 +427,8 @@ SR_UpdateCameraTarget:
 
   load r4, 0x80452f2c # mode 3 slot
   stb r3, 0(r4)
+  load r4, stc_pause_data
+  stw r3, PAUSE_UI_SLOT(r4)
 
 SR_UpdateCameraTarget_Exit:
   rslr
@@ -438,6 +447,7 @@ SR_GetCurrentPlayerSlot:
 
   mulli r4, r3, 4
   lwzx r3, r4, REG_DATA # SRC_SLOT_ORDER
+  stw r3, SRC_ACTIVE_SLOT(REG_DATA)
   b SR_GetCurrentPlayerSlot_Exit
 
   INVALID_CURR_PICKER:

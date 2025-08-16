@@ -17,6 +17,7 @@
 .set SRC_CURRENT_PICKER, SRC_SLOT_ORDER + 8         # int
 .set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
 .set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
+.set SRC_ACTIVE_SLOT, SRC_GAME_STATE + 4            # int
 
 ################################################################################
 # Directives
@@ -66,6 +67,13 @@
   loadwz \reg_state, stc_sr_data # init gobj
   lwz \reg_state, GOBJ_USERDATA(\reg_state)
   lwz \reg_state, SRC_GAME_STATE(\reg_state)
+.endm
+
+.macro get_active_pad reg_pad
+  loadwz \reg_pad, stc_sr_data
+  lwz \reg_pad, GOBJ_USERDATA(\reg_pad)
+  lwz \reg_pad, SRC_ACTIVE_SLOT(\reg_pad)
+  get_port_pad \reg_pad
 .endm
 
 
