@@ -107,7 +107,7 @@ CODE_START:
 #==============================================================================#
 .set REG_DATA, 30
 SR_InitContext:
-  backup
+  bklr
 
   li r3, -1
   stw r3, SRC_ACTIVE_SLOTS(REG_DATA)
@@ -121,7 +121,7 @@ SR_InitContext:
   logf LOG_LEVEL_ERROR, "SR Data Reset"
 
 SR_InitContext_Exit:
-  restore
+  rslr
   blr
 
 

@@ -37,7 +37,7 @@ CODE_START:
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   backup
 
-  # Get HUD CObjDesc
+  # setup camera
   load  r3, 0x804d6d5c
   lwz r3, 0x0 (r3)
   load  r4, 0x803f94d0
@@ -67,8 +67,12 @@ CODE_START:
   # Store COBJs GXLinks
   load r3, 1 << MY_GXLINK
   stw r3, 0x24(REG_GOBJ)
-  load r4, stc_gobj_pause
-  stw r3, 0x3(r4)
+  # add proc
+  mr r3, REG_GOBJ
+  bl FN_CameraProcessBLRL
+  mflr r4
+  li r5, 0
+  branchl r12, GObj_AddProc
 
   mr r5, REG_COBJ
   logf LOG_LEVEL_ERROR, "GOBJ: %x"
@@ -141,7 +145,7 @@ CODE_START:
   stw r3, PROMPT_MODEL_SET(REG_DATA)
 
   # create gobj
-  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, 111, REG_GOBJ
+  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
 
   # load joint
   lwz r3, PROMPT_MODEL_SET(REG_DATA)
@@ -160,7 +164,7 @@ CODE_START:
   mr r3, REG_GOBJ
   load r4, 0x80391070
   load r5, MY_GXLINK # usually 0xB
-  li r6, MY_GXPRI
+  li r6, 128
   branchl r12, GObj_SetupGXLink
 
   # add anims
@@ -202,15 +206,19 @@ CODE_START:
   branchl r12, HSD_DObjSetFlags
 
   # set the position
-  load r4, 0x41e00000
+  lfs f1, PANEL_Y(REG_DATA)
   lwz r3, SP_JOBJ(sp)
-  stw r4, JOBJ_POS+Y(r3)
-
+  stfs f1, JOBJ_POS+Y(r3)
 
   b EXIT
 
-################################################################################
-################################################################################
+#==============================================================================#
+
+
+
+# Picker Process
+#------------------------------------------------------------------------------#
+
 FN_PickerDisplayBLRL:
 blrl
 .set REG_FRAME, 27
@@ -250,27 +258,78 @@ FN_PickerDisplay:
   li r4, JOBJFLAG_HIDDEN
   branchl r12, HSD_JObjClearFlagsAll
 
-
-
 FN_PickerDisplay_Exit:
   restore
   blr
 
-################################################################################
 
+# Camera GX
+#------------------------------------------------------------------------------#
+.set REG_GOBJ, 31
 FN_CameraGX:
   blrl
   backup
-  .set  REG_GOBJ,31
-  mr  REG_GOBJ, r3
 
-  # Draw camera
-  mr  r3, REG_GOBJ
-  branchl r12,0x803910d8
+  mr REG_GOBJ, r3
+  mr r3, REG_GOBJ
+  branchl r12, 0x803910d8
 
 FN_CameraGX_Exit:
   restore
   blr
+  
+
+# Camera Process
+#------------------------------------------------------------------------------#
+# This will rotate the camera towards our selection
+.set REG_GOBJ, 31
+.set REG_COBJ, 30
+.set REG_DATA, 29
+.set FREG_X, 31
+.set FREG_Y, 30
+.set FREG_PITCH, 29
+.set FREG_YAW, 28
+FN_CameraProcessBLRL:
+blrl
+b FN_CameraProcess
+
+CAM_DATA_BLRL:
+blrl
+.set DEADZONE, 0
+  .float 0.4
+.set ROT_SCALE, DEADZONE + 4
+  .float 30.0
+.set INPUT_RANGE, ROT_SCALE + 4
+  .float 0.6
+FN_CameraProcess:
+  backup
+
+  # init vars
+  mr REG_GOBJ, r3
+  lwz REG_COBJ, GOBJ_OBJ(REG_GOBJ)
+  # sticks
+  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+  get_port_pad r3
+  lfs FREG_X, PAD_stick_x(r3)
+  lfs FREG_Y, PAD_stick_y(r3)
+  # local data
+  bl CAM_DATA_BLRL
+  mflr REG_DATA
+
+  # fmr f1, FREG_X
+  # fmr f2, FREG_Y
+  # logf LOG_LEVEL_ERROR, "sticks: %f, %f\n"
+
+  
+
+FN_CameraProcess_Exit:
+  restore
+  blr
+
+
+
+# Main exit
+#=============================================================================#
 
 EXIT:
   restore
