@@ -35,6 +35,8 @@
 .set HSD_JObjSetFlagsAll, 0x80371d9c # (HSD_JObj *jobj,JObjFlag flag)
 .set HSD_JObjClearFlags, 0x80371f00 # (HSD_JObj *jobj,JObjFlag flag)
 .set HSD_JObjClearFlagsAll, 0x80371f9c # (HSD_JObj *jobj,JObjFlag flag)
+.set HSD_JObjSetScale, 0x80272f7c # (HSD_JObj *jobj,float scale)
+.set HSD_JObjGetPosition, 0x8000b1cc # (HSD_JObj *jobj,Vec *in,Vec *out)
 
 .set HSD_JObjLoadJoint, 0x80370e44 # (HSD_Joint *desc)
 
