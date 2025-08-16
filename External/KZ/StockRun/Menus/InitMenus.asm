@@ -28,14 +28,23 @@ blrl
 .set PANEL_Y, PROMPT_JOBJ + 4
 .float 14.0
 
-PANEL_DATA_BLRL:
+# Panel Data - top, right, bottom, left
+PD_TOP_BLRL:
+blrl
+.set PD_POS, 0
+.float 0.0
+.float 14.0
+.float 0.0
+
+# Camera Data
+CD_PANEL_BLRL:
 blrl
 .set DEADZONE, 0
   .float 0.27
 .set MOVE_SPEED, DEADZONE + 4
   .float 2.0
 
-STICK_DATA_BLRL:
+CD_STICK_BLRL:
 blrl
 .set DEADZONE, 0
   .float 0.27
@@ -80,7 +89,7 @@ CODE_START:
   mr r3, REG_GOBJ
   li r4, 0
   li r5, 0
-  bl PANEL_DATA_BLRL
+  bl CD_PANEL_BLRL
   mflr r6
   branchl r12, GObj_AddUserData
 
@@ -129,6 +138,13 @@ CODE_START:
   mflr r4
   li r5, 0
   branchl r12, GObj_AddProc
+
+  mr r3, REG_GOBJ
+  li r4, 0
+  li r5, 0
+  bl PD_TOP_BLRL
+  mflr r6
+  branchl r12, GObj_AddUserData
 
   # add anims
   mr r3, REG_JOBJ
@@ -190,7 +206,7 @@ CODE_START:
   mr r3, REG_GOBJ
   li r4, 0
   li r5, 0
-  bl STICK_DATA_BLRL
+  bl CD_STICK_BLRL
   mflr r6
   branchl r12, GObj_AddUserData
 
@@ -495,14 +511,24 @@ blrl
 .set FREG_DEADZONE, 27
 .set FREG_SCALE, 26
 # stack
-.set SP_SCALE, BKP_FREE_SPACE_OFFSET
+.set SP_STICK_DIR, BKP_FREE_SPACE_OFFSET
+.set SP_JOBJ_DIR, SP_STICK_DIR + 12
   backup
   # init vars
   mr REG_GOBJ, r3
   lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
 
-  addi r3, sp, SP_SCALE
-  jobj_set_scale REG_JOBJ, r3
+  # lets get our scale..
+  # the closer the stick is to the panels direction, the larger it gets
+  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+  get_port_pad r3
+  lfs FREG_X, PAD_stick_x(r3)
+  lfs FREG_Y, PAD_stick_y(r3)
+  lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
+  lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
+
+  mr r3, REG_JOBJ
+  fmr f1, 
 
   mr r3, REG_JOBJ
   branchl r12, HSD_JObjSetMtxDirty
