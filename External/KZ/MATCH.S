@@ -46,6 +46,9 @@
 .set stc_ifvscam, 0x80479bc8
 .set stc_ifcammodel_str, 0x803da73c
 
+.set stc_ifall, 0x804d6d5c
+.set stc_str_ScInfDmg_scene_data, 0x803f94d0
+
 .set OFST_TINT, 0
 .set OFST_TEYE, 4
 .set OFST_FOV, 8

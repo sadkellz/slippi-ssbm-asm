@@ -28,6 +28,13 @@ blrl
 .set PANEL_Y, PROMPT_JOBJ + 4
 .float 14.0
 
+PANEL_DATA_BLRL:
+blrl
+.set DEADZONE, 0
+  .float 0.27
+.set MOVE_SPEED, DEADZONE + 4
+  .float 2.0
+
 CODE_START:
   .set REG_GOBJ, 31
   .set REG_DATA, 30
@@ -38,38 +45,20 @@ CODE_START:
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   backup
 
-  # setup camera
-  load  r3, 0x804d6d5c
-  lwz r3, 0x0 (r3)
-  load  r4, 0x803f94d0
-  branchl r12,0x80380358
-  # Create CObj
-  lwz r3,0x4(r3)
-  lwz r3,0x0(r3)
+  # Get camera descriptor from archive
+  load r3, stc_ifall
+  lwz r3, 0x0(r3)
+  load r4, stc_str_ScInfDmg_scene_data
+  branchl r12, HSD_ArchiveGetSymbol
+  lwz r3, 0x4(r3)
+  lwz r3, 0x0(r3)
   load r4, stc_sr_data
   stw r3, SRD_COBJ_DESC(r4)
-  branchl r12,0x8036a590
-  mr  REG_COBJ,r3
-  # Create GObj
-  li  r3,GOBJ_CLASS_CAMERA
-  li  r4,GOBJ_PLINK_HUD
-  li  r5,0
-  branchl r12,0x803901f0
-  mr  REG_GOBJ,r3
-  # Add object
-  mr  r3,REG_GOBJ
-  lbz r4,-0x3E55(r13)
-  mr  r5,REG_COBJ
-  branchl r12,0x80390a70
-  # Init camera
-  mr  r3,REG_GOBJ
-  bl  FN_CameraGX
-  mflr  r4
-  li  r5, COBJ_GXPRI
-  branchl r12,0x8039075c
-  # Store COBJs GXLinks
-  load r3, 1 << MY_GXLINK
-  stw r3, 0x24(REG_GOBJ)
+
+  bl FN_CameraGX
+  mflr r16
+  spawn_cobj r3, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << MY_GXLINK, REG_GOBJ, REG_COBJ
+
   # add proc
   mr r3, REG_GOBJ
   bl FN_CameraProcessBLRL
@@ -77,8 +66,12 @@ CODE_START:
   li r5, 0
   branchl r12, GObj_AddProc
 
-  mr r5, REG_COBJ
-  logf LOG_LEVEL_ERROR, "GOBJ: %x"
+  mr r3, REG_GOBJ
+  li r4, 0
+  li r5, 0
+  bl PANEL_DATA_BLRL
+  mflr r6
+  branchl r12, GObj_AddUserData
 
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
   load r3, stc_sr_data
@@ -285,6 +278,8 @@ FN_CameraGX_Exit:
 # Camera Process
 #------------------------------------------------------------------------------#
 # This will rotate the camera towards our selection
+FN_CameraProcessBLRL:
+blrl
 .set REG_GOBJ, 31
 .set REG_COBJ, 30
 .set REG_DATA, 29
@@ -296,18 +291,6 @@ FN_CameraGX_Exit:
 .set FREG_YAW, 28
 .set FREG_DEADZONE, 27
 .set FREG_SCALE, 26
-FN_CameraProcessBLRL:
-blrl
-b FN_CameraProcess
-
-CAM_DATA_BLRL:
-blrl
-.set DEADZONE, 0
-  .float 0.27
-.set ROT_SCALE, DEADZONE + 4
-  .float 30.0
-.set INPUT_RANGE, ROT_SCALE + 4
-  .float 0.6
 FN_CameraProcess:
   backup
 
@@ -319,12 +302,10 @@ FN_CameraProcess:
   get_port_pad r3
   lfs FREG_X, PAD_stick_x(r3)
   lfs FREG_Y, PAD_stick_y(r3)
-  # local data
-  bl CAM_DATA_BLRL
-  mflr REG_DATA
+  lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
   # deadzone
   lfs FREG_DEADZONE, DEADZONE(REG_DATA)
-  lfs FREG_SCALE, SCALE(REG_DATA)
+  lfs FREG_SCALE, MOVE_SPEED(REG_DATA)
   
   check_deadzones FREG_X, FREG_Y, FREG_DEADZONE
   cmpwi r0, FALSE
@@ -369,9 +350,10 @@ FN_CameraProcess:
   # fmr f2, FREG_Y
   # logf LOG_LEVEL_ERROR, "sticks: %f, %f\n"
 
-    fneg FREG_X, FREG_X
     fmuls FREG_X, FREG_X, FREG_SCALE
     fmuls FREG_Y, FREG_Y, FREG_SCALE
+    stick_curve FREG_X, FREG_Y
+    fneg FREG_X, FREG_X
 
     # reset camera?
     mr r3, REG_COBJ
@@ -416,16 +398,12 @@ FN_CameraProcess:
 
     # Calculate horizontal pan offset
     fmr f1, FREG_X
-    lfs f0, RTOC_HUND(rtoc)
-    fmuls f1, f1, f0
     addi r3, sp, SP_LEFT
     addi r4, sp, SP_OFFSET
     branchl r12, PSVECScale
 
     # Calculate vertical pan offset
     fmr f1, FREG_Y
-    lfs f0, RTOC_HUND(rtoc)
-    fmuls f1, f1, f0
     addi r3, sp, SP_UP
     addi r4, sp, SP_VOFFSET
     branchl r12, PSVECScale
@@ -462,6 +440,17 @@ FN_CameraProcess:
     branchl r12, HSD_CObjSetInterest
 
 FN_CameraProcess_Exit:
+  restore
+  blr
+
+
+# Jobj Process
+#-----------------------------------------------------------------------------#
+FN_UpdatePanel:
+  blrl
+  backup
+
+FN_UpdatePanel_Exit:
   restore
   blr
 

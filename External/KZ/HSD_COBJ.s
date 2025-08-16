@@ -1,5 +1,5 @@
 .ifndef HEADER_COBJ_STRUCT
-
+.include "Common/Common.s"
 ################################################################################
 # Struct
 ################################################################################
@@ -135,6 +135,38 @@
 .set DevelopCobjDesc, 0x803fdc48
 .set STC_DEVTEXT_GOBJ, 0x804d6e1c
 .set CmSubjects, 0x804d6468
+
+################################################################################
+# Macros
+################################################################################
+
+.macro spawn_cobj cobj_desc, gobj_class, gobj_plink, gx_proc, gx_priority, gxlink_mask, out_gobj, out_cobj
+# Create CObj
+mr r3, \cobj_desc
+branchl r12, HSD_CObjLoadDesc
+mr \out_cobj, r3
+# Create GObj
+li r3, \gobj_class
+li r4, \gobj_plink
+li r5, 0
+branchl r12, GObj_Create
+mr \out_gobj, r3
+# Add CObj to GObj
+mr r3, \out_gobj
+li r4, GOBJ_KIND_CAMERA
+mr r5, \out_cobj
+branchl r12, GObj_AddObj
+# Initialize camera
+mr r3, \out_gobj
+mr r4, \gx_proc
+li r5, \gx_priority
+branchl r12, GObj_InitCamera
+# Set GX link priorities
+load r0, \gxlink_mask
+stw r0, 0x24(\out_gobj)
+li r0, 0
+stw r0, 0x20(\out_gobj)
+.endm
 
 
 .endif

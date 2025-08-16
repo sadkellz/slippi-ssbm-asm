@@ -93,5 +93,12 @@
     add \reg, \reg, pad_master
 .endm
 
+.macro stick_curve input_x, input_y
+    fmuls f0, \input_x, \input_x
+    fmuls \input_x, f0, \input_x
+    fmuls f0, \input_y, \input_y
+    fmuls \input_y, f0, \input_y
+.endm
+
 .endif
 .set HEADER_HSD_PAD, 1
