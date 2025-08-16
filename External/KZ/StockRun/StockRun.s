@@ -46,7 +46,8 @@
 # GX
 .set  COBJ_GXPRI, 8
 .set  MY_GXPRI, 80
-.set  MY_GXLINK, 13
+.set  PANEL_GXLINK, 13
+.set  STICK_GXLINK, 14
 
 # Menus
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input
