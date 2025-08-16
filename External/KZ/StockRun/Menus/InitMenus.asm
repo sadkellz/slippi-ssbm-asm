@@ -397,8 +397,10 @@ FN_CameraProcess:
     .set SP_FWD, SP_UP + 12
     .set SP_LEFT, SP_FWD + 12
     .set SP_EYE, SP_LEFT + 12
-    .set SP_TARGET, SP_EYE + 12
-    .set SP_OFFSET, SP_TARGET + 12
+    .set SP_NEW_EYE, SP_LEFT + 12
+    .set SP_TARGET, SP_NEW_EYE + 12
+    .set SP_NEW_TARGET, SP_TARGET + 12
+    .set SP_OFFSET, SP_NEW_TARGET + 12
 
     fmr f1, FREG_PITCH
     fmr f2, FREG_YAW
@@ -424,6 +426,10 @@ FN_CameraProcess:
     mr r3, REG_COBJ
     addi r4, sp, SP_FWD
     branchl r12, HSD_CObjGetForwardVector
+
+    mr r3, REG_COBJ
+    addi r4, sp, SP_EYE
+    branchl r12, HSD_CObjGetEyePosition
 
     mr r3, REG_COBJ
     addi r4, sp, SP_TARGET
@@ -466,23 +472,24 @@ FN_CameraProcess:
     addi r4, sp, SP_FWD
     branchl r12, PSVECScale
 
-    # lfs f1, RTOC_TEN(rtoc)
-    # addi r3, sp, SP_FWD
-    # addi r4, sp, SP_OFFSET
-    # branchl r12, PSVECScale
+    # new eye
+    addi r3, sp, SP_EYE
+    addi r4, sp, SP_FWD
+    addi r5, sp, SP_NEW_EYE
+    branchl r12, PSVECSubtract
 
-    # addi r3, sp, SP_TARGET
-    # addi r4, sp, SP_FWD
-    # addi r5, sp, SP_EYE
-    # branchl r12, PSVECAdd
-
+    # new target
     addi r3, sp, SP_TARGET
     addi r4, sp, SP_FWD
-    addi r5, sp, SP_EYE
-    branchl r12, PSVECAdd
+    addi r5, sp, SP_NEW_TARGET
+    branchl r12, PSVECSubtract
 
     mr r3, REG_COBJ
-    addi r4, sp, SP_EYE
+    addi r4, sp, SP_NEW_EYE
+    branchl r12, HSD_CObjSetEyePosition
+
+    mr r3, REG_COBJ
+    addi r4, sp, SP_NEW_TARGET
     branchl r12, HSD_CObjSetInterest
 
 

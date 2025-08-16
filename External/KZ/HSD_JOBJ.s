@@ -86,6 +86,18 @@
 .set JOBJFLAG_ROOT_XLU, 0x20000000
 .set JOBJFLAG_ROOT_TEXEDGE, 0x40000000
 
+################################################################################
+# Macros
+################################################################################
+
+.macro jobj_set_pos, jobj, vec
+  lfs f1, X(\vec)
+  lfs f2, Y(\vec)
+  lfs f3, Z(\vec)
+  stfs f1, JOBJ_POS+X(\jobj)
+  stfs f2, JOBJ_POS+Y(\jobj)
+  stfs f3, JOBJ_POS+Z(\jobj)
+.endm
 
 .endif
 .set HEADER_JOBJ_STRUCT, 1
