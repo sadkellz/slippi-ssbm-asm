@@ -11,6 +11,7 @@
 .include "External/KZ/PLAYER.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_PAD.s"
+.include "External/KZ/OS.s"
 
 # Initialize Stock Run
 #==============================================================================#
@@ -93,6 +94,39 @@ CODE_START:
     cmpwi REG_COUNT, MAX_PORTS
     blt SET_ACTIVE_SLOTS_LOOP
 
+# setup camera blur
+  load r3, 0x80472d28
+  li r4, 288
+  branchl r12, memzero # zero out the imagedesc mem
+  
+  load r3, stc_blur_imagedesc
+  li r4, 640
+  li r5, 480
+  li r6, 5
+  li r7, 0
+  branchl r12, 0x800121fc
+
+  lfs f1, RTOC_ZERO(rtoc)
+  lfs f2, RTOC_ZERO(rtoc)
+  lfs f3, RTOC_ONE(rtoc)
+  lfs f4, RTOC_ONE(rtoc)
+  load r3, stc_blur_imagedesc
+  li r4, 0
+  li r5, 2
+  li r6, 50
+  branchl r12, 0x800138ec
+  mr REG_GOBJ, r3
+  load r3, 0x80472d54
+  stw REG_GOBJ, 0(r3)
+
+  mr r3, REG_GOBJ
+  li r4, 1
+  branchl r12, 0x800138d8
+
+  mr r3, REG_GOBJ
+  load r4, 0x8017fe54
+  branchl r12, 0x800138cc
+
   b EXIT
 
 #==============================================================================#
@@ -145,6 +179,15 @@ SR_Update:
 
   cmpwi REG_FRAME, SETUP_START_FRAME # first frame after entry
   blt SR_Update_Exit
+  cmpwi REG_FRAME, ALLOW_INPUTS_FRAME 
+  bgt STATE_SWITCH # this is so we can start our blur
+
+  # add blur until we can input
+  load r3, stc_blur_amt
+  lfs f1, 0(r3)
+  lfs f0, RTOC_0_015625(rtoc)
+  fadds f1, f1, f0
+  stfs f1, 0(r3)
 
   STATE_SWITCH:
     STATE_INIT:
@@ -218,6 +261,12 @@ SR_IsSelectionComplete:
   lwz r4, SRC_CURRENT_PICKER(REG_DATA)
   cmpwi r4, MAX_PLAYERS - 1
   ble SR_IsSelectionComplete_Exit
+
+  # reset blur
+  load r3, stc_blur_amt
+  li r4, 0
+  stw r4, 0(r3)
+
 
   # update state
   li r3, SRGS_GAME_ACTIVE

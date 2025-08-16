@@ -57,5 +57,17 @@
 .set MIN_SCALE, RTOC_HALF
 .set MAX_SCALE, RTOC_TWO
 
+
+################################################################################
+# Macros
+################################################################################
+
+.macro get_game_state reg_state
+  loadwz \reg_state, stc_sr_data # init gobj
+  lwz \reg_state, GOBJ_USERDATA(\reg_state)
+  lwz \reg_state, SRC_GAME_STATE(\reg_state)
+.endm
+
+
 .endif
 .set HEADER_STOCKRUN, 1

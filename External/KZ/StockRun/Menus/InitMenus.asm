@@ -228,11 +228,6 @@ CREATE_PANEL_LOOP:
     cmpwi REG_COUNT, 4
     blt CREATE_PANEL_LOOP
 
-#------------------------------------------------------------------------------#
-
-li r3, 60
-branchl r12, 0x8002063c
-
 
 # Stick Interface
 #------------------------------------------------------------------------------#
@@ -363,10 +358,15 @@ FN_PickerDisplay_Exit:
 FN_CameraGX:
   blrl
   backup
-
   mr REG_GOBJ, r3
-  mr r3, REG_GOBJ
-  branchl r12, 0x803910d8
+
+  get_game_state r3
+  cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraGX_Exit
+
+  DRAW_GX:
+    mr r3, REG_GOBJ
+    branchl r12, 0x803910d8
 
 FN_CameraGX_Exit:
   restore
@@ -396,6 +396,11 @@ FN_CameraProcess:
   # init vars
   mr REG_GOBJ, r3
   lwz REG_COBJ, GOBJ_OBJ(REG_GOBJ)
+
+  get_game_state r3
+  cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraProcess_Exit
+
   # sticks
   li r3, DEBUG_PAD_UNION # TODO :: use the active players port
   get_port_pad r3
@@ -566,6 +571,10 @@ blrl
   mr REG_GOBJ, r3
   lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
+
+  get_game_state r3
+  cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_UpdatePanel_Exit
   
   # get stick input
   li r3, DEBUG_PAD_UNION

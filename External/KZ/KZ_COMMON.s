@@ -15,6 +15,8 @@
 .set RTOC_STICKTHRESH, -0x3c98
 .set RTOC_TEN, -0x1e64
 .set RTOC_NEG_1_1, -0x125c
+.set RTOC_0_01, -0x7ebc
+.set RTOC_0_015625, -0x7da8
 
 ################################################################################
 # Directives

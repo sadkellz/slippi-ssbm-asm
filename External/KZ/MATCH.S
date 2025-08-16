@@ -29,6 +29,14 @@
 .set DYN_MODEL_MATANIMJOINT, DYN_MODEL_ANIMJOINT + 4        # matanimjoint **
 .set DYN_MODEL_SHAPEANIMJOINT, DYN_MODEL_MATANIMJOINT + 4   # shapeanimjoint **
 
+.set HSD_FOG_OBJ, 0 # HSD_Obj
+.set HSD_FOG_TYPE, HSD_FOG_OBJ + 8 # u32
+.set HSD_FOG_ADJ, HSD_FOG_TYPE + 4 # HSD_FogAdj*
+.set HSD_FOG_START, HSD_FOG_ADJ + 4 # float
+.set HSD_FOG_END, HSD_FOG_START + 4 # float
+.set HSD_FOG_COLOR, HSD_FOG_END + 4 # GXcolor
+.set HSD_FOG_AOBJ, HSD_FOG_COLOR + 4 # HSD_AObj
+
 
 ################################################################################
 # Directives
@@ -48,6 +56,9 @@
 
 .set stc_ifall, 0x804d6d5c
 .set stc_str_ScInfDmg_scene_data, 0x803f94d0
+
+# stage
+.set stc_stage_fog, 0x8049e7f4
 
 .set OFST_TINT, 0
 .set OFST_TEYE, 4
