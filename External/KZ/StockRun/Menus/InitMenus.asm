@@ -25,17 +25,31 @@ blrl
 .long 0 # DynamicModelDesc
 .set PROMPT_JOBJ, PROMPT_MODEL_SET + 4
 .long 0
-.set PANEL_Y, PROMPT_JOBJ + 4
-.float 14.0
 
 # Panel Data - top, right, bottom, left
+.set PD_POS, 0
+.set PD_SPEED, PD_POS + 12
+.set PD_SIZE, PD_SPEED + 4
 PD_TOP_BLRL:
 blrl
-.set PD_POS, 0
   .float 0.0
   .float 14.0
   .float 0.0
-.set PD_SPEED, PD_POS + 12
+  .float 25.0
+PD_RIGHT_BLRL:
+  .float 20.0
+  .float 0.0
+  .float 0.0
+  .float 25.0
+PD_BOT_BLRL:
+  .float 0.0
+  .float -14.0
+  .float 0.0
+  .float 25.0
+PD_LEFT_BLRL:
+  .float -20.0
+  .float 0.0
+  .float 0.0
   .float 25.0
 
 # Camera Data
@@ -43,19 +57,19 @@ CD_PANEL_BLRL:
 blrl
 .set DEADZONE, 0
   .float 0.27
-.set MOVE_SPEED, DEADZONE + 4
-  .float 2.0
-.set MOVE_SPEED_X, MOVE_SPEED + 4
-  .float 2.75
+.set MOVE_SPEED_Y, DEADZONE + 4
+  .float 2.25
+.set MOVE_SPEED_X, MOVE_SPEED_Y + 4
+  .float 3.15
 
 CD_STICK_BLRL:
 blrl
 .set DEADZONE, 0
   .float 0.27
-.set MOVE_SPEED, DEADZONE + 4
-  .float 1.75
-.set MOVE_SPEED_X, MOVE_SPEED + 4
-  .float 2.75
+.set MOVE_SPEED_Y, DEADZONE + 4
+  .float 1.85
+.set MOVE_SPEED_X, MOVE_SPEED_Y + 4
+  .float 2.85
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -65,7 +79,12 @@ CODE_START:
   .set REG_JOBJ, 27
   .set REG_COBJ, 26
   .set REG_COBJDESC, 25
+  .set REG_COUNT, 24
+  # stack
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
+  .set SP_PROMPT_MODEL_SET, SP_JOBJ + 4
+  .set SP_GX_START, SP_PROMPT_MODEL_SET + 4
+  .set SP_GX_END, SP_GX_START + 4
   backup
 
 # Panels
@@ -99,11 +118,9 @@ CODE_START:
   mflr r6
   branchl r12, GObj_AddUserData
 
-# Panel Jobj
+# Panel Jobjs
 #------------------------------------------------------------------------------#
-  bl DATA_BLRL
-  mflr REG_DATA
-
+  # load archive
   load r3, stc_ifvscam_str
   branchl r12, HSD_ArchiveLoad
   load r4, stc_ifvscam
@@ -113,17 +130,25 @@ CODE_START:
   loadwz r3, stc_ifvscam
   load r4, stc_ifcammodel_str
   branchl r12, HSD_ArchiveGetSymbol
-  stw r3, PROMPT_MODEL_SET(REG_DATA)
+  stw r3, SP_PROMPT_MODEL_SET(sp)
 
+  # create 4 panels
+  li REG_COUNT, 0
+CREATE_PANEL_LOOP:
   # create gobj
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
 
+  # data
+  bl PD_TOP_BLRL
+  mflr REG_DATA
+  mulli r0, REG_COUNT, PD_SIZE
+  add REG_DATA, REG_DATA, r0
+
   # load joint
-  lwz r3, PROMPT_MODEL_SET(REG_DATA)
+  lwz r3, SP_PROMPT_MODEL_SET(sp)
   lwz r3, DYN_MODEL_JOINT(r3)
   branchl r12, HSD_JObjLoadJoint
   mr REG_JOBJ, r3
-  stw REG_JOBJ, PROMPT_JOBJ(REG_DATA)
 
   # add to gobj
   mr r3, REG_GOBJ
@@ -148,13 +173,12 @@ CODE_START:
   mr r3, REG_GOBJ
   li r4, 0
   li r5, 0
-  bl PD_TOP_BLRL
-  mflr r6
+  mr r6, REG_DATA
   branchl r12, GObj_AddUserData
 
   # add anims
   mr r3, REG_JOBJ
-  lwz r4, PROMPT_MODEL_SET(REG_DATA)
+  lwz r4, SP_PROMPT_MODEL_SET(sp)
   li r5, 0
   branchl r12, HSD_JObjAddSceneAnimByIndex
 
@@ -182,7 +206,7 @@ CODE_START:
   lwz r3, SP_JOBJ(sp)
   li r4, JOBJFLAG_HIDDEN
   branchl r12, HSD_JObjClearFlagsAll
-
+  
   # hide the text dobj
   lwz r3, SP_JOBJ(sp)
   branchl r12, HSD_JObjGetDObj
@@ -191,9 +215,23 @@ CODE_START:
   branchl r12, HSD_DObjSetFlags
 
   # set the position
-  lfs f1, PANEL_Y(REG_DATA)
+  lfs f1, PD_POS+X(REG_DATA)
+  lfs f2, PD_POS+Y(REG_DATA)
+  lfs f3, PD_POS+Z(REG_DATA)
   lwz r3, SP_JOBJ(sp)
-  stfs f1, JOBJ_POS+Y(r3)
+  stfs f1, JOBJ_POS+X(r3)
+  stfs f2, JOBJ_POS+Y(r3)
+  stfs f3, JOBJ_POS+Z(r3)
+
+  CREATE_PANEL_LOOP_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, 4
+    blt CREATE_PANEL_LOOP
+
+#------------------------------------------------------------------------------#
+
+li r3, 60
+branchl r12, 0x8002063c
 
 
 # Stick Interface
@@ -367,7 +405,7 @@ FN_CameraProcess:
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
   # deadzone
   lfs FREG_DEADZONE, DEADZONE(REG_DATA)
-  lfs FREG_SCALE, MOVE_SPEED(REG_DATA)
+  lfs FREG_SCALE, MOVE_SPEED_Y(REG_DATA)
   lfs FREG_SCALEX, MOVE_SPEED_X(REG_DATA)
   
   check_deadzones FREG_X, FREG_Y, FREG_DEADZONE
@@ -412,7 +450,7 @@ FN_CameraProcess:
   # fmr f1, FREG_X
   # fmr f2, FREG_Y
   # logf LOG_LEVEL_ERROR, "sticks: %f, %f\n"
-    bp
+
     fmuls FREG_X, FREG_X, FREG_SCALEX
     fmuls FREG_Y, FREG_Y, FREG_SCALE
     stick_curve FREG_X, FREG_Y

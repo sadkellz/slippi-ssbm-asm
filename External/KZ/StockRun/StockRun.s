@@ -53,6 +53,7 @@
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input
 .set MENU_TRANSITION_FRAMES, 20 # 
 .set IF_PANEL_IDX, 5
+.set IF_BG_IDX, 2
 .set MIN_SCALE, RTOC_HALF
 .set MAX_SCALE, RTOC_TWO
 

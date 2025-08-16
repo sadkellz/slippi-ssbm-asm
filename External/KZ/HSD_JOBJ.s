@@ -50,6 +50,7 @@
 .set HSD_JObjAddSceneAnimByIndex, 0x8016895c # (HSD_JObj *jobj, DynamicModelDesc *model,int index)
 
 .set HSD_DObjSetFlags, 0x8035ddb8 # (HSD_DObj *Dobj, DObjFlag flag)
+.set HSD_MObjSetDiffuseColor, 0x80363c10 # (HSD_MObj *Mobj, u8 r, u8 g, u8 b)
 
 ################################################################################
 # Constants
