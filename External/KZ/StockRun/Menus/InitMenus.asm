@@ -71,6 +71,19 @@ blrl
 .set MOVE_SPEED_X, MOVE_SPEED_Y + 4
   .float 2.85
 
+# Text Data
+TEXT_DATA_BLRL:
+blrl
+.set TXT_CLR, 0
+  .long 0xFFFFFFFF # white
+.set TXT_SCALE, TXT_CLR + 4
+  .float 1.0
+.set TXT_POS, TXT_SCALE + 4
+  .float 0.0, 0.0
+.set TXT_STRING, TXT_POS + 8
+  .string "Stock Run"
+  .align 2
+
 CODE_START:
   .set REG_GOBJ, 31
   .set REG_DATA, 30
@@ -80,6 +93,7 @@ CODE_START:
   .set REG_COBJ, 26
   .set REG_COBJDESC, 25
   .set REG_COUNT, 24
+  .set REG_CANVAS, 23
   # stack
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   .set SP_PROMPT_MODEL_SET, SP_JOBJ + 4
@@ -91,9 +105,12 @@ CODE_START:
 #------------------------------------------------------------------------------#
 # Panel Camera
   # Get camera descriptor from archive
-  load r3, stc_ifall
-  lwz r3, 0x0(r3)
-  load r4, stc_str_ScInfDmg_scene_data
+  # load archive
+  load r3, stc_str_gmtou1p
+  branchl r12, HSD_ArchiveLoad
+
+  # get symbol
+  load r4, stc_str_ScGamTour_scene_data
   branchl r12, HSD_ArchiveGetSymbol
   lwz r3, 0x4(r3)
   lwz REG_COBJDESC, 0x0(r3)
@@ -118,6 +135,55 @@ CODE_START:
   mflr r6
   branchl r12, GObj_AddUserData
 
+  # create canvas
+  li r3, 0          # sis id
+  # mr r4, REG_GOBJ   # camera gobj
+  li r4, 0
+  li r5, GOBJ_CLASS_UI          # gobj class
+  li r6, GOBJ_PLINK_UI         # plink
+  li r7, 0          # prio
+  li r8, 16 # gxlink
+  li r9, 0          # render prio
+  li r10, 0         # camera prio
+  branchl r12, Text_CreateCanvas
+  mr REG_CANVAS, r3
+
+.set REG_TEXT, 16
+.set SP_CLR, BKP_FREE_SPACE_OFFSET
+  bl TEXT_DATA_BLRL
+  mflr REG_DATA
+
+  li r3, 0
+  mr r4, REG_CANVAS
+  branchl r12, Text_CreateStruct
+  mr REG_TEXT, r3
+  load r4, stc_sr_data
+  stw REG_TEXT, SRD_TEXT(r4)
+
+  mr r3, REG_TEXT
+  addi r4, REG_DATA, TXT_CLR
+  li r5, 0
+  mr r6, r4
+  addi r7, REG_DATA, TXT_STRING
+  lfs f1, TXT_SCALE(REG_DATA)
+  lfs f2, TXT_POS+X(REG_DATA)
+  lfs f3, TXT_POS+Y(REG_DATA)
+  lfs f5, RTOC_ONE(rtoc)
+  lfs f6, RTOC_ONE(rtoc)
+  branchl r12, FG_CreateSubtext
+
+  load r3, 0xFF00007F
+  stw r3, TEXT_BACKGROUND_R(REG_TEXT)
+  li r3, 1
+  stb r3, TEXT_DEFAULT_ALIGN(REG_TEXT)
+
+
+  mr r5, REG_TEXT
+  logf LOG_LEVEL_ERROR, "Text: %x"
+
+  li r3, 1
+  stb r3, TEXT_DEPTH_TEST(REG_TEXT)
+
 # Panel Jobjs
 #------------------------------------------------------------------------------#
   # load archive
@@ -131,6 +197,24 @@ CODE_START:
   load r4, stc_ifcammodel_str
   branchl r12, HSD_ArchiveGetSymbol
   stw r3, SP_PROMPT_MODEL_SET(sp)
+
+  # we have to turn on zupdate in the mobj desc before it gets loaded
+  # otherwise it will always draw over our text
+  lwz r3, SP_PROMPT_MODEL_SET(sp)
+  lwz r3, DYN_MODEL_JOINT(r3)
+  # traverse tree
+  lwz r3, 0x8(r3) # child
+  lwz r3, 0xC(r3) # next
+  # dobjdesc
+  lwz r3, 0x10(r3)
+  # mobjdesc
+  lwz r3, 0x8(r3)
+  # set flags
+  load r4, 1 << 29 # zupdate
+  lwz r5, 0x4(r3) # flags
+  andc r5, r5, r4
+  # why does this hide the entire panel?
+  stw r5, 0x4(r3)
 
   # create 4 panels
   li REG_COUNT, 0
@@ -226,7 +310,7 @@ CREATE_PANEL_LOOP:
   CREATE_PANEL_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
     cmpwi REG_COUNT, 4
-    blt CREATE_PANEL_LOOP
+    # blt CREATE_PANEL_LOOP
 
 
 # Stick Interface
@@ -299,8 +383,31 @@ CREATE_PANEL_LOOP:
   load r3, stc_pause_stickmult
   stw r0, 0(r3)
 
-  b EXIT
+# Text
+#------------------------------------------------------------------------------#
+# .set REG_TEXT, 16
+# .set SP_CLR, BKP_FREE_SPACE_OFFSET
+#   bl TEXT_DATA_BLRL
+#   mflr REG_DATA
 
+#   li r3, 5
+#   mr r4, REG_CANVAS
+#   branchl r12, Text_CreateStruct
+#   mr REG_TEXT, r3
+
+#   mr r3, REG_TEXT
+#   addi r4, REG_DATA, TXT_CLR
+#   li r5, 0
+#   mr r6, r4
+#   addi r7, REG_DATA, TXT_STRING
+#   lfs f1, TXT_SCALE(REG_DATA)
+#   lfs f2, TXT_POS+X(REG_DATA)
+#   lfs f3, TXT_POS+Y(REG_DATA)
+#   lfs f5, RTOC_ONE(rtoc)
+#   lfs f6, RTOC_ONE(rtoc)
+#   branchl r12, FG_CreateSubtext
+
+  b EXIT
 #==============================================================================#
 
 
@@ -551,6 +658,7 @@ blrl
 .set REG_GOBJ, 31
 .set REG_JOBJ, 30
 .set REG_DATA, 29
+.set REG_TEXT, 28
 # floats
 .set FREG_X, 31
 .set FREG_Y, 30
@@ -571,6 +679,9 @@ blrl
   get_game_state r3
   cmpwi r3, SRGS_GAME_ACTIVE
   beq FN_UpdatePanel_Exit
+
+  load r3, stc_sr_data
+  lwz REG_TEXT, SRD_TEXT(r3)
   
   # get stick input
   # li r3, DEBUG_PAD_UNION
@@ -663,6 +774,11 @@ SET_SCALE:
   fmr f3, FREG_SCALE
   branchl r12, HSD_JObjSetScale
 
+  # fmr f1, FREG_SCALE
+  # fmr f2, FREG_SCALE
+  # mr r3, REG_TEXT
+  # branchl r12, 0x803a7548
+
   # move in opposite direction
   lfs f1, PD_POS+X(REG_DATA)
   lfs f2, PD_POS+Y(REG_DATA)
@@ -690,7 +806,18 @@ SET_SCALE:
   stfs f1, JOBJ_POS+X(REG_JOBJ)
   stfs f2, JOBJ_POS+Y(REG_JOBJ)
   stfs f3, JOBJ_POS+Z(REG_JOBJ)
- 
+
+  # # move text
+  # lfs f0, RTOC_HALF(rtoc)
+  # fmuls f1, f1, f0
+  # fmuls f2, f2, f0
+  # fmuls f3, f3, f0
+  # stfs f1, TEXT_TRANS+X(REG_TEXT)
+  # fneg f2, f2
+  # stfs f2, TEXT_TRANS+Y(REG_TEXT)
+  # stfs f3, TEXT_TRANS+Z(REG_TEXT)
+  
+
   mr r3, REG_JOBJ
   branchl r12, HSD_JObjSetMtxDirty
 

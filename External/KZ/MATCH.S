@@ -57,6 +57,9 @@
 .set stc_ifall, 0x804d6d5c
 .set stc_str_ScInfDmg_scene_data, 0x803f94d0
 
+.set stc_str_gmtou1p, 0x804d41e0
+.set stc_str_ScGamTour_scene_data, 0x803da260
+
 # stage
 .set stc_stage_fog, 0x8049e7f4
 

@@ -422,6 +422,7 @@ add \reg, r3, r4
 .set Text_DrawEachFrame,0x803a84bc
 .set Text_UpdateSubtextContents,0x803a70a0
 .set Text_RemoveText,0x803a5cc4
+.set Text_CreateCanvas,0x803A611C
 
 ## EXI functions
 .set EXIAttach,0x803464c0
