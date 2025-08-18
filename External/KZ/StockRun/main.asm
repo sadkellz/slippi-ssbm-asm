@@ -189,7 +189,8 @@ SR_Update:
   lfs f1, 0(r3)
   lfs f0, RTOC_0_015625(rtoc)
   fadds f1, f1, f0
-  stfs f1, 0(r3)
+  stfs f1, 0(r3) # blur
+  stfs f1, 4(r3) # tint
 
   STATE_SWITCH:
     STATE_INIT:
@@ -273,6 +274,7 @@ SR_IsSelectionComplete:
   load r3, stc_blur_amt
   li r4, 0
   stw r4, 0(r3)
+  stw r4, 4(r3) # tint
 
   # update state
   li r3, SRGS_GAME_ACTIVE
@@ -311,8 +313,8 @@ SR_ProcessInput:
   cmpwi r3, -1
   beq SR_ProcessInput_Exit
 
-  bl SR_GetCurrentPlayerSlot
-  # li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
+  # bl SR_GetCurrentPlayerSlot
+  li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
   branchl r12, Inputs_GetPlayerInstantInputs
   andi. r4, r4, PAD_BTN_A
   bne CHOOSE_CARD
@@ -369,6 +371,10 @@ SR_SetupCamera:
   
   lwz r3, SRC_SLOT_ORDER(REG_DATA) # lowest port goes first
   branchl r12, Camera_SetMode3
+
+  lwz r3, SRC_SLOT_ORDER(REG_DATA)
+  load r4, stc_pause_data
+  stw r3, PAUSE_UI_SLOT(r4)
 
 SR_SetupCamera_Exit:
   rslr

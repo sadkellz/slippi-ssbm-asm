@@ -112,6 +112,7 @@
 .set HSD_CObjEndCurrent, 0x80368608
 .set HSD_CObjEraseScreen, 0x803676f8
 .set HSD_CObjInit, 0x8036a55c
+.set HSD_CObjWorldToScreen, 0x8000e210 # (HSD_CObj *cobj,Vec *pos3d,Vec *pos2d,int recalc_mtx)
 
 .set CObj_CopyFromMain, 0x8021eb10 # (GOBJ *gobj)
 .set Camera_LoadCameraEntity, 0x80030a50

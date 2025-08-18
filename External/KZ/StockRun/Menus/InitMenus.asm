@@ -153,12 +153,13 @@ CODE_START:
   bl TEXT_DATA_BLRL
   mflr REG_DATA
 
+  bp
   li r3, 0
   mr r4, REG_CANVAS
   branchl r12, Text_CreateStruct
   mr REG_TEXT, r3
   load r4, stc_sr_data
-  stw REG_TEXT, SRD_TEXT(r4)
+  stw REG_TEXT, SRD_TEXTS(r4) # TODO :: spawn 4
 
   mr r3, REG_TEXT
   addi r4, REG_DATA, TXT_CLR
@@ -172,17 +173,15 @@ CODE_START:
   lfs f6, RTOC_ONE(rtoc)
   branchl r12, FG_CreateSubtext
 
-  load r3, 0xFF00007F
-  stw r3, TEXT_BACKGROUND_R(REG_TEXT)
-  li r3, 1
-  stb r3, TEXT_DEFAULT_ALIGN(REG_TEXT)
+  # load r3, 0xFF00007F
+  # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
 
+  li r3, 1
+  stb r3, TEXT_DEFAULT_KERNING(REG_TEXT)
+  stb r3, TEXT_DEFAULT_ALIGN(REG_TEXT)
 
   mr r5, REG_TEXT
   logf LOG_LEVEL_ERROR, "Text: %x"
-
-  li r3, 1
-  stb r3, TEXT_DEPTH_TEST(REG_TEXT)
 
 # Panel Jobjs
 #------------------------------------------------------------------------------#
@@ -233,6 +232,12 @@ CREATE_PANEL_LOOP:
   lwz r3, DYN_MODEL_JOINT(r3)
   branchl r12, HSD_JObjLoadJoint
   mr REG_JOBJ, r3
+  # store joint
+  # bp
+  load r4, stc_sr_data
+  addi r4, r4, SRD_JOBJ_PANELS
+  mulli r0, REG_COUNT, 4
+  stwx REG_JOBJ, r4, r0
 
   # add to gobj
   mr r3, REG_GOBJ
@@ -310,7 +315,7 @@ CREATE_PANEL_LOOP:
   CREATE_PANEL_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
     cmpwi REG_COUNT, 4
-    # blt CREATE_PANEL_LOOP
+    blt CREATE_PANEL_LOOP
 
 
 # Stick Interface
@@ -383,29 +388,6 @@ CREATE_PANEL_LOOP:
   load r3, stc_pause_stickmult
   stw r0, 0(r3)
 
-# Text
-#------------------------------------------------------------------------------#
-# .set REG_TEXT, 16
-# .set SP_CLR, BKP_FREE_SPACE_OFFSET
-#   bl TEXT_DATA_BLRL
-#   mflr REG_DATA
-
-#   li r3, 5
-#   mr r4, REG_CANVAS
-#   branchl r12, Text_CreateStruct
-#   mr REG_TEXT, r3
-
-#   mr r3, REG_TEXT
-#   addi r4, REG_DATA, TXT_CLR
-#   li r5, 0
-#   mr r6, r4
-#   addi r7, REG_DATA, TXT_STRING
-#   lfs f1, TXT_SCALE(REG_DATA)
-#   lfs f2, TXT_POS+X(REG_DATA)
-#   lfs f3, TXT_POS+Y(REG_DATA)
-#   lfs f5, RTOC_ONE(rtoc)
-#   lfs f6, RTOC_ONE(rtoc)
-#   branchl r12, FG_CreateSubtext
 
   b EXIT
 #==============================================================================#
@@ -504,9 +486,9 @@ FN_CameraProcess:
   beq FN_CameraProcess_Exit
 
   # sticks
-  # li r3, DEBUG_PAD_UNION # TODO :: use the active players port
-  # get_port_pad r3
-  get_active_pad r3
+  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+  get_port_pad r3
+  # get_active_pad r3
   lfs FREG_X, PAD_stick_x(r3)
   lfs FREG_Y, PAD_stick_y(r3)
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
@@ -634,9 +616,9 @@ FN_CameraProcess:
     addi r5, sp, SP_NEW_TARGET
     branchl r12, PSVECAdd
 
-  lfs f1, SP_NEW_EYE+X(sp)
-  lfs f2, SP_NEW_EYE+Y(sp)
-  lfs f3, SP_NEW_EYE+Z(sp)
+    # lfs f1, SP_NEW_EYE+X(sp)
+    # lfs f2, SP_NEW_EYE+Y(sp)
+    # lfs f3, SP_NEW_EYE+Z(sp)
 
     # Update camera
     mr r3, REG_COBJ
@@ -645,6 +627,29 @@ FN_CameraProcess:
     mr r3, REG_COBJ
     addi r4, sp, SP_NEW_TARGET
     branchl r12, HSD_CObjSetInterest
+
+  # update text
+  .set SP_OUT, BKP_FREE_SPACE_OFFSET
+  mr r3, REG_COBJ
+  load r4, stc_sr_data
+  addi r4, r4, SRD_JOBJ_PANELS
+  lwz r4, 0(r4)
+  addi r4, r4, JOBJ_POS
+  addi r5, sp, SP_OUT
+  li r6, 0
+  branchl r12, HSD_CObjWorldToScreen
+
+  bp
+  load r4, stc_sr_data
+  lwz r3, SRD_TEXTS(r4)
+  lfs f0, RTOC_300(rtoc)
+  lfs f1, SP_OUT+X(sp)
+  lfs f2, SP_OUT+Y(sp)
+  lfs f3, SP_OUT+Z(sp)
+  stfs f1, TEXT_TRANS+X(r3)
+  fsubs f2, f2, f0
+  stfs f2, TEXT_TRANS+Y(r3)
+  stfs f3, TEXT_TRANS+Z(r3)
 
 FN_CameraProcess_Exit:
   restore
@@ -658,7 +663,6 @@ blrl
 .set REG_GOBJ, 31
 .set REG_JOBJ, 30
 .set REG_DATA, 29
-.set REG_TEXT, 28
 # floats
 .set FREG_X, 31
 .set FREG_Y, 30
@@ -679,14 +683,11 @@ blrl
   get_game_state r3
   cmpwi r3, SRGS_GAME_ACTIVE
   beq FN_UpdatePanel_Exit
-
-  load r3, stc_sr_data
-  lwz REG_TEXT, SRD_TEXT(r3)
   
   # get stick input
-  # li r3, DEBUG_PAD_UNION
-  # get_port_pad r3
-  get_active_pad r3
+  li r3, DEBUG_PAD_UNION
+  get_port_pad r3
+  # get_active_pad r3
   lfs FREG_X, PAD_stick_x(r3)
   lfs FREG_Y, PAD_stick_y(r3)
   lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
@@ -774,10 +775,10 @@ SET_SCALE:
   fmr f3, FREG_SCALE
   branchl r12, HSD_JObjSetScale
 
-  # fmr f1, FREG_SCALE
-  # fmr f2, FREG_SCALE
-  # mr r3, REG_TEXT
-  # branchl r12, 0x803a7548
+  # load r3, stc_sr_data
+  # lwz r3, SRD_TEXTS(r3)
+  # stfs FREG_SCALE, TEXT_STRETCH+X(r3)
+  # stfs FREG_SCALE, TEXT_STRETCH+Y(r3)
 
   # move in opposite direction
   lfs f1, PD_POS+X(REG_DATA)
@@ -806,17 +807,6 @@ SET_SCALE:
   stfs f1, JOBJ_POS+X(REG_JOBJ)
   stfs f2, JOBJ_POS+Y(REG_JOBJ)
   stfs f3, JOBJ_POS+Z(REG_JOBJ)
-
-  # # move text
-  # lfs f0, RTOC_HALF(rtoc)
-  # fmuls f1, f1, f0
-  # fmuls f2, f2, f0
-  # fmuls f3, f3, f0
-  # stfs f1, TEXT_TRANS+X(REG_TEXT)
-  # fneg f2, f2
-  # stfs f2, TEXT_TRANS+Y(REG_TEXT)
-  # stfs f3, TEXT_TRANS+Z(REG_TEXT)
-  
 
   mr r3, REG_JOBJ
   branchl r12, HSD_JObjSetMtxDirty
