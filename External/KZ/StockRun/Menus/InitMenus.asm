@@ -149,16 +149,41 @@ CODE_START:
   mr REG_CANVAS, r3
 
 .set REG_TEXT, 16
+.set REG_SISDATA, 17
+.set REG_SISTABLE, 18
 .set SP_CLR, BKP_FREE_SPACE_OFFSET
   bl TEXT_DATA_BLRL
   mflr REG_DATA
 
+  bp
   # get SdTou filename
   branchl r12, 0x8018f5f0
   mr r4, r3
   li r3, SIS_ID
   load r5, 0x803da0b8 # "SIS_TournamentData"
   branchl r12, 0x803a62a0 # LoadSIS
+  # replace SIS text
+  # get our SIS address we're replacing - taken from 803a637c
+  load r0, 0x804d1124 # SISData - SIS[4]
+  li r5, SIS_ID
+  rlwinm r3, r5, 2, 0, 29
+  add	r3, r0, r3
+  lwz	REG_SISDATA, 0(r3) # SISData[SIS_ID]
+  computeBranchTargetAddress REG_SISTABLE, stc_sr_sistable
+  li REG_COUNT, 0
+  SIS_LOOP:
+    # now the idx we want
+    rlwinm r0, REG_COUNT, 2, 0, 29
+    add r12, REG_SISTABLE, r0
+    mtctr r12
+    bctrl
+    mflr r3
+    stwx r3, REG_SISDATA, r0
+
+  SIS_LOOP_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, SIS_COUNT
+    ble SIS_LOOP
 
   # create text
   li r3, SIS_ID
@@ -177,7 +202,7 @@ CODE_START:
   stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
 
   mr r3, REG_TEXT
-  li r4, 74
+  li r4, 0
   branchl r12, Text_SetFromSIS
 
   load r4, stc_sr_data
@@ -236,7 +261,6 @@ CREATE_PANEL_LOOP:
   branchl r12, HSD_JObjLoadJoint
   mr REG_JOBJ, r3
   # store joint
-  # bp
   load r4, stc_sr_data
   addi r4, r4, SRD_JOBJ_PANELS
   mulli r0, REG_COUNT, 4
@@ -641,16 +665,21 @@ FN_CameraProcess:
   addi r5, sp, SP_OUT
   li r6, 0
   branchl r12, HSD_CObjWorldToScreen
-
-  load r4, stc_sr_data
-  lwz r3, SRD_TEXTS(r4)
-  lfs f0, RTOC_300(rtoc)
   lfs f1, SP_OUT+X(sp)
   lfs f2, SP_OUT+Y(sp)
   lfs f3, SP_OUT+Z(sp)
+  # load our text
+  load r4, stc_sr_data
+  lwz r3, SRD_TEXTS(r4)
+  # x offset
+  lfs f0, RTOC_190(rtoc)
+  fsubs f1, f1, f0
   stfs f1, TEXT_TRANS+X(r3)
+  # y offset
+  lfs f0, RTOC_300(rtoc)
   fsubs f2, f2, f0
   stfs f2, TEXT_TRANS+Y(r3)
+  # z offset
   stfs f3, TEXT_TRANS+Z(r3)
 
 FN_CameraProcess_Exit:
@@ -822,6 +851,7 @@ SET_SCALE:
 FN_UpdatePanel_Exit:
  restore
  blr
+
 
 
 

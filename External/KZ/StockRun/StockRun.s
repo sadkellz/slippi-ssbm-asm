@@ -24,6 +24,7 @@
 # Directives
 ################################################################################
 .set stc_sr_data, 0x804a2f48
+.set stc_sr_sistable, 0x804a3048
 
 # StockRun Game State
 .set SRGS_INIT, 0
@@ -58,7 +59,8 @@
 .set IF_BG_IDX, 2
 .set MIN_SCALE, RTOC_HALF
 .set MAX_SCALE, RTOC_TWO
-.set SIS_ID, 5
+.set SIS_ID, 3
+.set SIS_COUNT, 4 # number of replaced SIS entries we've made
 
 
 ################################################################################
