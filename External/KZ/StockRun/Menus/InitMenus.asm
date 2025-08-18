@@ -71,18 +71,34 @@ blrl
 .set MOVE_SPEED_X, MOVE_SPEED_Y + 4
   .float 2.85
 
-# Text Data
+# Text Data - TOP, RIGHT, BOTTOM, LEFT
 TEXT_DATA_BLRL:
 blrl
-.set TXT_CLR, 0
-  .long 0xFFFFFFFF # white
-.set TXT_SCALE, TXT_CLR + 4
-  .float 1.0
-.set TXT_POS, TXT_SCALE + 4
-  .float 0.0, 0.0
-.set TXT_STRING, TXT_POS + 8
-  .string "Stock Run"
-  .align 2
+.set TXT_WIDTH, 0
+.set TXT_HEIGHT, TXT_WIDTH + 4
+.set TXT_OFSTX, TXT_HEIGHT + 4
+.set TXT_OFSTY, TXT_OFSTX + 4
+.set TD_SIZE, TXT_OFSTY + 4
+TEXT_DATA_TOP:
+  .float 450.0
+  .float 160.0
+  .float 225.0
+  .float 300.0
+TEXT_DATA_RIGHT:
+  .float 450.0
+  .float 160.0
+  .float -300.0
+  .float -65.0
+TEXT_DATA_BOTTOM:
+  .float 450.0
+  .float 160.0
+  .float 225.0
+  .float -425.0
+TEXT_DATA_LEFT:
+  .float 450.0
+  .float 160.0
+  .float 755.0
+  .float -65.0
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -155,7 +171,6 @@ CODE_START:
   bl TEXT_DATA_BLRL
   mflr REG_DATA
 
-  bp
   # get SdTou filename
   branchl r12, 0x8018f5f0
   mr r4, r3
@@ -186,30 +201,38 @@ CODE_START:
     ble SIS_LOOP
 
   # create text
-  li r3, SIS_ID
-  mr r4, REG_CANVAS
-  # camera process will handle position
-  lfs	f1, RTOC_ZERO(rtoc)
-  lfs	f2, RTOC_ZERO(rtoc)
-  lfs	f3, -0x52F8(rtoc)
-  lfs	f4, -0x5248(rtoc)
-  lfs	f5, -0x5244(rtoc)
-  branchl r12, Text_AllocateTextObject
-  mr REG_TEXT, r3
-  load r3, 0xFF00007F
-  stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
-  li r3, TRUE
-  stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
+  li REG_COUNT, 0
+  SPAWN_TEXT_LOOP:
+    # camera process will handle position
+    li r3, SIS_ID
+    mr r4, REG_CANVAS
+    lfs	f1, RTOC_ZERO(rtoc)
+    lfs	f2, RTOC_ZERO(rtoc)
+    lfs	f3, RTOC_ZERO(rtoc)
+    lfs	f4, TXT_WIDTH(REG_DATA)
+    lfs	f5, TXT_HEIGHT(REG_DATA)
+    branchl r12, Text_AllocateTextObject
+    mr REG_TEXT, r3
+    load r3, 0xFF00007F
+    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+    li r3, TRUE
+    stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
 
-  mr r3, REG_TEXT
-  li r4, 0
-  branchl r12, Text_SetFromSIS
+    mr r3, REG_TEXT
+    mr r4, REG_COUNT
+    branchl r12, Text_SetFromSIS
 
-  load r4, stc_sr_data
-  stw REG_TEXT, SRD_TEXTS(r4) # TODO :: spawn 4
+    load r4, stc_sr_data
+    addi r4, r4, SRD_TEXTS
+    mulli r0, REG_COUNT, 4
+    stwx REG_TEXT, r4, r0
 
-  mr r5, REG_TEXT
-  logf LOG_LEVEL_ERROR, "Text: %x"
+    SPAWN_TEXT_LOOP_CHECK:
+      addi REG_COUNT, REG_COUNT, 1
+      cmpwi REG_COUNT, 4
+      blt SPAWN_TEXT_LOOP
+      mr r5, REG_COUNT
+      logf LOG_LEVEL_ERROR, "Spawned %d text objects"
 
 # Panel Jobjs
 #------------------------------------------------------------------------------#
@@ -657,30 +680,53 @@ FN_CameraProcess:
 
   # update text
   .set SP_OUT, BKP_FREE_SPACE_OFFSET
-  mr r3, REG_COBJ
+  .set REG_COUNT, 16
+  .set REG_TEXTS, 17
+  bl TEXT_DATA_BLRL
+  mflr REG_DATA
   load r4, stc_sr_data
-  addi r4, r4, SRD_JOBJ_PANELS
-  lwz r4, 0(r4)
+  addi REG_TEXTS, r4, SRD_TEXTS
+  lwz r4, SRD_JOBJ_PANELS(r4)
+  mr r3, REG_COBJ
   addi r4, r4, JOBJ_POS
   addi r5, sp, SP_OUT
   li r6, 0
   branchl r12, HSD_CObjWorldToScreen
-  lfs f1, SP_OUT+X(sp)
-  lfs f2, SP_OUT+Y(sp)
-  lfs f3, SP_OUT+Z(sp)
-  # load our text
-  load r4, stc_sr_data
-  lwz r3, SRD_TEXTS(r4)
-  # x offset
-  lfs f0, RTOC_190(rtoc)
-  fsubs f1, f1, f0
-  stfs f1, TEXT_TRANS+X(r3)
-  # y offset
-  lfs f0, RTOC_300(rtoc)
-  fsubs f2, f2, f0
-  stfs f2, TEXT_TRANS+Y(r3)
-  # z offset
-  stfs f3, TEXT_TRANS+Z(r3)
+  lfs f31, SP_OUT+X(sp)
+  lfs f30, SP_OUT+Y(sp)
+  lfs f29, SP_OUT+Z(sp)
+  
+  li REG_COUNT, 0
+  UPDATE_TEXT_LOOP:
+    # load our text
+    mulli r0, REG_COUNT, 4
+    mulli r4, REG_COUNT, TD_SIZE
+    add r4, REG_DATA, r4
+    lwzx r3, REG_TEXTS, r0
+    # x offset
+    lfs f0, TXT_OFSTX(r4)
+    fmr f1, f31
+    fsubs f1, f1, f0
+    stfs f1, TEXT_TRANS+X(r3)
+    # y offset
+    lfs f0, TXT_OFSTY(r4)
+    fmr f2, f30
+    fsubs f2, f2, f0
+    stfs f2, TEXT_TRANS+Y(r3)
+    # z offset
+    fmr f3, f29
+    stfs f3, TEXT_TRANS+Z(r3)
+
+  # logging
+  # lfs f1, TEXT_TRANS+X(r3)
+  # lfs f2, TEXT_TRANS+Y(r3)
+  # lfs f3, TEXT_TRANS+Z(r3)
+  # mr r5, REG_COUNT
+  # logf LOG_LEVEL_ERROR, "UPDATE TEXT POS: IDX: [%d]  POS: [%f, %f, %f]\n\n"
+  UPDATE_TEXT_LOOP_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, 4
+    blt UPDATE_TEXT_LOOP
 
 FN_CameraProcess_Exit:
   restore
