@@ -58,6 +58,7 @@
 .set IF_BG_IDX, 2
 .set MIN_SCALE, RTOC_HALF
 .set MAX_SCALE, RTOC_TWO
+.set SIS_ID, 5
 
 
 ################################################################################

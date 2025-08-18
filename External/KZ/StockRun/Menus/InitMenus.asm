@@ -136,7 +136,7 @@ CODE_START:
   branchl r12, GObj_AddUserData
 
   # create canvas
-  li r3, 0          # sis id
+  li r3, SIS_ID          # sis id
   # mr r4, REG_GOBJ   # camera gobj
   li r4, 0
   li r5, GOBJ_CLASS_UI          # gobj class
@@ -153,32 +153,35 @@ CODE_START:
   bl TEXT_DATA_BLRL
   mflr REG_DATA
 
-  bp
-  li r3, 0
+  # get SdTou filename
+  branchl r12, 0x8018f5f0
+  mr r4, r3
+  li r3, SIS_ID
+  load r5, 0x803da0b8 # "SIS_TournamentData"
+  branchl r12, 0x803a62a0 # LoadSIS
+
+  # create text
+  li r3, SIS_ID
   mr r4, REG_CANVAS
-  branchl r12, Text_CreateStruct
+  # camera process will handle position
+  lfs	f1, RTOC_ZERO(rtoc)
+  lfs	f2, RTOC_ZERO(rtoc)
+  lfs	f3, -0x52F8(rtoc)
+  lfs	f4, -0x5248(rtoc)
+  lfs	f5, -0x5244(rtoc)
+  branchl r12, Text_AllocateTextObject
   mr REG_TEXT, r3
-  load r4, stc_sr_data
-  stw REG_TEXT, SRD_TEXTS(r4) # TODO :: spawn 4
+  load r3, 0xFF00007F
+  stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+  li r3, TRUE
+  stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
 
   mr r3, REG_TEXT
-  addi r4, REG_DATA, TXT_CLR
-  li r5, 0
-  mr r6, r4
-  addi r7, REG_DATA, TXT_STRING
-  lfs f1, TXT_SCALE(REG_DATA)
-  lfs f2, TXT_POS+X(REG_DATA)
-  lfs f3, TXT_POS+Y(REG_DATA)
-  lfs f5, RTOC_ONE(rtoc)
-  lfs f6, RTOC_ONE(rtoc)
-  branchl r12, FG_CreateSubtext
+  li r4, 74
+  branchl r12, Text_SetFromSIS
 
-  # load r3, 0xFF00007F
-  # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
-
-  li r3, 1
-  stb r3, TEXT_DEFAULT_KERNING(REG_TEXT)
-  stb r3, TEXT_DEFAULT_ALIGN(REG_TEXT)
+  load r4, stc_sr_data
+  stw REG_TEXT, SRD_TEXTS(r4) # TODO :: spawn 4
 
   mr r5, REG_TEXT
   logf LOG_LEVEL_ERROR, "Text: %x"
@@ -639,7 +642,6 @@ FN_CameraProcess:
   li r6, 0
   branchl r12, HSD_CObjWorldToScreen
 
-  bp
   load r4, stc_sr_data
   lwz r3, SRD_TEXTS(r4)
   lfs f0, RTOC_300(rtoc)
