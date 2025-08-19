@@ -37,25 +37,25 @@ blrl
   .float 14.0
   .float 0.0
   .float 1.0
-  .float 1.0
+  .float 0.0
 PD_RIGHT_BLRL:
   .float 20.0
   .float 0.0
   .float 0.0
   .float 1.0
-  .float 1.0
+  .float 0.0
 PD_BOT_BLRL:
   .float 0.0
   .float -14.0
   .float 0.0
   .float 1.0
-  .float 1.0
+  .float 0.0
 PD_LEFT_BLRL:
   .float -20.0
   .float 0.0
   .float 0.0
   .float 1.0
-  .float 1.0
+  .float 0.0
 
 # Camera Data
 CD_PANEL_BLRL:
@@ -822,7 +822,6 @@ blrl
   lfs FREG_STICK_X, PAD_stick_x(r3)
   lfs FREG_STICK_Y, PAD_stick_y(r3)
 
-  bp
   # Create stick direction vector
   stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
   stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
@@ -926,13 +925,13 @@ CLAMP_VALUES:
   DOBJ_ALPHA_LOOP:
     cmpwi REG_DOBJ, 0
     beq DOBJ_ALPHA_DONE
-    lwz r3, DOBJ_MOBJ(REG_DOBJ)
+    lwz r3, 0x8(REG_DOBJ)
     cmpwi r3, 0
     beq DOBJ_ALPHA_NEXT
     fmr f1, FREG_CURRENT_ALPHA
     branchl r12, HSD_MObjSetAlpha
   DOBJ_ALPHA_NEXT:
-    lwz REG_DOBJ, DOBJ_NEXT(REG_DOBJ)
+    lwz REG_DOBJ, 0x4(REG_DOBJ)
     b DOBJ_ALPHA_LOOP
   DOBJ_ALPHA_DONE:
 
@@ -940,16 +939,12 @@ CLAMP_VALUES:
   mr r3, REG_PANEL
   branchl r12, HSD_JObjSetMtxDirty
 
-  fmr f1, FREG_CURRENT_SCALE
-  fmr f2, FREG_CURRENT_ALPHA
-  logf LOG_LEVEL_ERROR, "SCALE: %f, ALPHA: %f"
+  # fmr f1, FREG_CURRENT_SCALE
+  # fmr f2, FREG_CURRENT_ALPHA
+  # logf LOG_LEVEL_ERROR, "SCALE: %f, ALPHA: %f"
 
-  # fmr f1, FREG_STICK_X
-  # fmr f2, FREG_STICK_Y
-  # logf LOG_LEVEL_ERROR, "STICK_X: %f, STICK_Y: %f"
-
-  stfs FREG_CURRENT_SCALE, STATIC_CURRENT_SCALE(REG_DATA)
-  stfs FREG_CURRENT_ALPHA, STATIC_CURRENT_ALPHA(REG_DATA)
+  stfs FREG_CURRENT_SCALE, PD_CURRENT_SCALE(REG_DATA)
+  stfs FREG_CURRENT_ALPHA, PD_CURRENT_ALPHA(REG_DATA)
 
 FN_UpdatePanel_Exit:
   restore
