@@ -34,24 +34,24 @@ blrl
 PD_TOP_BLRL:
 blrl
   .float 0.0
-  .float 14.0
+  .float 17.0
   .float 0.0
   .float 1.0
   .float 0.0
 PD_RIGHT_BLRL:
-  .float 20.0
+  .float 34.0
   .float 0.0
   .float 0.0
   .float 1.0
   .float 0.0
 PD_BOT_BLRL:
   .float 0.0
-  .float -14.0
+  .float -17.0
   .float 0.0
   .float 1.0
   .float 0.0
 PD_LEFT_BLRL:
-  .float -20.0
+  .float -34.0
   .float 0.0
   .float 0.0
   .float 1.0
@@ -275,6 +275,7 @@ CODE_START:
   # stw r5, 0x4(r3)
 
   # create 4 panels
+  bp
   li REG_COUNT, 0
 CREATE_PANEL_LOOP:
   # create gobj
@@ -760,7 +761,6 @@ FN_TextProcess:
     lfs f29, SP_OUT+Z(sp)
   
     # load our text
-    # bp
     mulli r0, REG_COUNT, 4
     mulli r4, REG_COUNT, TD_SIZE
     add r4, REG_DATA, r4
