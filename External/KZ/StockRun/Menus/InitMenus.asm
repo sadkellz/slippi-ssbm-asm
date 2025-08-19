@@ -579,7 +579,8 @@ FN_CameraProcess:
   lfs FREG_Y, PAD_stick_y(r3)
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
   # deadzone
-  lfs FREG_DEADZONE, DEADZONE(REG_DATA)
+  # lfs FREG_DEADZONE, DEADZONE(REG_DATA)
+  lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
   lfs FREG_SCALE, MOVE_SPEED_Y(REG_DATA)
   lfs FREG_SCALEX, MOVE_SPEED_X(REG_DATA)
   
@@ -846,11 +847,11 @@ blrl
   lfs FREG_CURRENT_ALPHA, PD_CURRENT_ALPHA(REG_DATA)
 
   # Set constants
-  load r3, 0x3dcccccd  # 0.1f
+  load r3, 0x3ecccccd  # 0.4f (reset_speed)
   stw r3, SP_TEMP(sp)
   lfs FREG_RESET_SPEED, SP_TEMP(sp)
 
-  load r3, 0x3d23d70a  # 0.04f
+  load r3, 0x3f800000  # 1.0f (change_speed) - was 0x3d23d70a (0.04f)
   stw r3, SP_TEMP(sp)
   lfs FREG_CHANGE_SPEED, SP_TEMP(sp)
 
@@ -859,12 +860,10 @@ blrl
   branchl r12, PSVECMag
   fmr FREG_MAGNITUDE, f1
 
-  # Check if magnitude > 0.001f
-  load r3, 0x3a83126f  # 0.001f
-  stw r3, SP_TEMP(sp)
-  lfs f0, SP_TEMP(sp)
+  # Check if magnitude > deadzone threshold
+  lfs f0, RTOC_STICKTHRESH(rtoc)
   fcmpo cr0, FREG_MAGNITUDE, f0
-  ble RESET_SCALE  # No stick input - reset
+  ble RESET_SCALE  # Below deadzone - reset
 
   # Normalize stick direction
   addi r3, sp, SP_STICK_DIR
@@ -882,12 +881,13 @@ blrl
   fcmpo cr0, FREG_ALIGNMENT, f0
   ble RESET_SCALE  # Negative alignment - reset
 
-  # Scale up: current_scale += alignment * magnitude * change_speed
-  fmuls f0, FREG_ALIGNMENT, FREG_MAGNITUDE
-  fmuls f0, f0, FREG_CHANGE_SPEED
-  fadds FREG_CURRENT_SCALE, FREG_CURRENT_SCALE, f0
-  fadds FREG_CURRENT_ALPHA, FREG_CURRENT_ALPHA, f0
-  b CLAMP_VALUES  # Skip reset section
+  # Set scale directly based on current input: 1.0 + (alignment * magnitude * scale_factor)
+  lfs f0, RTOC_ONE(rtoc)                    # Start with 1.0
+  fmuls f1, FREG_ALIGNMENT, FREG_MAGNITUDE  # alignment * magnitude
+  fmuls f1, f1, FREG_CHANGE_SPEED          # * scale_factor (maybe increase this value)
+  fadds FREG_CURRENT_SCALE, f0, f1         # 1.0 + scaled_input
+  fmr FREG_CURRENT_ALPHA, f1               # alpha = just the scaled_input (0 to max)
+  b CLAMP_VALUES
 
 RESET_SCALE:
   # current_scale += (1.0 - current_scale) * reset_speed
@@ -905,14 +905,14 @@ CLAMP_VALUES:
     load r3, 0x3dcccccd  # 0.1f
     stw r3, SP_TEMP(sp)
     lfs f1, SP_TEMP(sp)
-    load r3, 0x3fc00000  # 1.5f
-    stw r3, SP_TEMP(sp)
-    lfs f2, SP_TEMP(sp)
+    # load r3, 0x3fc00000  # 1.5f
+    # stw r3, SP_TEMP(sp)
+    lfs f2, RTOC_TWO(rtoc)
     clamp_float FREG_CURRENT_SCALE, f1, f2
 
-    # Clamp alpha (0.0f to 1.0f)
+    # Clamp alpha
     lfs f1, RTOC_ZERO(rtoc)
-    lfs f2, RTOC_ONE(rtoc)
+    lfs f2, RTOC_0_75(rtoc)
     clamp_float FREG_CURRENT_ALPHA, f1, f2
 
     # Set panel scale
