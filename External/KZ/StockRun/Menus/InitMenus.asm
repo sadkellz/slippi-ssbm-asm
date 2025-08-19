@@ -28,29 +28,34 @@ blrl
 
 # Panel Data - top, right, bottom, left
 .set PD_POS, 0
-.set PD_SPEED, PD_POS + 12
-.set PD_SIZE, PD_SPEED + 4
+.set PD_CURRENT_SCALE, PD_POS + 12
+.set PD_CURRENT_ALPHA, PD_CURRENT_SCALE + 4
+.set PD_SIZE, PD_CURRENT_ALPHA + 4
 PD_TOP_BLRL:
 blrl
   .float 0.0
   .float 14.0
   .float 0.0
-  .float 25.0
+  .float 1.0
+  .float 1.0
 PD_RIGHT_BLRL:
   .float 20.0
   .float 0.0
   .float 0.0
-  .float 25.0
+  .float 1.0
+  .float 1.0
 PD_BOT_BLRL:
   .float 0.0
   .float -14.0
   .float 0.0
-  .float 25.0
+  .float 1.0
+  .float 1.0
 PD_LEFT_BLRL:
   .float -20.0
   .float 0.0
   .float 0.0
-  .float 25.0
+  .float 1.0
+  .float 1.0
 
 # Camera Data
 CD_PANEL_BLRL:
@@ -117,6 +122,7 @@ CODE_START:
   .set SP_GX_END, SP_GX_START + 4
   backup
 
+
 # Panels
 #------------------------------------------------------------------------------#
 # Panel Camera
@@ -136,6 +142,8 @@ CODE_START:
   bl FN_CameraGX
   mflr r16
   spawn_cobj REG_COBJDESC, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << PANEL_GXLINK, REG_GOBJ, REG_COBJ
+  load r4, stc_sr_data
+  stw REG_COBJ, SRD_COBJ(r4)
 
   # add proc
   mr r3, REG_GOBJ
@@ -158,7 +166,7 @@ CODE_START:
   li r5, GOBJ_CLASS_UI          # gobj class
   li r6, GOBJ_PLINK_UI         # plink
   li r7, 0          # prio
-  li r8, 16 # gxlink
+  li r8, 16         # gxlink
   li r9, 0          # render prio
   li r10, 0         # camera prio
   branchl r12, Text_CreateCanvas
@@ -203,9 +211,9 @@ CODE_START:
   # create text
   li REG_COUNT, 0
   SPAWN_TEXT_LOOP:
-    # camera process will handle position
     li r3, SIS_ID
     mr r4, REG_CANVAS
+    # text process handles position
     lfs	f1, RTOC_ZERO(rtoc)
     lfs	f2, RTOC_ZERO(rtoc)
     lfs	f3, RTOC_ZERO(rtoc)
@@ -232,7 +240,7 @@ CODE_START:
       cmpwi REG_COUNT, 4
       blt SPAWN_TEXT_LOOP
       mr r5, REG_COUNT
-      logf LOG_LEVEL_ERROR, "Spawned %d text objects"
+
 
 # Panel Jobjs
 #------------------------------------------------------------------------------#
@@ -250,21 +258,21 @@ CODE_START:
 
   # we have to turn on zupdate in the mobj desc before it gets loaded
   # otherwise it will always draw over our text
-  lwz r3, SP_PROMPT_MODEL_SET(sp)
-  lwz r3, DYN_MODEL_JOINT(r3)
-  # traverse tree
-  lwz r3, 0x8(r3) # child
-  lwz r3, 0xC(r3) # next
-  # dobjdesc
-  lwz r3, 0x10(r3)
-  # mobjdesc
-  lwz r3, 0x8(r3)
-  # set flags
-  load r4, 1 << 29 # zupdate
-  lwz r5, 0x4(r3) # flags
-  andc r5, r5, r4
-  # why does this hide the entire panel?
-  stw r5, 0x4(r3)
+  # lwz r3, SP_PROMPT_MODEL_SET(sp)
+  # lwz r3, DYN_MODEL_JOINT(r3)
+  # # traverse tree
+  # lwz r3, 0x8(r3) # child
+  # lwz r3, 0xC(r3) # next
+  # # dobjdesc
+  # lwz r3, 0x10(r3)
+  # # mobjdesc
+  # lwz r3, 0x8(r3)
+  # # set flags
+  # load r4, 1 << 29 # zupdate
+  # lwz r5, 0x4(r3) # flags
+  # andc r5, r5, r4
+  # # why does this hide the entire panel?
+  # stw r5, 0x4(r3)
 
   # create 4 panels
   li REG_COUNT, 0
@@ -284,10 +292,10 @@ CREATE_PANEL_LOOP:
   branchl r12, HSD_JObjLoadJoint
   mr REG_JOBJ, r3
   # store joint
-  load r4, stc_sr_data
-  addi r4, r4, SRD_JOBJ_PANELS
-  mulli r0, REG_COUNT, 4
-  stwx REG_JOBJ, r4, r0
+  # load r4, stc_sr_data
+  # addi r4, r4, SRD_JOBJ_PANELS
+  # mulli r0, REG_COUNT, 4
+  # stwx REG_JOBJ, r4, r0
 
   # add to gobj
   mr r3, REG_GOBJ
@@ -341,6 +349,13 @@ CREATE_PANEL_LOOP:
   li r6, -1
   branchl r12, HSD_JObjGetChild
 
+  # store panels
+  lwz r3, SP_JOBJ(sp)
+  load r4, stc_sr_data
+  addi r4, r4, SRD_JOBJ_PANELS
+  mulli r0, REG_COUNT, 4
+  stwx r3, r4, r0
+
   # unhide the panel
   lwz r3, SP_JOBJ(sp)
   li r4, JOBJFLAG_HIDDEN
@@ -373,6 +388,8 @@ CREATE_PANEL_LOOP:
   bl FN_CameraGX
   mflr r16
   spawn_cobj REG_COBJDESC, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << STICK_GXLINK, REG_GOBJ, REG_COBJ
+  # load r4, stc_sr_data
+  # stw REG_COBJ, SRD_COBJ(r4)
 
   # add proc
   mr r3, REG_GOBJ
@@ -437,6 +454,25 @@ CREATE_PANEL_LOOP:
   load r0, 0x41c80000 # 25.0
   load r3, stc_pause_stickmult
   stw r0, 0(r3)
+
+
+# Init Text Process
+#-------------------------------------------------------------------------------#
+  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
+
+# add proc
+  mr r3, REG_GOBJ
+  bl FN_TextProcessBLRL
+  mflr r4
+  li r5, 8
+  branchl r12, GObj_AddProc
+
+# add data
+  mr r3, REG_GOBJ
+  li r4, 0
+  li r5, 0
+  load r6, stc_sr_data
+  branchl r12, GObj_AddUserData
 
 
   b EXIT
@@ -678,57 +714,70 @@ FN_CameraProcess:
     addi r4, sp, SP_NEW_TARGET
     branchl r12, HSD_CObjSetInterest
 
+FN_CameraProcess_Exit:
+  restore
+  blr
+
+
+# Text Process
+#-----------------------------------------------------------------------------#
+FN_TextProcessBLRL:
+blrl
+.set SP_OUT, BKP_FREE_SPACE_OFFSET
+.set REG_DATA, 31
+.set REG_TEXTS, 30
+.set REG_COUNT, 29
+.set REG_COBJ, 28
+.set REG_PANELS, 27
+# floats
+.set FREG_SCALE, 16
+FN_TextProcess:
+  backup
+  lwz REG_DATA, GOBJ_USERDATA(r3)
+  lwz REG_COBJ, SRD_COBJ(REG_DATA)
+  addi REG_TEXTS, REG_DATA, SRD_TEXTS
+  addi REG_PANELS, REG_DATA, SRD_JOBJ_PANELS
+  addi r16, REG_DATA, SRD_PANEL_SCALES
+  # lwz REG_PANEL, SRD_JOBJ_PANELS(REG_DATA)
+  # lfs FREG_SCALE, SRD_PANEL_SCALE(REG_DATA)
+
   # update text
-  .set SP_OUT, BKP_FREE_SPACE_OFFSET
-  .set REG_COUNT, 16
-  .set REG_TEXTS, 17
   bl TEXT_DATA_BLRL
   mflr REG_DATA
-  load r4, stc_sr_data
-  addi REG_TEXTS, r4, SRD_TEXTS
-  lwz r4, SRD_JOBJ_PANELS(r4)
-  mr r3, REG_COBJ
-  addi r4, r4, JOBJ_POS
-  addi r5, sp, SP_OUT
-  li r6, 0
-  branchl r12, HSD_CObjWorldToScreen
-  lfs f31, SP_OUT+X(sp)
-  lfs f30, SP_OUT+Y(sp)
-  lfs f29, SP_OUT+Z(sp)
-  
+
   li REG_COUNT, 0
   UPDATE_TEXT_LOOP:
+    mulli r0, REG_COUNT, 4
+    mr r3, REG_COBJ
+    lwzx r4, REG_PANELS, r0
+    addi r4, r4, JOBJ_POS
+    addi r5, sp, SP_OUT
+    li r6, 0
+    branchl r12, HSD_CObjWorldToScreen
+    lfs f31, SP_OUT+X(sp)
+    lfs f30, SP_OUT+Y(sp)
+    lfs f29, SP_OUT+Z(sp)
+  
     # load our text
+    # bp
     mulli r0, REG_COUNT, 4
     mulli r4, REG_COUNT, TD_SIZE
     add r4, REG_DATA, r4
     lwzx r3, REG_TEXTS, r0
     # x offset
-    lfs f0, TXT_OFSTX(r4)
-    fmr f1, f31
-    fsubs f1, f1, f0
-    stfs f1, TEXT_TRANS+X(r3)
+    stfs f31, TEXT_TRANS+X(r3)
     # y offset
-    lfs f0, TXT_OFSTY(r4)
-    fmr f2, f30
-    fsubs f2, f2, f0
-    stfs f2, TEXT_TRANS+Y(r3)
-    # z offset
-    fmr f3, f29
-    stfs f3, TEXT_TRANS+Z(r3)
+    stfs f30, TEXT_TRANS+Y(r3)
 
-  # logging
-  # lfs f1, TEXT_TRANS+X(r3)
-  # lfs f2, TEXT_TRANS+Y(r3)
-  # lfs f3, TEXT_TRANS+Z(r3)
-  # mr r5, REG_COUNT
-  # logf LOG_LEVEL_ERROR, "UPDATE TEXT POS: IDX: [%d]  POS: [%f, %f, %f]\n\n"
   UPDATE_TEXT_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
     cmpwi REG_COUNT, 4
     blt UPDATE_TEXT_LOOP
+    
 
-FN_CameraProcess_Exit:
+  # logf LOG_LEVEL_ERROR, "UPDATE TEXT POS"
+
+FN_TextProcess_Exit:
   restore
   blr
 
@@ -738,165 +787,173 @@ FN_CameraProcess_Exit:
 FN_UpdatePanel:
 blrl
 .set REG_GOBJ, 31
-.set REG_JOBJ, 30
+.set REG_PANEL, 30
 .set REG_DATA, 29
+.set REG_DOBJ, 27
 # floats
-.set FREG_X, 31
-.set FREG_Y, 30
-.set FREG_DEADZONE, 27
-.set FREG_SCALE, 26
-.set FREG_MAGNITUDE, 25
-.set FREG_ALIGNMENT, 24
+.set FREG_STICK_X, 31
+.set FREG_STICK_Y, 30
+.set FREG_MAGNITUDE, 29
+.set FREG_ALIGNMENT, 28
+.set FREG_CURRENT_SCALE, 27
+.set FREG_CURRENT_ALPHA, 26
+.set FREG_RESET_SPEED, 25
+.set FREG_CHANGE_SPEED, 24
 # stack
 .set SP_STICK_DIR, BKP_FREE_SPACE_OFFSET
-.set SP_JOBJ_DIR, SP_STICK_DIR + 12
-.set SP_REF_POS, SP_JOBJ_DIR + 12
+.set SP_TO_PANEL, SP_STICK_DIR + 12
+.set SP_TEMP, SP_TO_PANEL + 12
   backup
-  # init vars
   mr REG_GOBJ, r3
-  lwz REG_JOBJ, GOBJ_OBJ(REG_GOBJ)
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
 
-  get_game_state r3
-  cmpwi r3, SRGS_GAME_ACTIVE
-  beq FN_UpdatePanel_Exit
-  
-  # get stick input
-  li r3, DEBUG_PAD_UNION
+  # get panel
+  lwz r3, GOBJ_OBJ(REG_GOBJ)
+  addi r4, sp, SP_TEMP
+  li r5, IF_PANEL_IDX
+  li r6, -1
+  branchl r12, HSD_JObjGetChild
+  lwz REG_PANEL, SP_TEMP(sp)
+
+  # Get pad input
+  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
   get_port_pad r3
   # get_active_pad r3
-  lfs FREG_X, PAD_stick_x(r3)
-  lfs FREG_Y, PAD_stick_y(r3)
-  lfs FREG_DEADZONE, RTOC_STICKTHRESH(rtoc)
-  
-  # create stick direction
-  stfs FREG_X, SP_STICK_DIR+X(sp)
-  stfs FREG_Y, SP_STICK_DIR+Y(sp)
+  lfs FREG_STICK_X, PAD_stick_x(r3)
+  lfs FREG_STICK_Y, PAD_stick_y(r3)
+
+  bp
+  # Create stick direction vector
+  stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
+  stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
   lfs f0, RTOC_ZERO(rtoc)
   stfs f0, SP_STICK_DIR+Z(sp)
-  
-  # get mag and check deadzone
+
+  # Copy panel translation to to_panel
+  lfs f1, JOBJ_POS+X(REG_PANEL)
+  lfs f2, JOBJ_POS+Y(REG_PANEL)
+  lfs f3, JOBJ_POS+Z(REG_PANEL)
+  stfs f1, SP_TO_PANEL+X(sp)
+  stfs f2, SP_TO_PANEL+Y(sp)
+  stfs f3, SP_TO_PANEL+Z(sp)
+
+  # Normalize to_panel
+  addi r3, sp, SP_TO_PANEL
+  addi r4, sp, SP_TO_PANEL
+  branchl r12, PSVECNormalize
+
+  # Load static variables
+  lfs FREG_CURRENT_SCALE, PD_CURRENT_SCALE(REG_DATA)
+  lfs FREG_CURRENT_ALPHA, PD_CURRENT_ALPHA(REG_DATA)
+
+  # Set constants
+  load r3, 0x3dcccccd  # 0.1f
+  stw r3, SP_TEMP(sp)
+  lfs FREG_RESET_SPEED, SP_TEMP(sp)
+
+  load r3, 0x3d23d70a  # 0.04f
+  stw r3, SP_TEMP(sp)
+  lfs FREG_CHANGE_SPEED, SP_TEMP(sp)
+
+  # Get stick magnitude
   addi r3, sp, SP_STICK_DIR
   branchl r12, PSVECMag
   fmr FREG_MAGNITUDE, f1
-  fcmpo cr0, FREG_MAGNITUDE, FREG_DEADZONE
-  blt SET_MIN_SCALE
-  
-  # apply curve (cube)
-  stick_curve FREG_X, FREG_Y
-  
-  # normalize
+
+  # Check if magnitude > 0.001f
+  load r3, 0x3a83126f  # 0.001f
+  stw r3, SP_TEMP(sp)
+  lfs f0, SP_TEMP(sp)
+  fcmpo cr0, FREG_MAGNITUDE, f0
+  ble RESET_SCALE  # No stick input - reset
+
+  # Normalize stick direction
   addi r3, sp, SP_STICK_DIR
   addi r4, sp, SP_STICK_DIR
   branchl r12, PSVECNormalize
 
-  # all relative to 0
-  lfs f0, RTOC_ZERO(rtoc)
-  stfs f0, SP_REF_POS+X(sp)
-  stfs f0, SP_REF_POS+Y(sp)  
-  stfs f0, SP_REF_POS+Z(sp)
-
-  # calculate direction from ref to jobj
-  addi r3, REG_DATA, PD_POS
-  addi r4, sp, SP_REF_POS
-  addi r5, sp, SP_JOBJ_DIR
-  branchl r12, PSVECSubtract
-
-  # normalize jobj direction
-  addi r3, sp, SP_JOBJ_DIR
-  addi r4, sp, SP_JOBJ_DIR
-  branchl r12, PSVECNormalize
-
-  # alignment to jobj
+  # Calculate alignment
   addi r3, sp, SP_STICK_DIR
-  addi r4, sp, SP_JOBJ_DIR
+  addi r4, sp, SP_TO_PANEL
   branchl r12, PSVECDotProduct
   fmr FREG_ALIGNMENT, f1
 
-  # clamp mag
+  # Check if alignment > 0
+  lfs f0, RTOC_ZERO(rtoc)
+  fcmpo cr0, FREG_ALIGNMENT, f0
+  ble RESET_SCALE  # Negative alignment - reset
+
+  # Scale up: current_scale += alignment * magnitude * change_speed
+  fmuls f0, FREG_ALIGNMENT, FREG_MAGNITUDE
+  fmuls f0, f0, FREG_CHANGE_SPEED
+  fadds FREG_CURRENT_SCALE, FREG_CURRENT_SCALE, f0
+  fadds FREG_CURRENT_ALPHA, FREG_CURRENT_ALPHA, f0
+  b CLAMP_VALUES  # Skip reset section
+
+RESET_SCALE:
+  # current_scale += (1.0 - current_scale) * reset_speed
   lfs f0, RTOC_ONE(rtoc)
-  fcmpo cr0, FREG_MAGNITUDE, f0
-  ble SCALE_CALCULATION
-  fmr FREG_MAGNITUDE, f0
+  fsubs f0, f0, FREG_CURRENT_SCALE
+  fmuls f0, f0, FREG_RESET_SPEED
+  fadds FREG_CURRENT_SCALE, FREG_CURRENT_SCALE, f0
 
-SCALE_CALCULATION:
-  fmuls f0, FREG_MAGNITUDE, FREG_ALIGNMENT
-  lfs f1, RTOC_ZERO(rtoc)
-  fcmpo cr0, f0, f1
-  blt SCALE_TO_ZERO
+  # current_alpha -= current_alpha * reset_speed  
+  fmuls f0, FREG_CURRENT_ALPHA, FREG_RESET_SPEED
+  fsubs FREG_CURRENT_ALPHA, FREG_CURRENT_ALPHA, f0
 
-  # scale up from 1.0 to max
-  lfs f1, RTOC_ONE(rtoc)
-  lfs f2, MAX_SCALE(rtoc)
-  fsubs f2, f2, f1  # max - 1.0
-  fmadds FREG_SCALE, f2, f0, f1  # 1.0 + (max-1.0)*factor
-  b SET_SCALE
+CLAMP_VALUES:
+    # Clamp scale (0.1f to 1.5f)
+    load r3, 0x3dcccccd  # 0.1f
+    stw r3, SP_TEMP(sp)
+    lfs f1, SP_TEMP(sp)
+    load r3, 0x3fc00000  # 1.5f
+    stw r3, SP_TEMP(sp)
+    lfs f2, SP_TEMP(sp)
+    clamp_float FREG_CURRENT_SCALE, f1, f2
 
-SCALE_TO_ZERO:
-  # scale from min towards zero
-  fabs f0, f0
-  lfs f1, RTOC_ONE(rtoc)
-  lfs f2, RTOC_ZERO(rtoc)
-  fsubs f2, f1, f2  # min - 0
-  fmuls f2, f2, f0  # (min - 0) * factor
-  fsubs FREG_SCALE, f1, f2  # min - (min * factor)
-  b SET_SCALE
+    # Clamp alpha (0.0f to 1.0f)
+    lfs f1, RTOC_ZERO(rtoc)
+    lfs f2, RTOC_ONE(rtoc)
+    clamp_float FREG_CURRENT_ALPHA, f1, f2
 
-SET_MIN_SCALE:
- lfs FREG_SCALE, RTOC_ONE(rtoc)
+    # Set panel scale
+    stfs FREG_CURRENT_SCALE, JOBJ_SCALE+X(REG_PANEL)
+    stfs FREG_CURRENT_SCALE, JOBJ_SCALE+Y(REG_PANEL)
+    stfs FREG_CURRENT_SCALE, JOBJ_SCALE+Z(REG_PANEL)
 
-SET_SCALE:
-  mr r3, REG_JOBJ
-  fmr f1, FREG_SCALE
-  fmr f2, FREG_SCALE
-  fmr f3, FREG_SCALE
-  branchl r12, HSD_JObjSetScale
+  # Set alpha for all dobjs
+  lwz REG_DOBJ, JOBJ_DOBJ(REG_PANEL)
+  DOBJ_ALPHA_LOOP:
+    cmpwi REG_DOBJ, 0
+    beq DOBJ_ALPHA_DONE
+    lwz r3, DOBJ_MOBJ(REG_DOBJ)
+    cmpwi r3, 0
+    beq DOBJ_ALPHA_NEXT
+    fmr f1, FREG_CURRENT_ALPHA
+    branchl r12, HSD_MObjSetAlpha
+  DOBJ_ALPHA_NEXT:
+    lwz REG_DOBJ, DOBJ_NEXT(REG_DOBJ)
+    b DOBJ_ALPHA_LOOP
+  DOBJ_ALPHA_DONE:
 
-  # load r3, stc_sr_data
-  # lwz r3, SRD_TEXTS(r3)
-  # stfs FREG_SCALE, TEXT_STRETCH+X(r3)
-  # stfs FREG_SCALE, TEXT_STRETCH+Y(r3)
-
-  # move in opposite direction
-  lfs f1, PD_POS+X(REG_DATA)
-  lfs f2, PD_POS+Y(REG_DATA)
-  lfs f3, PD_POS+Z(REG_DATA)
-  
-  # (stick direction * magnitude * movement scale) - offset
-  lfs f4, SP_STICK_DIR+X(sp)
-  lfs f5, SP_STICK_DIR+Y(sp)
-  lfs f6, SP_STICK_DIR+Z(sp)
-  
-  # scale movement by mag and offset
-  lfs f0, PD_SPEED(REG_DATA)
-  fmuls f4, f4, FREG_MAGNITUDE
-  fmuls f4, f4, f0
-  fmuls f5, f5, FREG_MAGNITUDE
-  fmuls f5, f5, f0
-  fmuls f6, f6, FREG_MAGNITUDE
-  fmuls f6, f6, f0
-  
-  fsubs f1, f1, f4
-  fsubs f2, f2, f5
-  fsubs f3, f3, f6
-  
-  # set position
-  stfs f1, JOBJ_POS+X(REG_JOBJ)
-  stfs f2, JOBJ_POS+Y(REG_JOBJ)
-  stfs f3, JOBJ_POS+Z(REG_JOBJ)
-
-  mr r3, REG_JOBJ
+  # Set matrix dirty
+  mr r3, REG_PANEL
   branchl r12, HSD_JObjSetMtxDirty
 
-  # fmr f1, FREG_MAGNITUDE
-  # fmr f2, FREG_ALIGNMENT
-  # fmr f3, FREG_SCALE
-  # fmr f4, FREG_Y
-  # logf LOG_LEVEL_ERROR, "\nMAG: %f ALIGN: %f SCALE: %f Y: %f\n"
+  fmr f1, FREG_CURRENT_SCALE
+  fmr f2, FREG_CURRENT_ALPHA
+  logf LOG_LEVEL_ERROR, "SCALE: %f, ALPHA: %f"
+
+  # fmr f1, FREG_STICK_X
+  # fmr f2, FREG_STICK_Y
+  # logf LOG_LEVEL_ERROR, "STICK_X: %f, STICK_Y: %f"
+
+  stfs FREG_CURRENT_SCALE, STATIC_CURRENT_SCALE(REG_DATA)
+  stfs FREG_CURRENT_ALPHA, STATIC_CURRENT_ALPHA(REG_DATA)
 
 FN_UpdatePanel_Exit:
- restore
- blr
+  restore
+  blr
 
 
 

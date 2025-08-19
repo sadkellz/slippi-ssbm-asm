@@ -22,6 +22,7 @@
 .set RTOC_160, -0x5450
 .set RTOC_190, -0x4f44
 .set RTOC_300, -0x7ab4
+.set RTOC_1_25, -0x4d70
 
 ################################################################################
 # Directives
@@ -82,6 +83,28 @@
   li r0, TRUE
   b 2f
   1: li r0, FALSE
+  2:
+.endm
+
+.macro clamp_int value, min_val, max_val
+  cmpw \value, \min_val
+  bge 1f
+  mr \value, \min_val
+  b 2f
+  1: cmpw \value, \max_val
+  ble 2f
+  mr \value, \max_val
+  2:
+.endm
+
+.macro clamp_float value, min_val, max_val
+  fcmpo cr0, \value, \min_val
+  bge 1f
+  fmr \value, \min_val
+  b 2f
+  1: fcmpo cr0, \value, \max_val
+  ble 2f
+  fmr \value, \max_val
   2:
 .endm
 

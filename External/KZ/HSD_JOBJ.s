@@ -51,6 +51,7 @@
 
 .set HSD_DObjSetFlags, 0x8035ddb8 # (HSD_DObj *Dobj, DObjFlag flag)
 .set HSD_MObjSetDiffuseColor, 0x80363c10 # (HSD_MObj *Mobj, u8 r, u8 g, u8 b)
+.set HSD_MObjSetAlpha, 0x80363c2c # (HSD_MObj *Mobj, float alpha)
 
 ################################################################################
 # Constants
