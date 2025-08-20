@@ -83,27 +83,31 @@ blrl
 .set TXT_HEIGHT, TXT_WIDTH + 4
 .set TXT_OFSTX, TXT_HEIGHT + 4
 .set TXT_OFSTY, TXT_OFSTX + 4
-.set TD_SIZE, TXT_OFSTY + 4
+.set TXT_101, TXT_OFSTY + 4
+.set TXT_201, TXT_101 + 4
+.set TD_SIZE, TXT_201 + 4
 TEXT_DATA_TOP:
   .float 450.0
   .float 160.0
   .float 225.0
-  .float 300.0
-TEXT_DATA_RIGHT:
-  .float 450.0
-  .float 160.0
-  .float -300.0
-  .float -65.0
-TEXT_DATA_BOTTOM:
-  .float 450.0
-  .float 160.0
-  .float 225.0
-  .float -425.0
-TEXT_DATA_LEFT:
-  .float 450.0
-  .float 160.0
-  .float 755.0
-  .float -65.0
+  .float 80.0
+  .float 101.0
+  .float 202.0
+# TEXT_DATA_RIGHT:
+#   .float 450.0
+#   .float 160.0
+#   .float -300.0
+#   .float -65.0
+# TEXT_DATA_BOTTOM:
+#   .float 450.0
+#   .float 160.0
+#   .float 225.0
+#   .float -425.0
+# TEXT_DATA_LEFT:
+#   .float 450.0
+#   .float 160.0
+#   .float 755.0
+#   .float -65.0
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -222,7 +226,7 @@ CODE_START:
     branchl r12, Text_AllocateTextObject
     mr REG_TEXT, r3
     load r3, 0xFF00007F
-    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+    # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
     li r3, TRUE
     stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
 
@@ -258,24 +262,23 @@ CODE_START:
 
   # we have to turn on zupdate in the mobj desc before it gets loaded
   # otherwise it will always draw over our text
-  # lwz r3, SP_PROMPT_MODEL_SET(sp)
-  # lwz r3, DYN_MODEL_JOINT(r3)
-  # # traverse tree
-  # lwz r3, 0x8(r3) # child
-  # lwz r3, 0xC(r3) # next
-  # # dobjdesc
-  # lwz r3, 0x10(r3)
-  # # mobjdesc
-  # lwz r3, 0x8(r3)
-  # # set flags
-  # load r4, 1 << 29 # zupdate
-  # lwz r5, 0x4(r3) # flags
-  # andc r5, r5, r4
-  # # why does this hide the entire panel?
-  # stw r5, 0x4(r3)
+  lwz r3, SP_PROMPT_MODEL_SET(sp)
+  lwz r3, DYN_MODEL_JOINT(r3)
+  # traverse tree
+  lwz r3, 0x8(r3) # child
+  lwz r3, 0xC(r3) # next
+  # dobjdesc
+  lwz r3, 0x10(r3)
+  # mobjdesc
+  lwz r3, 0x8(r3)
+  # set flags
+  load r4, 1 << 29 # zupdate
+  lwz r5, 0x4(r3) # flags
+  andc r5, r5, r4
+  # why does this hide the entire panel?
+  stw r5, 0x4(r3)
 
   # create 4 panels
-  bp
   li REG_COUNT, 0
 CREATE_PANEL_LOOP:
   # create gobj
@@ -731,6 +734,7 @@ blrl
 .set REG_COUNT, 29
 .set REG_COBJ, 28
 .set REG_PANELS, 27
+.set REG_CURR_PANEL, 26
 # floats
 .set FREG_SCALE, 16
 FN_TextProcess:
@@ -751,32 +755,49 @@ FN_TextProcess:
   UPDATE_TEXT_LOOP:
     mulli r0, REG_COUNT, 4
     mr r3, REG_COBJ
-    lwzx r4, REG_PANELS, r0
-    addi r4, r4, JOBJ_POS
+    lwzx REG_CURR_PANEL, REG_PANELS, r0
+    addi r4, REG_CURR_PANEL, JOBJ_POS
     addi r5, sp, SP_OUT
     li r6, 0
     branchl r12, HSD_CObjWorldToScreen
     lfs f31, SP_OUT+X(sp)
     lfs f30, SP_OUT+Y(sp)
-    lfs f29, SP_OUT+Z(sp)
+    lfs f29, JOBJ_SCALE+Z(REG_CURR_PANEL)
+    lfs f0, TXT_101(REG_DATA)
+    lfs f1, TXT_201(REG_DATA)
+    fmuls f29, f29, f0
+    fsubs f29, f29, f1
+    lwz r3, JOBJ_DOBJ(REG_CURR_PANEL)
+    lwz r3, 0x8(r3) # mobj
+    lwz r3, 0xC(r3) # mat
+    lfs f28, 0xC(r3) # alpha
+    lfs f0, RTOC_255(rtoc)
+    fmuls f28, f28, f0
+    fctiwz f28, f28
+    stfd f28, BKP_FREE_SPACE_OFFSET(sp)
+    
   
     # load our text
     mulli r0, REG_COUNT, 4
-    mulli r4, REG_COUNT, TD_SIZE
-    add r4, REG_DATA, r4
     lwzx r3, REG_TEXTS, r0
     # x offset
+    lfs f0, TXT_OFSTX(REG_DATA)
+    fsubs f31, f31, f0
     stfs f31, TEXT_TRANS+X(r3)
     # y offset
+    lfs f0, TXT_OFSTY(REG_DATA)
+    fsubs f30, f30, f0
     stfs f30, TEXT_TRANS+Y(r3)
+    # z offset
+    stfs f29 , TEXT_TRANS+Z(r3)
+    # alpha
+    lbz r0, BKP_FREE_SPACE_OFFSET+7(sp)
+    stb r0, TEXT_COLOR+A(r3)
 
   UPDATE_TEXT_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
     cmpwi REG_COUNT, 4
     blt UPDATE_TEXT_LOOP
-    
-
-  # logf LOG_LEVEL_ERROR, "UPDATE TEXT POS"
 
 FN_TextProcess_Exit:
   restore

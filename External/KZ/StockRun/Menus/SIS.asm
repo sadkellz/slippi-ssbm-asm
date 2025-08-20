@@ -14,8 +14,8 @@ b SIS_SHIELDHP
 
 SIS_KBINC: # Armour Pierce
 blrl
-.long 0x0E007D00
-.long 0x66101618
+.long 0x0E00E100
+.long 0xCA101618
 .long 0x03200A20
 .long 0x35203020
 .long 0x32203820
