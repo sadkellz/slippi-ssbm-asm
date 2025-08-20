@@ -60,8 +60,8 @@
 .set MENU_TRANSITION_FRAMES, 20 # 
 .set IF_PANEL_IDX, 5
 .set IF_BG_IDX, 2
-.set MIN_SCALE, RTOC_HALF
-.set MAX_SCALE, RTOC_TWO
+.set MIN_SCALE, RTOC_0_5
+.set MAX_SCALE, RTOC_2
 .set SIS_ID, 3
 .set SIS_COUNT, 4 # number of replaced SIS entries we've made
 

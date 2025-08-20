@@ -409,14 +409,14 @@ FN_GXProc_Body:
     fabs f3, f1
     fcmpo cr0, f3, f0
     bgt CHECK_STICKY
-      lfs f1, RTOC_ZERO(rtoc)
+      lfs f1, RTOC_0(rtoc)
 
     CHECK_STICKY:
       lfs f2, PAD_cstick_y(REG_PAD)
       fabs f3, f2
       fcmpo cr0, f3, f0
       bgt EXEC_CAM_ORBIT
-      lfs f2, RTOC_ZERO(rtoc)
+      lfs f2, RTOC_0(rtoc)
 
     EXEC_CAM_ORBIT:
       mr r3, REG_GOBJ
@@ -452,14 +452,14 @@ FN_GXProc_Body:
       b ROTATE_CAM_LOOP_CHECK
 
       ZPOS_INC:
-        lfs f0, RTOC_HUND(rtoc)
+        lfs f0, RTOC_100(rtoc)
         lfs f1, 0xC+Z(r5)
         fadds f1, f1, f0
         stfs f1, 0xC+Z(r5)
         b ROTATE_CAM_LOOP_CHECK
 
       ZPOS_DEC:
-        lfs f0, RTOC_HUND(rtoc)
+        lfs f0, RTOC_100(rtoc)
         fneg f0, f0
         lfs f1, 0xC+Z(r5)
         fadds f1, f1, f0
@@ -467,12 +467,12 @@ FN_GXProc_Body:
         b ROTATE_CAM_LOOP_CHECK
 
       RESET_CAM:
-        lfs f1, RTOC_ZERO(rtoc)
+        lfs f1, RTOC_0(rtoc)
         stfs f1, 0xC+X(r5)
         stfs f1, 0xC+Y(r5)
         stfs f1, COBJ_PITCH(REG_COBJ)
         stfs f1, COBJ_YAW(REG_COBJ)
-        lfs f1, RTOC_HUND(rtoc)
+        lfs f1, RTOC_100(rtoc)
         # lol
         fadds f1, f1, f1
         fadds f1, f1, f1
@@ -682,14 +682,14 @@ DrawCamera_Start:
   fmuls FREG_FOV, f0, FREG_FOV
   lfs FREG_ASPECT, COBJ_ASPECT(REG_COBJ)
   # lfs FREG_NEAR, COBJ_NEAR(REG_COBJ)
-  lfs FREG_NEAR, RTOC_HUND(rtoc)
+  lfs FREG_NEAR, RTOC_100(rtoc)
   lfs FREG_FAR, COBJ_FAR(REG_COBJ)
 
 # tan(fov/2.0) * 2.0
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fdivs f1, FREG_FOV, f0
   branchl r12, tan
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fmuls f1, f0, f1
 
 # get near width and height
@@ -706,7 +706,7 @@ DrawCamera_Start:
   mr REG_CORNERS, r3
 
 # near top left
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fneg f1, FREG_NEARW
   fdivs f1, f1, f0
   stfs f1, NEAR_TL+X(REG_CORNERS)
@@ -716,7 +716,7 @@ DrawCamera_Start:
   stfs f1, NEAR_TL+Z(REG_CORNERS)
 
 # near top right
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fdivs f1, FREG_NEARW, f0
   stfs f1, NEAR_TR+X(REG_CORNERS)
   fdivs f1, FREG_NEARH, f0
@@ -725,7 +725,7 @@ DrawCamera_Start:
   stfs f1, NEAR_TR+Z(REG_CORNERS)
 
 # near bottom left
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fneg f1, FREG_NEARW
   fdivs f1, f1, f0
   stfs f1, NEAR_BL+X(REG_CORNERS)
@@ -736,7 +736,7 @@ DrawCamera_Start:
   stfs f1, NEAR_BL+Z(REG_CORNERS)
 
 # near bottom right
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fdivs f1, FREG_NEARW, f0
   stfs f1, NEAR_BR+X(REG_CORNERS)
   fneg f1, FREG_NEARH
@@ -746,7 +746,7 @@ DrawCamera_Start:
   stfs f1, NEAR_BR+Z(REG_CORNERS)
 
 # bot top left
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fneg f1, FREG_FARW
   fdivs f1, f1, f0
   stfs f1, FAR_TL+X(REG_CORNERS)
@@ -756,7 +756,7 @@ DrawCamera_Start:
   stfs f1, FAR_TL+Z(REG_CORNERS)
 
 # bot top right
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fdivs f1, FREG_FARW, f0
   stfs f1, FAR_TR+X(REG_CORNERS)
   fdivs f1, FREG_FARH, f0
@@ -765,7 +765,7 @@ DrawCamera_Start:
   stfs f1, FAR_TR+Z(REG_CORNERS)
 
 # bot bottom left
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fneg f1, FREG_FARW
   fdivs f1, f1, f0
   stfs f1, FAR_BL+X(REG_CORNERS)
@@ -776,7 +776,7 @@ DrawCamera_Start:
   stfs f1, FAR_BL+Z(REG_CORNERS)
 
 # bot bottom right
-  lfs f0, RTOC_TWO(rtoc)
+  lfs f0, RTOC_2(rtoc)
   fdivs f1, FREG_FARW, f0
   stfs f1, FAR_BR+X(REG_CORNERS)
   fneg f1, FREG_FARH
@@ -847,7 +847,7 @@ SCALE_FAR_PLANE:
   branchl r12, PSVECSubtract
 
   # t
-  lfs f0, RTOC_ZERO(rtoc)
+  lfs f0, RTOC_0(rtoc)
   lfs f1, SP_CAMPOS+Z(sp)
   fsubs f1, f0, f1
   lfs f0, SP_DIFF+Z(sp)

@@ -426,7 +426,7 @@ backup
     andi. r0, r0, 0x80
     bne DRAW_JOBJ_INC
 
-    lfs f0, RTOC_ZERO(rtoc)
+    lfs f0, RTOC_0(rtoc)
 
   CHECK_PARENT_BONE:
     lfs FREG_X, 0x50(REG_JOBJ)

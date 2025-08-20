@@ -6,6 +6,6 @@
 .include "KZ/KZ_COMMON.s"
 
 lfs	f1, 0x0010 (r31)
-lfs f0, RTOC_TEN(rtoc)
+lfs f0, RTOC_10(rtoc)
 fmuls	f1, f0, f1
 stfs	f1, 0x003C (r3)

@@ -259,7 +259,7 @@ CREATE_PANEL_LOOP:
 
   # anim
   mr r3, REG_JOBJ
-  lfs f1, RTOC_ZERO(rtoc)
+  lfs f1, RTOC_0(rtoc)
   branchl r12, HSD_JObjReqAnimAll
 
   mr r3, REG_JOBJ
@@ -353,7 +353,7 @@ CREATE_PANEL_LOOP:
   lwz REG_BORDER, 0(r4)
 
   # pos
-  lfs f1, RTOC_ZERO(rtoc)
+  lfs f1, RTOC_0(rtoc)
   stfs f1, JOBJ_POS(REG_STICK)
   stfs f1, JOBJ_POS+4(REG_STICK)
   stfs f1, JOBJ_ROT(REG_STICK)
@@ -366,7 +366,7 @@ CREATE_PANEL_LOOP:
   stw r0, JOBJ_POS+4(REG_BORDER)
 
   # scale
-  lfs f1, RTOC_TWO(rtoc)
+  lfs f1, RTOC_2(rtoc)
   stfs f1, JOBJ_SCALE(REG_STICK)
   stfs f1, JOBJ_SCALE+4(REG_STICK)
   stfs f1, JOBJ_SCALE+8(REG_STICK)
@@ -444,7 +444,7 @@ CREATE_PANEL_LOOP:
     # text process handles position
     lfs	f1, TXT_OFSTX(REG_DATA)
     lfs	f2, TXT_OFSTY(REG_DATA)
-    lfs	f3, RTOC_ZERO(rtoc)
+    lfs	f3, RTOC_0(rtoc)
     lfs	f4, TXT_WIDTH(REG_DATA)
     lfs	f5, TXT_HEIGHT(REG_DATA)
     branchl r12, Text_AllocateTextObject
@@ -611,8 +611,8 @@ FN_CameraProcess:
   cmpwi r0, FALSE
   beq CALCULATE_ANGLES
   # no inputs, exit
-  lfs FREG_X, RTOC_ZERO(rtoc)
-  lfs FREG_Y, RTOC_ZERO(rtoc)
+  lfs FREG_X, RTOC_0(rtoc)
+  lfs FREG_Y, RTOC_0(rtoc)
   b EXECUTE
 
   CALCULATE_ANGLES:
@@ -623,7 +623,7 @@ FN_CameraProcess:
       b CHECK_Y
       
       SET_HORIZONTAL_ZERO:
-        lfs FREG_X, RTOC_ZERO(rtoc)
+        lfs FREG_X, RTOC_0(rtoc)
 
     CHECK_Y:
       check_deadzone FREG_Y, FREG_DEADZONE
@@ -632,7 +632,7 @@ FN_CameraProcess:
       b EXECUTE
       
       SET_VERTICAL_ZERO:
-        lfs FREG_Y, RTOC_ZERO(rtoc)
+        lfs FREG_Y, RTOC_0(rtoc)
 
   EXECUTE:
     # just using the stack pointer since its there
@@ -675,8 +675,8 @@ FN_CameraProcess:
     branchl r12, PSVECNormalize
 
     # Set world up vector
-    lfs f0, RTOC_ZERO(rtoc)
-    lfs f1, RTOC_ONE(rtoc)
+    lfs f0, RTOC_0(rtoc)
+    lfs f1, RTOC_1(rtoc)
     stfs f0, SP_UP+X(sp)
     stfs f1, SP_UP+Y(sp)
     stfs f0, SP_UP+Z(sp)
@@ -784,7 +784,7 @@ FN_TextProcess:
   mr REG_PAD, r3
   lfs FREG_STICK_X, PAD_stick_x(r3)
   lfs FREG_STICK_Y, PAD_stick_y(r3)
-  lfs f0, RTOC_ZERO(rtoc)
+  lfs f0, RTOC_0(rtoc)
   # store stick direction
   stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
   stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
@@ -800,7 +800,7 @@ FN_TextProcess:
   # logf LOG_LEVEL_ERROR, "Stick magnitude: %f"
   
   # Initialize input_strength to 0
-  lfs FREG_INPUT_STRENGTH, RTOC_ZERO(rtoc)
+  lfs FREG_INPUT_STRENGTH, RTOC_0(rtoc)
 
   # panel
   lfs f1, JOBJ_POS+X(REG_PANEL)
@@ -831,8 +831,8 @@ FN_TextProcess:
   fmr FREG_ALIGNMENT, f1
   # logf LOG_LEVEL_ERROR, "dot product: %f"
   fmuls FREG_INPUT_STRENGTH, FREG_ALIGNMENT, FREG_STICK_MAG
-  lfs f1, RTOC_ZERO(rtoc)
-  lfs f2, RTOC_ONE(rtoc)
+  lfs f1, RTOC_0(rtoc)
+  lfs f2, RTOC_1(rtoc)
   clamp_float FREG_INPUT_STRENGTH, f1, f2
   fmr f1, FREG_INPUT_STRENGTH
   # logf LOG_LEVEL_ERROR, "input_strength: %f"
@@ -843,12 +843,12 @@ FN_TextProcess:
     lfs FREG_TRANSLATION, TXT_TRANS(REG_DATA)
 
     # lerp vals
-    lfs FREG_LERP_SPEED, RTOC_0_01(rtoc)
+    lfs FREG_LERP_SPEED, RTOC_0_5(rtoc)
     fsubs f0, FREG_INPUT_STRENGTH, FREG_SCALE
     fmuls f0, f0, FREG_LERP_SPEED
     fadds FREG_SCALE, FREG_SCALE, f0
 
-    lfs f1, RTOC_ONE(rtoc)
+    lfs f1, RTOC_1(rtoc)
     fsubs f0, f1, FREG_INPUT_STRENGTH
     fsubs f0, f0, FREG_TRANSLATION
     fmuls f0, f0, FREG_LERP_SPEED
@@ -856,7 +856,7 @@ FN_TextProcess:
 
     lfs FREG_OFST_X, TXT_OFSTX(REG_DATA)
     lfs FREG_OFST_Y, TXT_OFSTY(REG_DATA)
-    lfs f1, RTOC_20(rtoc)
+    lfs f1, RTOC_15(rtoc)
 
     # x
     lfs f0, SP_PANEL_DIR+X(sp)
@@ -873,6 +873,7 @@ FN_TextProcess:
     fadds f0, f0, FREG_OFST_Y  # Add original Y offset
     stfs f0, TEXT_TRANS+Y(REG_TEXT)
     # z
+    lfs f1, RTOC_100(rtoc)
     fneg f0, f1  # -20.0f
     fmuls f2, FREG_SCALE, f1  # scale * 20.0f
     fadds f0, f0, f2
@@ -931,7 +932,7 @@ blrl
   # Create stick direction vector
   stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
   stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
-  lfs f0, RTOC_ZERO(rtoc)
+  lfs f0, RTOC_0(rtoc)
   stfs f0, SP_STICK_DIR+Z(sp)
 
   # Copy panel translation to to_panel
@@ -982,12 +983,12 @@ blrl
   fmr FREG_ALIGNMENT, f1
 
   # Check if alignment > 0
-  lfs f0, RTOC_ZERO(rtoc)
+  lfs f0, RTOC_0(rtoc)
   fcmpo cr0, FREG_ALIGNMENT, f0
   ble RESET_SCALE  # Negative alignment - reset
 
   # Set scale directly based on current input: 1.0 + (alignment * magnitude * scale_factor)
-  lfs f0, RTOC_ONE(rtoc)                    # Start with 1.0
+  lfs f0, RTOC_1(rtoc)                    # Start with 1.0
   fmuls f1, FREG_ALIGNMENT, FREG_MAGNITUDE  # alignment * magnitude
   fmuls f1, f1, FREG_CHANGE_SPEED          # * scale_factor (maybe increase this value)
   fadds FREG_CURRENT_SCALE, f0, f1         # 1.0 + scaled_input
@@ -996,7 +997,7 @@ blrl
 
 RESET_SCALE:
   # current_scale += (1.0 - current_scale) * reset_speed
-  lfs f0, RTOC_ONE(rtoc)
+  lfs f0, RTOC_1(rtoc)
   fsubs f0, f0, FREG_CURRENT_SCALE
   fmuls f0, f0, FREG_RESET_SPEED
   fadds FREG_CURRENT_SCALE, FREG_CURRENT_SCALE, f0
@@ -1012,11 +1013,11 @@ CLAMP_VALUES:
     lfs f1, SP_TEMP(sp)
     # load r3, 0x3fc00000  # 1.5f
     # stw r3, SP_TEMP(sp)
-    lfs f2, RTOC_TWO(rtoc)
+    lfs f2, RTOC_2(rtoc)
     clamp_float FREG_CURRENT_SCALE, f1, f2
 
     # Clamp alpha
-    lfs f1, RTOC_ZERO(rtoc)
+    lfs f1, RTOC_0(rtoc)
     lfs f2, RTOC_0_75(rtoc)
     clamp_float FREG_CURRENT_ALPHA, f1, f2
 

@@ -117,7 +117,7 @@ FN_CustomGX_Body:
 #   li r4, 0
 #   branchl r12, GXSetLineWidth
 
-#   lfs FREG_X, RTOC_ZERO(rtoc)
+#   lfs FREG_X, RTOC_0(rtoc)
 #   lfs FREG_Y, SP_MTX(sp)
 #   fmr FREG_Z, FREG_X
 

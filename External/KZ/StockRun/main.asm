@@ -108,10 +108,10 @@ CODE_START:
   # li r7, 0
   # branchl r12, 0x800121fc
 
-  # lfs f1, RTOC_ZERO(rtoc)
-  # lfs f2, RTOC_ZERO(rtoc)
-  # lfs f3, RTOC_ONE(rtoc)
-  # lfs f4, RTOC_ONE(rtoc)
+  # lfs f1, RTOC_0(rtoc)
+  # lfs f2, RTOC_0(rtoc)
+  # lfs f3, RTOC_1(rtoc)
+  # lfs f4, RTOC_1(rtoc)
   # load r3, stc_blur_imagedesc
   # li r4, 0
   # li r5, 2
@@ -401,19 +401,19 @@ SR_UpdateCameraPos:
   stfs f1, 0(r3)
 
   lfs f1, BKP_FREE_SPACE_OFFSET(sp) # x
-  lfs f0, RTOC_ZERO(rtoc)
+  lfs f0, RTOC_0(rtoc)
   fcmpo cr0, f1, f0
   bge RIGHT_SIDE
 
   LEFT_SIDE:
     load r3, 0x80452f34 # offset x
-    lfs f1, RTOC_HALF(rtoc)
+    lfs f1, RTOC_0_5(rtoc)
     stfs f1, 0(r3) # pan/tilt camera left
     b SR_UpdateCameraPos_Exit
 
   RIGHT_SIDE:
     load r3, 0x80452f34
-    lfs f1, RTOC_HALF(rtoc)
+    lfs f1, RTOC_0_5(rtoc)
     fneg f1, f1
     stfs f1, 0(r3) # pan/tilt camera right
 

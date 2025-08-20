@@ -160,7 +160,7 @@ FN_CustomGX_Body:
       mr r3, REG_HTBOX
       li r4, 2
       li r5, 0
-      lfs f1, RTOC_ZERO(rtoc)
+      lfs f1, RTOC_0(rtoc)
       branchl r12, 0x8000a244
 
     HITBOX_LOOP_INC:
