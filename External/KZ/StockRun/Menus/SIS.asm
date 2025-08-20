@@ -14,8 +14,8 @@ b SIS_SHIELDHP
 
 SIS_KBINC: # Armour Pierce
 blrl
-.long 0x0E00E100
-.long 0xCA101618
+.long 0x0E001400
+.long 0x14101618
 .long 0x03200A20
 .long 0x35203020
 .long 0x32203820
@@ -43,8 +43,8 @@ blrl
 
 SIS_KBDEC: # Knights Armour
 blrl
-.long 0x0E00E100
-.long 0xCA101618
+.long 0x0E001400
+.long 0x14101618
 .long 0x03201420
 .long 0x31202C20
 .long 0x2A202B20
@@ -75,8 +75,8 @@ blrl
 
 SIS_CRIT:
 blrl
-.long 0x0E00E100
-.long 0xCA101618
+.long 0x0E001400
+.long 0x14101618
 .long 0x03200C20
 .long 0x35202C20
 .long 0x37202C20
@@ -106,8 +106,8 @@ blrl
 
 SIS_SHIELDHP:
 blrl
-.long 0x0E00E100
-.long 0xCA101618
+.long 0x0E001400
+.long 0x14101618
 .long 0x03200D20
 .long 0x38203520
 .long 0x24202520

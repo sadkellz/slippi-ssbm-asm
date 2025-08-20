@@ -15,9 +15,12 @@
 .set RTOC_STICKTHRESH, -0x3c98
 .set RTOC_TEN, -0x1e64
 .set RTOC_NEG_1_1, -0x125c
+.set RTOC_0_1, -0x7bd8
 .set RTOC_0_01, -0x7ebc
+.set RTOC_0_001, -0x7e88
 .set RTOC_0_015625, -0x7da8
 .set RTOC_0_75, -0x7d5c
+.set RTOC_20, -0x7fac
 .set RTOC_60, -0x7854
 .set RTOC_160, -0x5450
 .set RTOC_190, -0x4f44

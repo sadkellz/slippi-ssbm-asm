@@ -83,16 +83,37 @@ blrl
 .set TXT_HEIGHT, TXT_WIDTH + 4
 .set TXT_OFSTX, TXT_HEIGHT + 4
 .set TXT_OFSTY, TXT_OFSTX + 4
-.set TXT_101, TXT_OFSTY + 4
-.set TXT_201, TXT_101 + 4
-.set TD_SIZE, TXT_201 + 4
+.set TXT_SCALE, TXT_OFSTY + 4
+.set TXT_TRANS, TXT_SCALE + 4
+.set TD_SIZE, TXT_TRANS + 4
 TEXT_DATA_TOP:
-  .float 400.0
-  .float 160.0
-  .float 200.0
-  .float 80.0
-  .float 101.0
-  .float 202.0
+  .float 40.0
+  .float 16.0
+  .float -20.0
+  .float -25.0
+  .float 0.0
+  .float 1.0
+TEXT_DATA_RIGHT:
+  .float 40.0
+  .float 16.0
+  .float -20.0
+  .float -25.0
+  .float 0.0
+  .float 1.0
+TEXT_DATA_BOTTOM:
+  .float 40.0
+  .float 16.0
+  .float -20.0
+  .float -25.0
+  .float 0.0
+  .float 1.0
+TEXT_DATA_LEFT:
+  .float 40.0
+  .float 16.0
+  .float -20.0
+  .float -25.0
+  .float 0.0
+  .float 1.0
 
 
 CODE_START:
@@ -105,6 +126,7 @@ CODE_START:
   .set REG_COBJDESC, 25
   .set REG_COUNT, 24
   .set REG_CANVAS, 23
+  .set REG_CAMGOBJ, 22
   # stack
   .set SP_JOBJ, BKP_FREE_SPACE_OFFSET
   .set SP_PROMPT_MODEL_SET, SP_JOBJ + 4
@@ -131,106 +153,22 @@ CODE_START:
 
   bl FN_CameraGX
   mflr r16
-  spawn_cobj REG_COBJDESC, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << PANEL_GXLINK, REG_GOBJ, REG_COBJ
+  spawn_cobj REG_COBJDESC, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << PANEL_GXLINK, REG_CAMGOBJ, REG_COBJ
   load r4, stc_sr_data
   stw REG_COBJ, SRD_COBJ(r4)
-
   # add proc
-  mr r3, REG_GOBJ
+  mr r3, REG_CAMGOBJ
   bl FN_CameraProcessBLRL
   mflr r4
   li r5, 0
   branchl r12, GObj_AddProc
 
-  mr r3, REG_GOBJ
+  mr r3, REG_CAMGOBJ
   li r4, 0
   li r5, 0
   bl CD_PANEL_BLRL
   mflr r6
   branchl r12, GObj_AddUserData
-
-  # create canvas
-  li r3, SIS_ID          # sis id
-  # mr r4, REG_GOBJ   # camera gobj
-  li r4, 0
-  li r5, GOBJ_CLASS_UI          # gobj class
-  li r6, GOBJ_PLINK_UI         # plink
-  li r7, 0          # prio
-  li r8, 16         # gxlink
-  li r9, 0          # render prio
-  li r10, 0         # camera prio
-  branchl r12, Text_CreateCanvas
-  mr REG_CANVAS, r3
-
-.set REG_TEXT, 16
-.set REG_SISDATA, 17
-.set REG_SISTABLE, 18
-.set SP_CLR, BKP_FREE_SPACE_OFFSET
-  bl TEXT_DATA_BLRL
-  mflr REG_DATA
-
-  # get SdTou filename
-  branchl r12, 0x8018f5f0
-  mr r4, r3
-  li r3, SIS_ID
-  load r5, 0x803da0b8 # "SIS_TournamentData"
-  branchl r12, 0x803a62a0 # LoadSIS
-  # replace SIS text
-  # get our SIS address we're replacing - taken from 803a637c
-  load r0, 0x804d1124 # SISData - SIS[4]
-  li r5, SIS_ID
-  rlwinm r3, r5, 2, 0, 29
-  add	r3, r0, r3
-  lwz	REG_SISDATA, 0(r3) # SISData[SIS_ID]
-  computeBranchTargetAddress REG_SISTABLE, stc_sr_sistable
-  li REG_COUNT, 0
-  SIS_LOOP:
-    # now the idx we want
-    rlwinm r0, REG_COUNT, 2, 0, 29
-    add r12, REG_SISTABLE, r0
-    mtctr r12
-    bctrl
-    mflr r3
-    stwx r3, REG_SISDATA, r0
-
-  SIS_LOOP_CHECK:
-    addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, SIS_COUNT
-    ble SIS_LOOP
-
-  # create text
-  li REG_COUNT, 0
-  SPAWN_TEXT_LOOP:
-    li r3, SIS_ID
-    mr r4, REG_CANVAS
-    # text process handles position
-    lfs	f1, RTOC_ZERO(rtoc)
-    lfs	f2, RTOC_ZERO(rtoc)
-    lfs	f3, RTOC_ZERO(rtoc)
-    lfs	f4, TXT_WIDTH(REG_DATA)
-    lfs	f5, TXT_HEIGHT(REG_DATA)
-    branchl r12, Text_AllocateTextObject
-    mr REG_TEXT, r3
-    load r3, 0xFF00007F
-    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
-    li r3, TRUE
-    stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
-
-    mr r3, REG_TEXT
-    mr r4, REG_COUNT
-    branchl r12, Text_SetFromSIS
-
-    load r4, stc_sr_data
-    addi r4, r4, SRD_TEXTS
-    mulli r0, REG_COUNT, 4
-    stwx REG_TEXT, r4, r0
-
-    SPAWN_TEXT_LOOP_CHECK:
-      addi REG_COUNT, REG_COUNT, 1
-      cmpwi REG_COUNT, 4
-      blt SPAWN_TEXT_LOOP
-      mr r5, REG_COUNT
-
 
 # Panel Jobjs
 #------------------------------------------------------------------------------#
@@ -248,28 +186,28 @@ CODE_START:
 
   # we have to turn on zupdate in the mobj desc before it gets loaded
   # otherwise it will always draw over our text
-  lwz r3, SP_PROMPT_MODEL_SET(sp)
-  lwz r3, DYN_MODEL_JOINT(r3)
-  # traverse tree
-  lwz r3, 0x8(r3) # child
-  lwz r3, 0xC(r3) # next
-  # dobjdesc
-  lwz r3, 0x10(r3)
-  # mobjdesc
-  lwz r3, 0x8(r3)
-  # set flags
-  load r4, 1 << 29 # zupdate
-  lwz r5, 0x4(r3) # flags
-  andc r5, r5, r4
-  # why does this hide the entire panel?
-  stw r5, 0x4(r3)
+  # lwz r3, SP_PROMPT_MODEL_SET(sp)
+  # lwz r3, DYN_MODEL_JOINT(r3)
+  # # traverse tree
+  # lwz r3, 0x8(r3) # child
+  # lwz r3, 0xC(r3) # next
+  # # dobjdesc
+  # lwz r3, 0x10(r3)
+  # # mobjdesc
+  # lwz r3, 0x8(r3)
+  # # set flags
+  # load r4, 1 << 29 # zupdate
+  # lwz r5, 0x4(r3) # flags
+  # andc r5, r5, r4
+  # # why does this hide the entire panel?
+  # stw r5, 0x4(r3)
 
   # create 4 panels
   li REG_COUNT, 0
 CREATE_PANEL_LOOP:
   # create gobj
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
-
+# 80d3dd88
   # data
   bl PD_TOP_BLRL
   mflr REG_DATA
@@ -448,6 +386,101 @@ CREATE_PANEL_LOOP:
 
 # Init Text Process
 #-------------------------------------------------------------------------------#
+  # create canvas
+  li r3, SIS_ID          # sis id
+  mr r4, REG_CAMGOBJ   # camera gobj
+  # li r4, 0
+  # load r4, 0x804a0fd8
+  li r5, GOBJ_CLASS_UI          # gobj class
+  li r6, GOBJ_PLINK_UI         # plink
+  li r7, 0          # prio
+  li r8, PANEL_GXLINK        # gxlink
+  li r9, 0          # render prio
+  li r10, 0        # camera prio
+  branchl r12, Text_CreateCanvas
+  mr REG_CANVAS, r3
+
+.set REG_TEXT, 16
+.set REG_SISDATA, 17
+.set REG_SISTABLE, 18
+.set SP_CLR, BKP_FREE_SPACE_OFFSET
+  bl TEXT_DATA_BLRL
+  mflr REG_DATA
+
+  # get SdTou filename
+  branchl r12, 0x8018f5f0
+  mr r4, r3
+  li r3, SIS_ID
+  load r5, 0x803da0b8 # "SIS_TournamentData"
+  branchl r12, 0x803a62a0 # LoadSIS
+  # replace SIS text
+  # get our SIS address we're replacing - taken from 803a637c
+  load r0, 0x804d1124 # SISData - SIS[4]
+  li r5, SIS_ID
+  rlwinm r3, r5, 2, 0, 29
+  add	r3, r0, r3
+  lwz	REG_SISDATA, 0(r3) # SISData[SIS_ID]
+  computeBranchTargetAddress REG_SISTABLE, stc_sr_sistable
+  li REG_COUNT, 0
+  SIS_LOOP:
+    # now the idx we want
+    rlwinm r0, REG_COUNT, 2, 0, 29
+    add r12, REG_SISTABLE, r0
+    mtctr r12
+    bctrl
+    mflr r3
+    stwx r3, REG_SISDATA, r0
+
+  SIS_LOOP_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, SIS_COUNT
+    ble SIS_LOOP
+
+  # create text
+  li REG_COUNT, 0
+  SPAWN_TEXT_LOOP:
+    li r3, SIS_ID
+    mr r4, REG_CANVAS
+    # text process handles position
+    lfs	f1, TXT_OFSTX(REG_DATA)
+    lfs	f2, TXT_OFSTY(REG_DATA)
+    lfs	f3, RTOC_ZERO(rtoc)
+    lfs	f4, TXT_WIDTH(REG_DATA)
+    lfs	f5, TXT_HEIGHT(REG_DATA)
+    branchl r12, Text_AllocateTextObject
+    mr REG_TEXT, r3
+    # load r3, 0xFF00007F
+    # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+
+    mr r3, REG_TEXT
+    mr r4, REG_COUNT
+    branchl r12, Text_SetFromSIS
+
+    li r3, TRUE
+    stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
+    stb r3, TEXT_DEPTH_TEST(REG_TEXT)
+    
+
+    load r4, stc_sr_data
+    addi r4, r4, SRD_TEXTS
+    mulli r0, REG_COUNT, 4
+    stwx REG_TEXT, r4, r0
+
+    mr r5, REG_TEXT
+    logf LOG_LEVEL_NOTICE, "text %x"
+
+    SPAWN_TEXT_LOOP_CHECK:
+      addi REG_COUNT, REG_COUNT, 1
+      cmpwi REG_COUNT, 4
+      blt SPAWN_TEXT_LOOP
+      mr r5, REG_COUNT
+
+    load r4, stc_sr_data
+    lwz REG_TEXT, SRD_TEXTS(r4)
+    load r3, 0xFF00007F
+    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+
+
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
 
 # add proc
@@ -714,85 +747,142 @@ FN_CameraProcess_Exit:
 #-----------------------------------------------------------------------------#
 FN_TextProcessBLRL:
 blrl
+# stack
 .set SP_OUT, BKP_FREE_SPACE_OFFSET
+.set SP_STICK_DIR, SP_OUT + 12
+.set SP_PANEL_DIR, SP_STICK_DIR + 12
+.set SP_TEMP, SP_PANEL_DIR + 12
+# regs
 .set REG_DATA, 31
-.set REG_TEXTS, 30
-.set REG_COUNT, 29
-.set REG_COBJ, 28
-.set REG_PANELS, 27
-.set REG_CURR_PANEL, 26
+.set REG_PANEL, 30
+.set REG_TEXT, 29
+.set REG_PAD, 27
 # floats
-.set FREG_X, 31
-.set FREG_Y, 30
-.set FREG_Z, 29
-.set FREG_SCALE, 16
+.set FREG_STICK_X, 31
+.set FREG_STICK_Y, 30
+.set FREG_STICK_MAG, 29
+.set FREG_INPUT_STRENGTH, 28
+.set FREG_SCALE, 27
+.set FREG_TRANSLATION, 26
+.set FREG_LERP_SPEED, 25
+.set FREG_ALIGNMENT, 24
+.set FREG_OFST_X, 23
+.set FREG_OFST_Y, 22
 FN_TextProcess:
   backup
+  
+  # init data/vars
   lwz REG_DATA, GOBJ_USERDATA(r3)
-  lwz REG_COBJ, SRD_COBJ(REG_DATA)
-  addi REG_TEXTS, REG_DATA, SRD_TEXTS
-  addi REG_PANELS, REG_DATA, SRD_JOBJ_PANELS
-  addi r16, REG_DATA, SRD_PANEL_SCALES
-  # lwz REG_PANEL, SRD_JOBJ_PANELS(REG_DATA)
-  # lfs FREG_SCALE, SRD_PANEL_SCALE(REG_DATA)
-
-  # update text
+  lwz REG_PANEL, SRD_JOBJ_PANELS(REG_DATA)
+  lwz REG_TEXT, SRD_TEXTS(REG_DATA)
+  
   bl TEXT_DATA_BLRL
   mflr REG_DATA
-
-  li REG_COUNT, 0
-  UPDATE_TEXT_LOOP:
-    mulli r0, REG_COUNT, 4
-    mr r3, REG_COBJ
-    lwzx REG_CURR_PANEL, REG_PANELS, r0
-    addi r4, REG_CURR_PANEL, JOBJ_POS
-    addi r5, sp, SP_OUT
-    li r6, 0
-    branchl r12, HSD_CObjWorldToScreen
-    lfs FREG_X, SP_OUT+X(sp)
-    lfs FREG_Y, SP_OUT+Y(sp)
-    lfs f0, TXT_OFSTX(REG_DATA)
-    fsubs FREG_X, FREG_X, f0
-    lfs f0, TXT_OFSTY(REG_DATA)
-    fsubs FREG_Y, FREG_Y, f0
-
-    lfs FREG_Z, JOBJ_SCALE+Z(REG_CURR_PANEL)
-    lfs f0, TXT_101(REG_DATA)
-    lfs f1, TXT_201(REG_DATA)
-    fmuls FREG_Z, FREG_Z, f0
-    fsubs FREG_Z, FREG_Z, f1
-    lwz r3, JOBJ_DOBJ(REG_CURR_PANEL)
-    lwz r3, 0x8(r3) # mobj
-    lwz r3, 0xC(r3) # mat
-    lfs f28, 0xC(r3) # alpha
-    lfs f0, RTOC_255(rtoc)
-    fmuls f28, f28, f0
-    fctiwz f28, f28
-    stfd f28, BKP_FREE_SPACE_OFFSET(sp)
   
-    # load our text
-    mulli r0, REG_COUNT, 4
-    lwzx r3, REG_TEXTS, r0
-    # x offset
-    stfs FREG_X, TEXT_TRANS+X(r3)
-    # y offset
-    stfs FREG_Y, TEXT_TRANS+Y(r3)
-    # z offset
-    stfs FREG_Z , TEXT_TRANS+Z(r3)
-    # alpha
-    lbz r0, BKP_FREE_SPACE_OFFSET+7(sp)
-    stb r0, TEXT_COLOR+A(r3)
+  li r3, DEBUG_PAD_UNION  # or use player port
+  get_port_pad r3
+  mr REG_PAD, r3
+  lfs FREG_STICK_X, PAD_stick_x(r3)
+  lfs FREG_STICK_Y, PAD_stick_y(r3)
+  lfs f0, RTOC_ZERO(rtoc)
+  # store stick direction
+  stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
+  stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
+  stfs f0, SP_STICK_DIR+Z(sp)
+  
+  # stick magnitude
+  fmuls f0, FREG_STICK_X, FREG_STICK_X
+  fmuls f1, FREG_STICK_Y, FREG_STICK_Y
+  fadds f0, f0, f1
+  fsqrts FREG_STICK_MAG, f0
 
-    # fmr f1, f31
-    # fmr f2, f30
-    # fmr f3, f29
-    # logf LOG_LEVEL_ERROR, "XYZ: %f %f %f"
+  # fmr f1, FREG_STICK_MAG
+  # logf LOG_LEVEL_ERROR, "Stick magnitude: %f"
+  
+  # Initialize input_strength to 0
+  lfs FREG_INPUT_STRENGTH, RTOC_ZERO(rtoc)
 
-  UPDATE_TEXT_LOOP_CHECK:
-    addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, 4
-    blt UPDATE_TEXT_LOOP
+  # panel
+  lfs f1, JOBJ_POS+X(REG_PANEL)
+  lfs f2, JOBJ_POS+Y(REG_PANEL)
+  lfs f3, JOBJ_POS+Z(REG_PANEL)
+  stfs f1, SP_PANEL_DIR+X(sp)
+  stfs f2, SP_PANEL_DIR+Y(sp)
+  stfs f3, SP_PANEL_DIR+Z(sp)
+  # normalize
+  addi r3, sp, SP_PANEL_DIR
+  addi r4, sp, SP_PANEL_DIR
+  branchl r12, PSVECNormalize
+  
+  # stick_mag > 0.001f
+  lfs f0, RTOC_0_001(rtoc)
+  fcmpo cr0, FREG_STICK_MAG, f0
+  ble LERP_AND_TRANSFORM
+  
+  # normalize stick vector
+  addi r3, sp, SP_STICK_DIR
+  addi r4, sp, SP_STICK_DIR
+  branchl r12, PSVECNormalize
+  
+  # alignment
+  addi r3, sp, SP_STICK_DIR
+  addi r4, sp, SP_PANEL_DIR
+  branchl r12, PSVECDotProduct
+  fmr FREG_ALIGNMENT, f1
+  # logf LOG_LEVEL_ERROR, "dot product: %f"
+  fmuls FREG_INPUT_STRENGTH, FREG_ALIGNMENT, FREG_STICK_MAG
+  lfs f1, RTOC_ZERO(rtoc)
+  lfs f2, RTOC_ONE(rtoc)
+  clamp_float FREG_INPUT_STRENGTH, f1, f2
+  fmr f1, FREG_INPUT_STRENGTH
+  # logf LOG_LEVEL_ERROR, "input_strength: %f"
 
+  LERP_AND_TRANSFORM:
+    # current vals
+    lfs FREG_SCALE, TXT_SCALE(REG_DATA)
+    lfs FREG_TRANSLATION, TXT_TRANS(REG_DATA)
+
+    # lerp vals
+    lfs FREG_LERP_SPEED, RTOC_0_01(rtoc)
+    fsubs f0, FREG_INPUT_STRENGTH, FREG_SCALE
+    fmuls f0, f0, FREG_LERP_SPEED
+    fadds FREG_SCALE, FREG_SCALE, f0
+
+    lfs f1, RTOC_ONE(rtoc)
+    fsubs f0, f1, FREG_INPUT_STRENGTH
+    fsubs f0, f0, FREG_TRANSLATION
+    fmuls f0, f0, FREG_LERP_SPEED
+    fadds FREG_TRANSLATION, FREG_TRANSLATION, f0
+
+    lfs FREG_OFST_X, TXT_OFSTX(REG_DATA)
+    lfs FREG_OFST_Y, TXT_OFSTY(REG_DATA)
+    lfs f1, RTOC_20(rtoc)
+
+    # x
+    lfs f0, SP_PANEL_DIR+X(sp)
+    fneg f0, f0
+    fmuls f0, f0, FREG_TRANSLATION
+    fmuls f0, f0, f1  # multiply by scale factor
+    fadds f0, f0, FREG_OFST_X  # Add original X offset
+    stfs f0, TEXT_TRANS+X(REG_TEXT)
+    # y
+    lfs f0, SP_PANEL_DIR+Y(sp)
+    fneg f0, f0
+    fmuls f0, f0, FREG_TRANSLATION
+    fmuls f0, f0, f1  # multiply by scale factor
+    fadds f0, f0, FREG_OFST_Y  # Add original Y offset
+    stfs f0, TEXT_TRANS+Y(REG_TEXT)
+    # z
+    fneg f0, f1  # -20.0f
+    fmuls f2, FREG_SCALE, f1  # scale * 20.0f
+    fadds f0, f0, f2
+    stfs f0, TEXT_TRANS+Z(REG_TEXT)
+
+
+    stfs FREG_SCALE, TXT_SCALE(REG_DATA)
+    stfs FREG_TRANSLATION, TXT_TRANS(REG_DATA)
+
+  
 FN_TextProcess_Exit:
   restore
   blr
