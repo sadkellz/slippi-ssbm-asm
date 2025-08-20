@@ -853,35 +853,47 @@ FN_TextProcess:
     fsubs f0, f0, FREG_TRANSLATION
     fmuls f0, f0, FREG_LERP_SPEED
     fadds FREG_TRANSLATION, FREG_TRANSLATION, f0
-
+    # text offsets to so that they align with the panels
     lfs FREG_OFST_X, TXT_OFSTX(REG_DATA)
     lfs FREG_OFST_Y, TXT_OFSTY(REG_DATA)
-    lfs f1, RTOC_15(rtoc)
 
     # x
+    lfs f1, RTOC_10(rtoc)
+    fmuls f4, FREG_STICK_X, f1
+    lfs f1, RTOC_100(rtoc)
+    # fmuls f4, FREG_STICK_X, f1
     lfs f0, SP_PANEL_DIR+X(sp)
     fneg f0, f0
     fmuls f0, f0, FREG_TRANSLATION
-    fmuls f0, f0, f1  # multiply by scale factor
-    fadds f0, f0, FREG_OFST_X  # Add original X offset
+    fmuls f0, f0, f1
+    fadds f0, f0, FREG_OFST_X
+    fsubs f0, f0, f4
     stfs f0, TEXT_TRANS+X(REG_TEXT)
     # y
+    lfs f1, RTOC_15(rtoc)
     lfs f0, SP_PANEL_DIR+Y(sp)
     fneg f0, f0
     fmuls f0, f0, FREG_TRANSLATION
-    fmuls f0, f0, f1  # multiply by scale factor
-    fadds f0, f0, FREG_OFST_Y  # Add original Y offset
+    fmuls f0, f0, f1 
+    fadds f0, f0, FREG_OFST_Y
     stfs f0, TEXT_TRANS+Y(REG_TEXT)
     # z
     lfs f1, RTOC_100(rtoc)
-    fneg f0, f1  # -20.0f
-    fmuls f2, FREG_SCALE, f1  # scale * 20.0f
+    fneg f0, f1
+    fmuls f2, FREG_SCALE, f1
     fadds f0, f0, f2
     stfs f0, TEXT_TRANS+Z(REG_TEXT)
 
-
     stfs FREG_SCALE, TXT_SCALE(REG_DATA)
     stfs FREG_TRANSLATION, TXT_TRANS(REG_DATA)
+
+    # alpha
+    lfs f0, RTOC_255(rtoc)
+    fmuls f0, FREG_INPUT_STRENGTH, f0
+    fctiwz f0, f0
+    stfd f0, SP_TEMP(sp)
+    lbz r3, SP_TEMP+7(sp)
+    stb r3, TEXT_COLOR+A(REG_TEXT)
 
   
 FN_TextProcess_Exit:
