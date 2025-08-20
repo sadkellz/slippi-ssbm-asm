@@ -87,9 +87,9 @@ blrl
 .set TXT_201, TXT_101 + 4
 .set TD_SIZE, TXT_201 + 4
 TEXT_DATA_TOP:
-  .float 450.0
+  .float 400.0
   .float 160.0
-  .float 225.0
+  .float 200.0
   .float 80.0
   .float 101.0
   .float 202.0
@@ -226,7 +226,7 @@ CODE_START:
     branchl r12, Text_AllocateTextObject
     mr REG_TEXT, r3
     load r3, 0xFF00007F
-    # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
     li r3, TRUE
     stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
 
