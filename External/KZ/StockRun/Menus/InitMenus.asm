@@ -93,21 +93,7 @@ TEXT_DATA_TOP:
   .float 80.0
   .float 101.0
   .float 202.0
-# TEXT_DATA_RIGHT:
-#   .float 450.0
-#   .float 160.0
-#   .float -300.0
-#   .float -65.0
-# TEXT_DATA_BOTTOM:
-#   .float 450.0
-#   .float 160.0
-#   .float 225.0
-#   .float -425.0
-# TEXT_DATA_LEFT:
-#   .float 450.0
-#   .float 160.0
-#   .float 755.0
-#   .float -65.0
+
 
 CODE_START:
   .set REG_GOBJ, 31
@@ -736,6 +722,9 @@ blrl
 .set REG_PANELS, 27
 .set REG_CURR_PANEL, 26
 # floats
+.set FREG_X, 31
+.set FREG_Y, 30
+.set FREG_Z, 29
 .set FREG_SCALE, 16
 FN_TextProcess:
   backup
@@ -760,13 +749,18 @@ FN_TextProcess:
     addi r5, sp, SP_OUT
     li r6, 0
     branchl r12, HSD_CObjWorldToScreen
-    lfs f31, SP_OUT+X(sp)
-    lfs f30, SP_OUT+Y(sp)
-    lfs f29, JOBJ_SCALE+Z(REG_CURR_PANEL)
+    lfs FREG_X, SP_OUT+X(sp)
+    lfs FREG_Y, SP_OUT+Y(sp)
+    lfs f0, TXT_OFSTX(REG_DATA)
+    fsubs FREG_X, FREG_X, f0
+    lfs f0, TXT_OFSTY(REG_DATA)
+    fsubs FREG_Y, FREG_Y, f0
+
+    lfs FREG_Z, JOBJ_SCALE+Z(REG_CURR_PANEL)
     lfs f0, TXT_101(REG_DATA)
     lfs f1, TXT_201(REG_DATA)
-    fmuls f29, f29, f0
-    fsubs f29, f29, f1
+    fmuls FREG_Z, FREG_Z, f0
+    fsubs FREG_Z, FREG_Z, f1
     lwz r3, JOBJ_DOBJ(REG_CURR_PANEL)
     lwz r3, 0x8(r3) # mobj
     lwz r3, 0xC(r3) # mat
@@ -775,24 +769,24 @@ FN_TextProcess:
     fmuls f28, f28, f0
     fctiwz f28, f28
     stfd f28, BKP_FREE_SPACE_OFFSET(sp)
-    
   
     # load our text
     mulli r0, REG_COUNT, 4
     lwzx r3, REG_TEXTS, r0
     # x offset
-    lfs f0, TXT_OFSTX(REG_DATA)
-    fsubs f31, f31, f0
-    stfs f31, TEXT_TRANS+X(r3)
+    stfs FREG_X, TEXT_TRANS+X(r3)
     # y offset
-    lfs f0, TXT_OFSTY(REG_DATA)
-    fsubs f30, f30, f0
-    stfs f30, TEXT_TRANS+Y(r3)
+    stfs FREG_Y, TEXT_TRANS+Y(r3)
     # z offset
-    stfs f29 , TEXT_TRANS+Z(r3)
+    stfs FREG_Z , TEXT_TRANS+Z(r3)
     # alpha
     lbz r0, BKP_FREE_SPACE_OFFSET+7(sp)
     stb r0, TEXT_COLOR+A(r3)
+
+    # fmr f1, f31
+    # fmr f2, f30
+    # fmr f3, f29
+    # logf LOG_LEVEL_ERROR, "XYZ: %f %f %f"
 
   UPDATE_TEXT_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
