@@ -3,6 +3,8 @@
 # Functions
 ################################################################################
 
+.set StockRun_RandomizeCards, 0x804a3120
+
 ################################################################################
 # Structs
 ################################################################################
@@ -10,9 +12,10 @@
 .set SRD_GOBJ_INIT, 0 # 0x0
 .set SRD_GOBJ_MENU, SRD_GOBJ_INIT + 4 # 0x4
 .set SRD_COBJ_DESC, SRD_GOBJ_MENU + 4 # 0x8
-.set SRD_JOBJ_PANELS, SRD_COBJ_DESC + 4 # 0xC
-.set SRD_TEXTS, SRD_JOBJ_PANELS + 16 # 0x1C
-.set SRD_CURRENT_PANEL, SRD_TEXTS + 16 # 0x2C
+.set SRD_JOBJ_PANELS, SRD_COBJ_DESC + 4 # 0xC - jobj[4]
+.set SRD_TEXTS, SRD_JOBJ_PANELS + 16 # 0x1C - text[4]
+.set SRD_CURRENT_PANEL, SRD_TEXTS + 16 # 0x2C - jobj
+.set SRD_CURRENT_CARDS, SRD_CURRENT_PANEL + 4 # 0x30 int[4]
 
 # StockRun Context
 .set SRC_SLOT_ORDER, 0                              # int[2]
@@ -22,11 +25,16 @@
 .set SRC_ACTIVE_SLOT, SRC_GAME_STATE + 4            # int
 .set SRC_HOVER_STATE, SRC_ACTIVE_SLOT + 4           # int
 
+# StockRun Player
+.set SRP_CARDS, 0 # int bitfield
+.set SRP_SIZE, SRP_CARDS + 4
+
 ################################################################################
 # Directives
 ################################################################################
 .set stc_sr_data, 0x804a2f48
 .set stc_sr_sistable, 0x804a3048
+.set stc_sr_plydata, 0x804a304c # this has a size of SRP_SIZE * 4
 
 # StockRun Game State
 .set SRGS_INIT, 0
@@ -63,7 +71,13 @@
 .set MIN_SCALE, RTOC_0_5
 .set MAX_SCALE, RTOC_2
 .set SIS_ID, 3
-.set SIS_COUNT, 4 # number of replaced SIS entries we've made
+.set CARD_COUNT, 4 # also the number of replaced SIS entries we've made
+
+# StockRun Cards
+.set SR_CARD_KBINC, 0
+.set SR_CARD_KBDEC, 1
+.set SR_CARD_CRIT, 2
+.set SR_CARD_SHIELDHP, 3
 
 
 ################################################################################

@@ -422,9 +422,17 @@ CREATE_PANEL_LOOP:
 .set REG_TEXT, 16
 .set REG_SISDATA, 17
 .set REG_SISTABLE, 18
+.set REG_CARDS, 19
 .set SP_CLR, BKP_FREE_SPACE_OFFSET
   bl TEXT_DATA_BLRL
   mflr REG_DATA
+
+  # random our cards
+  li r3, CARD_COUNT
+  load r4, stc_sr_data
+  addi REG_CARDS, r4, SRD_CURRENT_CARDS
+  mr r4, REG_CARDS
+  branchl r12, StockRun_RandomizeCards
 
   # get SdTou filename
   branchl r12, 0x8018f5f0
@@ -452,12 +460,11 @@ CREATE_PANEL_LOOP:
 
   SIS_LOOP_CHECK:
     addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, SIS_COUNT
+    cmpwi REG_COUNT, CARD_COUNT
     ble SIS_LOOP
 
   # create text
   li REG_COUNT, 0
-  bp
   SPAWN_TEXT_LOOP:
     li r3, SIS_ID
     mr r4, REG_CANVAS
@@ -475,7 +482,8 @@ CREATE_PANEL_LOOP:
     # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
 
     mr r3, REG_TEXT
-    mr r4, REG_COUNT
+    rlwinm r0, REG_COUNT, 2, 0, 29
+    lwzx r4, REG_CARDS, r0
     branchl r12, Text_SetFromSIS
 
     li r3, TRUE
@@ -492,7 +500,7 @@ CREATE_PANEL_LOOP:
 
     SPAWN_TEXT_LOOP_CHECK:
       addi REG_COUNT, REG_COUNT, 1
-      cmpwi REG_COUNT, 4
+      cmpwi REG_COUNT, CARD_COUNT
       blt SPAWN_TEXT_LOOP
       mr r5, REG_COUNT
 

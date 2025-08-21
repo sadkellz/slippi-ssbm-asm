@@ -155,6 +155,7 @@ SR_InitContext:
   li r3, 0
   stw r3, SRC_CURRENT_PICKER(REG_DATA)
   stw r3, SRC_GAME_STATE(REG_DATA)
+  stw r3, SRC_HOVER_STATE(REG_DATA)
 
   logf LOG_LEVEL_ERROR, "SR Data Reset"
 
