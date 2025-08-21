@@ -196,11 +196,12 @@ CODE_START:
   # mobjdesc
   lwz r3, 0x8(r3)
   # set flags
-  load r4, 1 << 29 # zupdate
-  lwz r5, 0x4(r3) # flags
-  or r5, r5, r4
+  load r4, 0x40000001
+  # lwz r5, 0x4(r3) # flags
+  # or r5, r5, r4
   # why does this hide the entire panel?
-  stw r5, 0x4(r3)
+  stw r4, 0x4(r3)
+  mr r5, r4
   logf LOG_LEVEL_ERROR, "flags %08x"
 
   # create 4 panels
@@ -452,8 +453,8 @@ CREATE_PANEL_LOOP:
     lfs	f5, TXT_HEIGHT(r9)
     branchl r12, Text_AllocateTextObject
     mr REG_TEXT, r3
-    load r3, 0xFF00007F
-    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+    # load r3, 0xFF00007F
+    # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
 
     mr r3, REG_TEXT
     mr r4, REG_COUNT
@@ -461,9 +462,8 @@ CREATE_PANEL_LOOP:
 
     li r3, TRUE
     stb r3, TEXT_DEFAULT_USE_ASPECT(REG_TEXT)
-    stb r3, TEXT_DEPTH_TEST(REG_TEXT)
+    # stb r3, TEXT_DEPTH_TEST(REG_TEXT)
     
-
     load r4, stc_sr_data
     addi r4, r4, SRD_TEXTS
     mulli r0, REG_COUNT, 4
@@ -902,6 +902,7 @@ FN_TextProcess:
 
       # alpha
       lfs f0, RTOC_255(rtoc)
+      fmuls FREG_INPUT_STRENGTH, FREG_INPUT_STRENGTH, FREG_INPUT_STRENGTH
       fmuls f0, FREG_INPUT_STRENGTH, f0
       fctiwz f0, f0
       stfd f0, SP_TEMP(sp)
@@ -965,10 +966,10 @@ blrl
   lfs f0, RTOC_0(rtoc)
   stfs f0, SP_STICK_DIR+Z(sp)
 
-  # Copy panel translation to to_panel
+  # Copy panel translation to to_panel (use only X,Y for direction)
   lfs f1, JOBJ_POS+X(REG_PANEL)
   lfs f2, JOBJ_POS+Y(REG_PANEL)
-  lfs f3, JOBJ_POS+Z(REG_PANEL)
+  lfs f3, RTOC_0(rtoc)  # Always use 0 for Z in direction calculation
   stfs f1, SP_TO_PANEL+X(sp)
   stfs f2, SP_TO_PANEL+Y(sp)
   stfs f3, SP_TO_PANEL+Z(sp)
@@ -986,10 +987,7 @@ blrl
   load r3, 0x3ecccccd  # 0.4f (reset_speed)
   stw r3, SP_TEMP(sp)
   lfs FREG_RESET_SPEED, SP_TEMP(sp)
-
-  load r3, 0x3f800000  # 1.0f (change_speed) - was 0x3d23d70a (0.04f)
-  stw r3, SP_TEMP(sp)
-  lfs FREG_CHANGE_SPEED, SP_TEMP(sp)
+  lfs FREG_CHANGE_SPEED, RTOC_1(rtoc)
 
   # Get stick magnitude
   addi r3, sp, SP_STICK_DIR
@@ -1037,24 +1035,43 @@ RESET_SCALE:
   fsubs FREG_CURRENT_ALPHA, FREG_CURRENT_ALPHA, f0
 
 CLAMP_VALUES:
-    # Clamp scale (0.1f to 1.5f)
-    load r3, 0x3dcccccd  # 0.1f
-    stw r3, SP_TEMP(sp)
-    lfs f1, SP_TEMP(sp)
-    # load r3, 0x3fc00000  # 1.5f
-    # stw r3, SP_TEMP(sp)
+    # Clamp scale (0.1f to 2.0f)
+    lfs f1, RTOC_0_1(rtoc)
     lfs f2, RTOC_2(rtoc)
     clamp_float FREG_CURRENT_SCALE, f1, f2
-
+    
     # Clamp alpha
     lfs f1, RTOC_0(rtoc)
     lfs f2, RTOC_0_75(rtoc)
     clamp_float FREG_CURRENT_ALPHA, f1, f2
-
+    
     # Set panel scale
     stfs FREG_CURRENT_SCALE, JOBJ_SCALE+X(REG_PANEL)
     stfs FREG_CURRENT_SCALE, JOBJ_SCALE+Y(REG_PANEL)
     stfs FREG_CURRENT_SCALE, JOBJ_SCALE+Z(REG_PANEL)
+    
+    # Calculate Z position based on scale
+    # We need to map scale [1.0, 2.0] to Z [-100, 1]
+    # Z = (scale - 1.0) * 101 - 100
+    
+    # Calculate Z position based on scale
+    # Map scale [1.0, 2.0] to Z [-50, 0] instead of [-100, 1]
+
+    lfs f0, RTOC_1(rtoc)              # 1.0
+    fsubs f1, FREG_CURRENT_SCALE, f0  # scale - 1.0 (gives 0 to 1)
+
+    load r3, 0x42480000               # 50.0f
+    stw r3, SP_TEMP(sp)
+    lfs f0, SP_TEMP(sp)
+    fmuls f1, f1, f0                  # (scale - 1.0) * 50
+
+    load r3, 0xc2480000               # -50.0f
+    stw r3, SP_TEMP(sp)
+    lfs f0, SP_TEMP(sp)
+    fadds f1, f1, f0                  # result + (-50)
+
+    stfs f1, JOBJ_POS+Z(REG_PANEL)
+
 
   # Set alpha for all dobjs
   lwz REG_DOBJ, JOBJ_DOBJ(REG_PANEL)
@@ -1074,10 +1091,6 @@ CLAMP_VALUES:
   # Set matrix dirty
   mr r3, REG_PANEL
   branchl r12, HSD_JObjSetMtxDirty
-
-  # fmr f1, FREG_CURRENT_SCALE
-  # fmr f2, FREG_CURRENT_ALPHA
-  # logf LOG_LEVEL_ERROR, "SCALE: %f, ALPHA: %f"
 
   stfs FREG_CURRENT_SCALE, PD_CURRENT_SCALE(REG_DATA)
   stfs FREG_CURRENT_ALPHA, PD_CURRENT_ALPHA(REG_DATA)
