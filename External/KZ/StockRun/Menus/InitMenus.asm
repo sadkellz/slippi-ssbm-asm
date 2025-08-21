@@ -387,6 +387,24 @@ CREATE_PANEL_LOOP:
 
 # Init Text Process
 #-------------------------------------------------------------------------------#
+
+  bl FN_CameraGX
+  mflr r16
+  spawn_cobj REG_COBJDESC, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << TEXT_GXLINK, REG_CAMGOBJ, REG_COBJ
+  # add proc
+  mr r3, REG_CAMGOBJ
+  bl FN_CameraProcessBLRL
+  mflr r4
+  li r5, 0
+  branchl r12, GObj_AddProc
+
+  mr r3, REG_CAMGOBJ
+  li r4, 0
+  li r5, 0
+  bl CD_PANEL_BLRL
+  mflr r6
+  branchl r12, GObj_AddUserData
+
   # create canvas
   li r3, SIS_ID          # sis id
   mr r4, REG_CAMGOBJ   # camera gobj
@@ -395,7 +413,7 @@ CREATE_PANEL_LOOP:
   li r5, GOBJ_CLASS_UI          # gobj class
   li r6, GOBJ_PLINK_UI         # plink
   li r7, 0          # prio
-  li r8, PANEL_GXLINK        # gxlink
+  li r8, TEXT_GXLINK        # gxlink
   li r9, 0          # render prio
   li r10, 0        # camera prio
   branchl r12, Text_CreateCanvas
