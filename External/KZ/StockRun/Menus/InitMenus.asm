@@ -96,22 +96,22 @@ TEXT_DATA_TOP:
 TEXT_DATA_RIGHT:
   .float 40.0
   .float 16.0
-  .float -20.0
-  .float -25.0
+  .float 14.0
+  .float -8.0
   .float 0.0
   .float 1.0
 TEXT_DATA_BOTTOM:
   .float 40.0
   .float 16.0
   .float -20.0
-  .float -25.0
+  .float 9.0
   .float 0.0
   .float 1.0
 TEXT_DATA_LEFT:
   .float 40.0
   .float 16.0
-  .float -20.0
-  .float -25.0
+  .float -54.0
+  .float -8.0
   .float 0.0
   .float 1.0
 
@@ -186,28 +186,28 @@ CODE_START:
 
   # we have to turn on zupdate in the mobj desc before it gets loaded
   # otherwise it will always draw over our text
-  # lwz r3, SP_PROMPT_MODEL_SET(sp)
-  # lwz r3, DYN_MODEL_JOINT(r3)
-  # # traverse tree
-  # lwz r3, 0x8(r3) # child
-  # lwz r3, 0xC(r3) # next
-  # # dobjdesc
-  # lwz r3, 0x10(r3)
-  # # mobjdesc
-  # lwz r3, 0x8(r3)
-  # # set flags
-  # load r4, 1 << 29 # zupdate
-  # lwz r5, 0x4(r3) # flags
-  # andc r5, r5, r4
-  # # why does this hide the entire panel?
-  # stw r5, 0x4(r3)
+  lwz r3, SP_PROMPT_MODEL_SET(sp)
+  lwz r3, DYN_MODEL_JOINT(r3)
+  # traverse tree
+  lwz r3, 0x8(r3) # child
+  lwz r3, 0xC(r3) # next
+  # dobjdesc
+  lwz r3, 0x10(r3)
+  # mobjdesc
+  lwz r3, 0x8(r3)
+  # set flags
+  load r4, 1 << 29 # zupdate
+  lwz r5, 0x4(r3) # flags
+  or r5, r5, r4
+  # why does this hide the entire panel?
+  stw r5, 0x4(r3)
+  logf LOG_LEVEL_ERROR, "flags %08x"
 
   # create 4 panels
   li REG_COUNT, 0
 CREATE_PANEL_LOOP:
   # create gobj
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
-# 80d3dd88
   # data
   bl PD_TOP_BLRL
   mflr REG_DATA
@@ -438,19 +438,22 @@ CREATE_PANEL_LOOP:
 
   # create text
   li REG_COUNT, 0
+  bp
   SPAWN_TEXT_LOOP:
     li r3, SIS_ID
     mr r4, REG_CANVAS
+    mulli r0, REG_COUNT, TD_SIZE
+    add r9, REG_DATA, r0
     # text process handles position
-    lfs	f1, TXT_OFSTX(REG_DATA)
-    lfs	f2, TXT_OFSTY(REG_DATA)
+    lfs	f1, TXT_OFSTX(r9)
+    lfs	f2, TXT_OFSTY(r9)
     lfs	f3, RTOC_0(rtoc)
-    lfs	f4, TXT_WIDTH(REG_DATA)
-    lfs	f5, TXT_HEIGHT(REG_DATA)
+    lfs	f4, TXT_WIDTH(r9)
+    lfs	f5, TXT_HEIGHT(r9)
     branchl r12, Text_AllocateTextObject
     mr REG_TEXT, r3
-    # load r3, 0xFF00007F
-    # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+    load r3, 0xFF00007F
+    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
 
     mr r3, REG_TEXT
     mr r4, REG_COUNT
@@ -475,10 +478,10 @@ CREATE_PANEL_LOOP:
       blt SPAWN_TEXT_LOOP
       mr r5, REG_COUNT
 
-    load r4, stc_sr_data
-    lwz REG_TEXT, SRD_TEXTS(r4)
-    load r3, 0xFF00007F
-    stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
+    # load r4, stc_sr_data
+    # lwz REG_TEXT, SRD_TEXTS(r4)
+    # load r3, 0xFF00007F
+    # stw r3, TEXT_BACKGROUND_CLR(REG_TEXT)
 
 
   gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
@@ -757,6 +760,10 @@ blrl
 .set REG_PANEL, 30
 .set REG_TEXT, 29
 .set REG_PAD, 27
+.set REG_COUNT, 26
+.set REG_CURR_PANEL, 25
+.set REG_CURR_TEXT, 24
+.set REG_CURR_DATA, 23
 # floats
 .set FREG_STICK_X, 31
 .set FREG_STICK_Y, 30
@@ -773,8 +780,10 @@ FN_TextProcess:
   
   # init data/vars
   lwz REG_DATA, GOBJ_USERDATA(r3)
-  lwz REG_PANEL, SRD_JOBJ_PANELS(REG_DATA)
-  lwz REG_TEXT, SRD_TEXTS(REG_DATA)
+  # lwz REG_PANEL, SRD_JOBJ_PANELS(REG_DATA)
+  # lwz REG_TEXT, SRD_TEXTS(REG_DATA)
+  addi REG_PANEL, REG_DATA, SRD_JOBJ_PANELS
+  addi REG_TEXT, REG_DATA, SRD_TEXTS
   
   bl TEXT_DATA_BLRL
   mflr REG_DATA
@@ -802,98 +811,107 @@ FN_TextProcess:
   # Initialize input_strength to 0
   lfs FREG_INPUT_STRENGTH, RTOC_0(rtoc)
 
-  # panel
-  lfs f1, JOBJ_POS+X(REG_PANEL)
-  lfs f2, JOBJ_POS+Y(REG_PANEL)
-  lfs f3, JOBJ_POS+Z(REG_PANEL)
-  stfs f1, SP_PANEL_DIR+X(sp)
-  stfs f2, SP_PANEL_DIR+Y(sp)
-  stfs f3, SP_PANEL_DIR+Z(sp)
-  # normalize
-  addi r3, sp, SP_PANEL_DIR
-  addi r4, sp, SP_PANEL_DIR
-  branchl r12, PSVECNormalize
-  
-  # stick_mag > 0.001f
-  lfs f0, RTOC_0_001(rtoc)
-  fcmpo cr0, FREG_STICK_MAG, f0
-  ble LERP_AND_TRANSFORM
-  
-  # normalize stick vector
-  addi r3, sp, SP_STICK_DIR
-  addi r4, sp, SP_STICK_DIR
-  branchl r12, PSVECNormalize
-  
-  # alignment
-  addi r3, sp, SP_STICK_DIR
-  addi r4, sp, SP_PANEL_DIR
-  branchl r12, PSVECDotProduct
-  fmr FREG_ALIGNMENT, f1
-  # logf LOG_LEVEL_ERROR, "dot product: %f"
-  fmuls FREG_INPUT_STRENGTH, FREG_ALIGNMENT, FREG_STICK_MAG
-  lfs f1, RTOC_0(rtoc)
-  lfs f2, RTOC_1(rtoc)
-  clamp_float FREG_INPUT_STRENGTH, f1, f2
-  fmr f1, FREG_INPUT_STRENGTH
-  # logf LOG_LEVEL_ERROR, "input_strength: %f"
+  # loop
+  li REG_COUNT, 0
+  START_TEXT_PROC_LOOP:
+    mulli r0, REG_COUNT, 4
+    lwzx REG_CURR_PANEL, REG_PANEL, r0
+    lwzx REG_CURR_TEXT, REG_TEXT, r0
+    mulli r0, REG_COUNT, TD_SIZE
+    add REG_CURR_DATA, REG_DATA, r0
+    # panel
+    lfs f1, JOBJ_POS+X(REG_CURR_PANEL)
+    lfs f2, JOBJ_POS+Y(REG_CURR_PANEL)
+    lfs f3, JOBJ_POS+Z(REG_CURR_PANEL)
+    stfs f1, SP_PANEL_DIR+X(sp)
+    stfs f2, SP_PANEL_DIR+Y(sp)
+    stfs f3, SP_PANEL_DIR+Z(sp)
+    # normalize
+    addi r3, sp, SP_PANEL_DIR
+    addi r4, sp, SP_PANEL_DIR
+    branchl r12, PSVECNormalize
+    
+    # stick_mag > 0.001f
+    lfs f0, RTOC_0_001(rtoc)
+    fcmpo cr0, FREG_STICK_MAG, f0
+    ble LERP_AND_TRANSFORM
+    
+    # normalize stick vector
+    addi r3, sp, SP_STICK_DIR
+    addi r4, sp, SP_STICK_DIR
+    branchl r12, PSVECNormalize
+    
+    # alignment
+    addi r3, sp, SP_STICK_DIR
+    addi r4, sp, SP_PANEL_DIR
+    branchl r12, PSVECDotProduct
+    fmr FREG_ALIGNMENT, f1
+    # logf LOG_LEVEL_ERROR, "dot product: %f"
+    fmuls FREG_INPUT_STRENGTH, FREG_ALIGNMENT, FREG_STICK_MAG
+    lfs f1, RTOC_0(rtoc)
+    lfs f2, RTOC_1(rtoc)
+    clamp_float FREG_INPUT_STRENGTH, f1, f2
+    fmr f1, FREG_INPUT_STRENGTH
+    # logf LOG_LEVEL_ERROR, "input_strength: %f"
 
-  LERP_AND_TRANSFORM:
-    # current vals
-    lfs FREG_SCALE, TXT_SCALE(REG_DATA)
-    lfs FREG_TRANSLATION, TXT_TRANS(REG_DATA)
+    LERP_AND_TRANSFORM:
+      # current vals
+      lfs FREG_SCALE, TXT_SCALE(REG_CURR_DATA)
+      lfs FREG_TRANSLATION, TXT_TRANS(REG_CURR_DATA)
 
-    # lerp vals
-    lfs FREG_LERP_SPEED, RTOC_0_5(rtoc)
-    fsubs f0, FREG_INPUT_STRENGTH, FREG_SCALE
-    fmuls f0, f0, FREG_LERP_SPEED
-    fadds FREG_SCALE, FREG_SCALE, f0
+      # lerp vals
+      lfs FREG_LERP_SPEED, RTOC_0_5(rtoc)
+      fsubs f0, FREG_INPUT_STRENGTH, FREG_SCALE
+      fmuls f0, f0, FREG_LERP_SPEED
+      fadds FREG_SCALE, FREG_SCALE, f0
 
-    lfs f1, RTOC_1(rtoc)
-    fsubs f0, f1, FREG_INPUT_STRENGTH
-    fsubs f0, f0, FREG_TRANSLATION
-    fmuls f0, f0, FREG_LERP_SPEED
-    fadds FREG_TRANSLATION, FREG_TRANSLATION, f0
-    # text offsets to so that they align with the panels
-    lfs FREG_OFST_X, TXT_OFSTX(REG_DATA)
-    lfs FREG_OFST_Y, TXT_OFSTY(REG_DATA)
+      lfs f1, RTOC_1(rtoc)
+      fsubs f0, f1, FREG_INPUT_STRENGTH
+      fsubs f0, f0, FREG_TRANSLATION
+      fmuls f0, f0, FREG_LERP_SPEED
+      fadds FREG_TRANSLATION, FREG_TRANSLATION, f0
+      # text offsets to so that they align with the panels
+      lfs FREG_OFST_X, TXT_OFSTX(REG_CURR_DATA)
+      lfs FREG_OFST_Y, TXT_OFSTY(REG_CURR_DATA)
 
-    # x
-    lfs f1, RTOC_10(rtoc)
-    fmuls f4, FREG_STICK_X, f1
-    lfs f1, RTOC_100(rtoc)
-    # fmuls f4, FREG_STICK_X, f1
-    lfs f0, SP_PANEL_DIR+X(sp)
-    fneg f0, f0
-    fmuls f0, f0, FREG_TRANSLATION
-    fmuls f0, f0, f1
-    fadds f0, f0, FREG_OFST_X
-    fsubs f0, f0, f4
-    stfs f0, TEXT_TRANS+X(REG_TEXT)
-    # y
-    lfs f1, RTOC_15(rtoc)
-    lfs f0, SP_PANEL_DIR+Y(sp)
-    fneg f0, f0
-    fmuls f0, f0, FREG_TRANSLATION
-    fmuls f0, f0, f1 
-    fadds f0, f0, FREG_OFST_Y
-    stfs f0, TEXT_TRANS+Y(REG_TEXT)
-    # z
-    lfs f1, RTOC_100(rtoc)
-    fneg f0, f1
-    fmuls f2, FREG_SCALE, f1
-    fadds f0, f0, f2
-    stfs f0, TEXT_TRANS+Z(REG_TEXT)
+      # x
+      lfs f1, RTOC_15(rtoc)
+      lfs f0, SP_PANEL_DIR+X(sp)
+      # fneg f0, f0
+      fmuls f0, f0, FREG_TRANSLATION
+      fmuls f0, f0, f1
+      fadds f0, f0, FREG_OFST_X
+      stfs f0, TEXT_TRANS+X(REG_CURR_TEXT)
+      # y
+      lfs f1, RTOC_15(rtoc)
+      lfs f0, SP_PANEL_DIR+Y(sp)
+      fneg f0, f0
+      fmuls f0, f0, FREG_TRANSLATION
+      fmuls f0, f0, f1 
+      fadds f0, f0, FREG_OFST_Y
+      stfs f0, TEXT_TRANS+Y(REG_CURR_TEXT)
+      # z
+      lfs f1, RTOC_100(rtoc)
+      fneg f0, f1
+      fmuls f2, FREG_SCALE, f1
+      fadds f0, f0, f2
+      stfs f0, TEXT_TRANS+Z(REG_CURR_TEXT)
 
-    stfs FREG_SCALE, TXT_SCALE(REG_DATA)
-    stfs FREG_TRANSLATION, TXT_TRANS(REG_DATA)
+      stfs FREG_SCALE, TXT_SCALE(REG_CURR_DATA)
+      stfs FREG_TRANSLATION, TXT_TRANS(REG_CURR_DATA)
 
-    # alpha
-    lfs f0, RTOC_255(rtoc)
-    fmuls f0, FREG_INPUT_STRENGTH, f0
-    fctiwz f0, f0
-    stfd f0, SP_TEMP(sp)
-    lbz r3, SP_TEMP+7(sp)
-    stb r3, TEXT_COLOR+A(REG_TEXT)
+      # alpha
+      lfs f0, RTOC_255(rtoc)
+      fmuls f0, FREG_INPUT_STRENGTH, f0
+      fctiwz f0, f0
+      stfd f0, SP_TEMP(sp)
+      lbz r3, SP_TEMP+7(sp)
+      stb r3, TEXT_COLOR+A(REG_CURR_TEXT)
+
+    START_TEXT_PROC_LOOP_CHECK:
+      addi REG_COUNT, REG_COUNT, 1
+      cmpwi REG_COUNT, 4
+      blt START_TEXT_PROC_LOOP
 
   
 FN_TextProcess_Exit:
