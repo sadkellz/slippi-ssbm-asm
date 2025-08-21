@@ -186,23 +186,23 @@ CODE_START:
 
   # we have to turn on zupdate in the mobj desc before it gets loaded
   # otherwise it will always draw over our text
-  lwz r3, SP_PROMPT_MODEL_SET(sp)
-  lwz r3, DYN_MODEL_JOINT(r3)
-  # traverse tree
-  lwz r3, 0x8(r3) # child
-  lwz r3, 0xC(r3) # next
-  # dobjdesc
-  lwz r3, 0x10(r3)
-  # mobjdesc
-  lwz r3, 0x8(r3)
-  # set flags
-  load r4, 0x40000001
-  # lwz r5, 0x4(r3) # flags
-  # or r5, r5, r4
-  # why does this hide the entire panel?
-  stw r4, 0x4(r3)
-  mr r5, r4
-  logf LOG_LEVEL_ERROR, "flags %08x"
+  # lwz r3, SP_PROMPT_MODEL_SET(sp)
+  # lwz r3, DYN_MODEL_JOINT(r3)
+  # # traverse tree
+  # lwz r3, 0x8(r3) # child
+  # lwz r3, 0xC(r3) # next
+  # # dobjdesc
+  # lwz r3, 0x10(r3)
+  # # mobjdesc
+  # lwz r3, 0x8(r3)
+  # # set flags
+  # load r4, 0x40000001
+  # # lwz r5, 0x4(r3) # flags
+  # # or r5, r5, r4
+  # # why does this hide the entire panel?
+  # stw r4, 0x4(r3)
+  # mr r5, r4
+  # logf LOG_LEVEL_ERROR, "flags %08x"
 
   # create 4 panels
   li REG_COUNT, 0

@@ -97,37 +97,37 @@ CODE_START:
     blt SET_ACTIVE_SLOTS_LOOP
 
 # setup camera blur
-  # load r3, 0x80472d28
-  # li r4, 288
-  # branchl r12, memzero # zero out the imagedesc mem
+  load r3, 0x80472d28
+  li r4, 288
+  branchl r12, memzero # zero out the imagedesc mem
   
-  # load r3, stc_blur_imagedesc
-  # li r4, 640
-  # li r5, 480
-  # li r6, 5
-  # li r7, 0
-  # branchl r12, 0x800121fc
+  load r3, stc_blur_imagedesc
+  li r4, 640
+  li r5, 480
+  li r6, 5
+  li r7, 0
+  branchl r12, 0x800121fc
 
-  # lfs f1, RTOC_0(rtoc)
-  # lfs f2, RTOC_0(rtoc)
-  # lfs f3, RTOC_1(rtoc)
-  # lfs f4, RTOC_1(rtoc)
-  # load r3, stc_blur_imagedesc
-  # li r4, 0
-  # li r5, 2
-  # li r6, 50
-  # branchl r12, 0x800138ec
-  # mr REG_GOBJ, r3
-  # load r3, 0x80472d54
-  # stw REG_GOBJ, 0(r3)
+  lfs f1, RTOC_0(rtoc)
+  lfs f2, RTOC_0(rtoc)
+  lfs f3, RTOC_1(rtoc)
+  lfs f4, RTOC_1(rtoc)
+  load r3, stc_blur_imagedesc
+  li r4, 0
+  li r5, 2
+  li r6, 50
+  branchl r12, 0x800138ec
+  mr REG_GOBJ, r3
+  load r3, 0x80472d54
+  stw REG_GOBJ, 0(r3)
 
-  # mr r3, REG_GOBJ
-  # li r4, 1
-  # branchl r12, 0x800138d8
+  mr r3, REG_GOBJ
+  li r4, 1
+  branchl r12, 0x800138d8
 
-  # mr r3, REG_GOBJ
-  # load r4, 0x8017fe54
-  # branchl r12, 0x800138cc
+  mr r3, REG_GOBJ
+  load r4, 0x8017fe54
+  branchl r12, 0x800138cc
 
   b EXIT
 
