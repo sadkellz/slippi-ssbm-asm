@@ -402,25 +402,61 @@ SR_ProcessInput_Exit:
 SR_SelectCard:
   bklr
 
-  # implement select logic
-  # ...
+  # check which card we picked
+  bp
+  bl SR_GetCurrentPlayerSlot
+  get_port_pad r3
+  lwz r3, PAD_buttons(r3)
+  li r4, 0
+  load r5, PAD_BTN_StickUp
+  and. r0, r3, r5
+  bne POST_CARD_SELECT
+  li r4, 1
+  load r5, PAD_BTN_StickRight
+  and. r0, r3, r5
+  bne POST_CARD_SELECT
+  li r4, 2
+  load r5, PAD_BTN_StickDown
+  and. r0, r3, r5
+  bne POST_CARD_SELECT
+  li r4, 3
+  load r5, PAD_BTN_StickLeft
+  and. r0, r3, r5
+  bne POST_CARD_SELECT
+  b 0x0 # shouldnt get here
 
-  lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
-  addi REG_PICKER, REG_PICKER, 1
-  stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
-  
-  bl SR_UpdateCameraTarget
-  bl SR_UpdateCameraPos
+  POST_CARD_SELECT:
+    # mr r5, r4
+    # logf LOG_LEVEL_ERROR, "SELECTED CARD %d"
+    load r6, stc_sr_data
+    addi r6, r6, SRD_CURRENT_CARDS
+    mulli r0, r4, 4
+    lwzx r4, r6, r0 # card we selected
+
+    load r6, stc_sr_plydata
+    mulli r0, r3, SRP_SIZE
+    add r6, r6, r0 # current player data
+    lwz r0, SRP_CARDS(r6)
+    or r4, r4, r0
+    stw r4, SRP_CARDS(r6) # set the card we selected in the player data
 
 
-  lwz r4, SRC_CURRENT_PICKER(REG_DATA)
-  cmpwi r4, MAX_PLAYERS
-  beq SR_SelectCard_Exit
+  UPDATE_STATE:
+    lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
+    addi REG_PICKER, REG_PICKER, 1
+    stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
+    
+    bl SR_UpdateCameraTarget
+    bl SR_UpdateCameraPos
 
-  li r3, TRANSITION_FRAMES
-  stw r3, SRC_TRANSITION_TIMER(REG_DATA)
-  li r3, SRGS_TRANSITION
-  stw r3, SRC_GAME_STATE(REG_DATA)
+    lwz r4, SRC_CURRENT_PICKER(REG_DATA)
+    cmpwi r4, MAX_PLAYERS
+    beq SR_SelectCard_Exit
+
+    li r3, TRANSITION_FRAMES
+    stw r3, SRC_TRANSITION_TIMER(REG_DATA)
+    li r3, SRGS_TRANSITION
+    stw r3, SRC_GAME_STATE(REG_DATA)
 
 SR_SelectCard_Exit:
   rslr
