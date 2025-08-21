@@ -10,11 +10,9 @@
 .set SRD_GOBJ_INIT, 0 # 0x0
 .set SRD_GOBJ_MENU, SRD_GOBJ_INIT + 4 # 0x4
 .set SRD_COBJ_DESC, SRD_GOBJ_MENU + 4 # 0x8
-.set SRD_COBJ, SRD_COBJ_DESC + 4 # 0xC
-.set SRD_JOBJ_PANELS, SRD_COBJ + 4 # 0x10
-.set SRD_TEXTS, SRD_JOBJ_PANELS + 16 # 0x20
-.set SRD_CURRENT_PANEL, SRD_TEXTS + 16
-.set SRD_PANEL_SCALES, SRD_CURRENT_PANEL + 4
+.set SRD_JOBJ_PANELS, SRD_COBJ_DESC + 4 # 0xC
+.set SRD_TEXTS, SRD_JOBJ_PANELS + 16 # 0x1C
+.set SRD_CURRENT_PANEL, SRD_TEXTS + 16 # 0x2C
 
 # StockRun Context
 .set SRC_SLOT_ORDER, 0                              # int[2]
@@ -22,6 +20,7 @@
 .set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
 .set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
 .set SRC_ACTIVE_SLOT, SRC_GAME_STATE + 4            # int
+.set SRC_HOVER_STATE, SRC_ACTIVE_SLOT + 4           # int
 
 ################################################################################
 # Directives
@@ -54,7 +53,7 @@
 .set  MY_GXPRI, 80
 .set  TEXT_GXLINK, 13
 .set  PANEL_GXLINK, 14
-.set  STICK_GXLINK, 16
+.set  STICK_GXLINK, 18
 
 # Menus
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input

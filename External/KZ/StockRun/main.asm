@@ -25,10 +25,12 @@ blrl
 .set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
 .set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
 .set SRC_ACTIVE_SLOT, SRC_GAME_STATE + 4            # int
+.set SRC_HOVER_STATE, SRC_ACTIVE_SLOT + 4           # int
 .long -1
 .long -1
 .long 0
 .long TRANSITION_FRAMES
+.long 0
 .long 0
 .long 0
 
@@ -304,27 +306,94 @@ SR_EndCardSelect_Exit:
 #------------------------------------------------------------------------------#
 
 SR_ProcessInput:
-  bklr
-  # lwz r3, SRC_GAME_STATE(REG_DATA)
-  # cmpwi r3, SRGS_TRANSITION
-  # beq SR_ProcessInput_Exit
+.set REG_HOVER_STATE, 16
+.set REG_PAD, 17
+# floats
+.set FREG_STICK_MAG, 15
+.set FREG_STICK_X, 16
+.set FREG_STICK_Y, 17
+# stack
+.set SP_STICK_DIR, BKP_FREE_SPACE_OFFSET
+  backup
+
+  lwz REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
 
   lwz r3, SR_GetCurrentPlayerSlot(REG_DATA)
   cmpwi r3, -1
   beq SR_ProcessInput_Exit
 
-  # bl SR_GetCurrentPlayerSlot
-  li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
-  branchl r12, Inputs_GetPlayerInstantInputs
-  andi. r4, r4, PAD_BTN_A
-  bne CHOOSE_CARD
-  b SR_ProcessInput_Exit
+  # check if we are actually hovering a card
+  li REG_PAD, DEBUG_PAD_UNION # TODO :: use the active players port
+  get_port_pad REG_PAD
+  # get_active_pad r3
+  lfs FREG_STICK_X, PAD_stick_x(REG_PAD)
+  lfs FREG_STICK_Y, PAD_stick_y(REG_PAD)
+  # create our stick dir
+  stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
+  stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
+  lfs f0, RTOC_0(rtoc)
+  stfs f0, SP_STICK_DIR+Z(sp)
+  # stick magnitude
+  addi r3, sp, SP_STICK_DIR
+  branchl r12, PSVECMag
+  fmr FREG_STICK_MAG, f1
+
+  lfs f0, RTOC_0_95(rtoc)
+  fcmpo cr0, FREG_STICK_MAG, f0
+  ble ON_UNHOVER
+
+  lwz r3, PAD_buttons(REG_PAD)
+  lwz r4, PAD_last_button(REG_PAD)
+  xor r5, r3, r4
+  load r6, PAD_BTN_StickUp | PAD_BTN_StickDown | PAD_BTN_StickLeft | PAD_BTN_StickRight
+  and r7, r5, r6
+  cmpwi r7, 0
+  bne PLAY_HOVER_SFX
+
+  # check if we werent already hovering
+  cmpwi REG_HOVER_STATE, FALSE
+  bne SKIP_SOUND
+
+  PLAY_HOVER_SFX:
+    li r3, SFX_CMN_SELECT
+    branchl r12, SFX_Menu_CommonSound
+
+  SKIP_SOUND:
+    li REG_HOVER_STATE, TRUE
+    stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
+    b CHECK_BUTTON
+
+  ON_UNHOVER:
+    cmpwi REG_HOVER_STATE, TRUE
+    bne CHECK_BUTTON
+    li REG_HOVER_STATE, FALSE
+    stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
+
+  CHECK_BUTTON:
+      # bl SR_GetCurrentPlayerSlot
+      li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
+      branchl r12, Inputs_GetPlayerInstantInputs
+      andi. r4, r4, PAD_BTN_A
+      bne CHOOSE_CARD
+      b SR_ProcessInput_Exit
 
   CHOOSE_CARD:
+    cmpwi REG_HOVER_STATE, FALSE
+    beq NOT_ACTIVE_CARD_SFX
+
+    # success
+    li r3, SFX_CMN_CONFIRM
+    branchl r12, SFX_Menu_CommonSound
+
     bl SR_SelectCard
+    b SR_ProcessInput_Exit
+
+    NOT_ACTIVE_CARD_SFX:
+      li r3, SFX_CMN_ERROR
+      branchl r12, SFX_Menu_CommonSound
 
 SR_ProcessInput_Exit:
-  rslr
+  restore
   blr
 
 #------------------------------------------------------------------------------#

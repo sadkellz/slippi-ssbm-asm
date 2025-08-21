@@ -154,8 +154,8 @@ CODE_START:
   bl FN_CameraGX
   mflr r16
   spawn_cobj REG_COBJDESC, GOBJ_CLASS_CAMERA, GOBJ_PLINK_HUD, r16, COBJ_GXPRI, 1 << PANEL_GXLINK, REG_CAMGOBJ, REG_COBJ
-  load r4, stc_sr_data
-  stw REG_COBJ, SRD_COBJ(r4)
+  # load r4, stc_sr_data
+  # stw REG_COBJ, SRD_COBJ(r4)
   # add proc
   mr r3, REG_CAMGOBJ
   bl FN_CameraProcessBLRL
@@ -361,7 +361,7 @@ CREATE_PANEL_LOOP:
   stfs f1, JOBJ_ROT+4(REG_STICK)
   stfs f1, JOBJ_ROT+8(REG_STICK)
 
-  lfs f1, RTOC_NEG_1_1(rtoc)
+  lfs f1, RTOC_N_1_1(rtoc)
   stfs f1, JOBJ_POS(REG_BORDER)
   load r0, 0xbf666666 # -0.9 whatever dude
   stw r0, JOBJ_POS+4(REG_BORDER)
