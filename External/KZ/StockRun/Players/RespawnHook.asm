@@ -14,11 +14,16 @@ lwz	r31, 0x002C(r3)
 CODE_START:
 .set REG_SRCD, 16 # StockRun Context data
 .set REG_SLOT, 17
+.set REG_SRD, 18
+.set REG_COUNT, 19
+.set REG_CARDS, 20
+.set REG_TEXT, 21
 .set REG_FP, 31 # fighter data
 .set REG_FGP, 30 # fighter gobj
   backup
   # we will set the game state, transition timer, and active slot
-  loadwz REG_SRCD, stc_sr_data # init gobj
+  load REG_SRD, stc_sr_data
+  lwz REG_SRCD, SRD_GOBJ_INIT(REG_SRD)
   lwz REG_SRCD, GOBJ_USERDATA(REG_SRCD)
 
   lbz REG_SLOT, FT_SLOT(REG_FP)
@@ -30,6 +35,27 @@ CODE_START:
 
   li r3, MATCH_FREEZE_FLAG # freezes players but not cameras/ui
   branchl r12, Scene_SetPauseFlag
+
+  # texts
+  addi REG_TEXT, REG_SRD, SRD_TEXTS
+
+  # roll cards
+  li r3, CARD_COUNT
+  addi REG_CARDS, REG_SRD, SRD_CURRENT_CARDS
+  mr r4, REG_CARDS
+  branchl r12, StockRun_RandomizeCards
+  
+  # set text
+  li REG_COUNT, 0
+  SET_TEXT_LOOP:
+    rlwinm r0, REG_COUNT, 2, 0, 29
+    lwzx r3, REG_TEXT, r0
+    lwzx r4, REG_CARDS, r0
+    branchl r12, Text_SetFromSIS
+  SET_TEXT_LOOP_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, 4
+    blt SET_TEXT_LOOP
 
   # set the camera here as well since its easier
   # update slot

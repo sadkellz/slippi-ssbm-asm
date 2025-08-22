@@ -17,6 +17,7 @@
 .set memzero, 0x8000c160
 
 .set Text_SetFromSIS, 0x803a6368
+.set Text_MemZero, 0x803a594c
 
 ################################################################################
 # Structs

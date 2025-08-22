@@ -430,7 +430,10 @@ SR_ProcessInput_Exit:
 #------------------------------------------------------------------------------#
 
 SR_SelectCard:
-  bklr
+.set REG_COUNT, 16
+.set REG_CARDS, 17
+.set REG_TEXT, 18
+  backup
 
   # check which card we picked
   lwz r9, SRC_ACTIVE_SLOT(REG_DATA)
@@ -478,6 +481,27 @@ SR_SelectCard:
     cmpwi r3, SRGS_GAME_CARD_SELECT
     beq MID_GAME_UPDATE
 
+    # roll cards
+    li r3, CARD_COUNT
+    load r4, stc_sr_data
+    addi REG_CARDS, r4, SRD_CURRENT_CARDS
+    mr r4, REG_CARDS
+    branchl r12, StockRun_RandomizeCards
+
+    # set text
+    li REG_COUNT, 0
+    load r5, stc_sr_data
+    addi REG_TEXT, r5, SRD_TEXTS
+    SET_TEXT_LOOP:
+      rlwinm r0, REG_COUNT, 2, 0, 29
+      lwzx r3, REG_TEXT, r0
+      lwzx r4, REG_CARDS, r0
+      branchl r12, Text_SetFromSIS
+    SET_TEXT_LOOP_CHECK:
+      addi REG_COUNT, REG_COUNT, 1
+      cmpwi REG_COUNT, 4
+      blt SET_TEXT_LOOP
+
     lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
     addi REG_PICKER, REG_PICKER, 1
     stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
@@ -497,7 +521,7 @@ SR_SelectCard:
 
   MID_GAME_UPDATE:
     bl SR_EndCardSelect
-    
+
     # enable hud
     load r3, stc_hud_vis
     li r4, FALSE 
@@ -515,7 +539,7 @@ SR_SelectCard:
 
 
 SR_SelectCard_Exit:
-  rslr
+  restore
   blr
 
 
