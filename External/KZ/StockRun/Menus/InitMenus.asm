@@ -548,17 +548,25 @@ FN_PickerDisplay:
   lwz r3, SRD_GOBJ_INIT(r3)
   lwz REG_DATA, GOBJ_USERDATA(r3)
 
+  # check if we should show the displayer
+  load_scene_frame REG_FRAME
+  cmpwi REG_FRAME, MENU_START_FRAME
+  blt FN_PickerDisplay_Exit
+
+  get_game_state r3
+  cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_GAME_TRANSITION
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_TRANSITION
+  beq FN_CameraGX_Exit
+
   # load jobjs
   load r3, stc_pause_data
   addi r4, r3, PAUSE_UI_STICK
   lwz REG_STICK, 0(r4)
   addi r4, r3, PAUSE_UI_STICK_BORDER
   lwz REG_BORDER, 0(r4)
-
-  # check if we should show the displayer
-  load_scene_frame REG_FRAME
-  cmpwi REG_FRAME, MENU_START_FRAME
-  blt FN_PickerDisplay_Exit
 
   # display
   mr r3, REG_STICK
@@ -584,6 +592,10 @@ FN_CameraGX:
 
   get_game_state r3
   cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_GAME_TRANSITION
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_TRANSITION
   beq FN_CameraGX_Exit
 
   DRAW_GX:
@@ -621,7 +633,11 @@ FN_CameraProcess:
 
   get_game_state r3
   cmpwi r3, SRGS_GAME_ACTIVE
-  beq FN_CameraProcess_Exit
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_GAME_TRANSITION
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_TRANSITION
+  beq FN_CameraGX_Exit
 
   # sticks
   # li r3, DEBUG_PAD_UNION # TODO :: use the active players port
@@ -813,6 +829,14 @@ FN_TextProcess:
   
   bl TEXT_DATA_BLRL
   mflr REG_DATA
+
+  get_game_state r3
+  cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_GAME_TRANSITION
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_TRANSITION
+  beq FN_CameraGX_Exit
   
   # li r3, DEBUG_PAD_UNION  # or use player port
   # get_port_pad r3
@@ -981,6 +1005,11 @@ blrl
   li r6, -1
   branchl r12, HSD_JObjGetChild
   lwz REG_PANEL, SP_TEMP(sp)
+
+  get_game_state r3
+  cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraGX_Exit
+
 
   # Get pad input
   # li r3, DEBUG_PAD_UNION # TODO :: use the active players port

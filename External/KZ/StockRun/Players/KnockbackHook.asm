@@ -3,7 +3,6 @@
 # Runs immediately after the game applies knockback but before its processed
 ################################################################################
 
-
 .include "./StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
@@ -43,8 +42,6 @@ CODE_START:
     lfs f0, RTOC_0_5(rtoc)
     fmuls f1, f1, f0
     stfs f1, FT_HIT_KB(REG_DATA)
-
-    
 
   INCREASE_KB_CHECK:
     # check if the attacker has the inc flag

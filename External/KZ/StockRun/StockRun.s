@@ -41,6 +41,8 @@
 .set SRGS_CARD_SELECT, 1
 .set SRGS_TRANSITION, 2
 .set SRGS_GAME_ACTIVE, 3
+.set SRGS_GAME_TRANSITION, 4
+.set SRGS_GAME_CARD_SELECT, 5
 
 # StockRun main defs
 .set PAUSE_BIT_MASK, 0x08
@@ -50,7 +52,7 @@
 .set CAM_ZOOM, 0x41200000  # 10.0 as float
 .set SETUP_START_FRAME, 64 # first frame after entry
 .set ALLOW_INPUTS_FRAME, 144 # just as the camera settles
-.set TRANSITION_FRAMES, 100 # 
+.set TRANSITION_FRAMES, 80 # 
 .set MAX_PLAYERS, 2 # not supporting teams/ffa
 .set MAX_PORTS, 4
 .set DEBUG_PAD_UNION, 4  # will return if anyone presses a button

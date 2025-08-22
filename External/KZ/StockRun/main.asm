@@ -161,7 +161,7 @@ SR_InitContext:
   mulli r4, r4, 4
   branchl r12, memzero
 
-  logf LOG_LEVEL_ERROR, "SR Data Reset"
+  # logf LOG_LEVEL_ERROR, "SR Data Reset"
 
 SR_InitContext_Exit:
   rslr
@@ -236,9 +236,35 @@ SR_Update:
 
     STATE_GAME_ACTIVE:
     cmpwi REG_STATE, SRGS_GAME_ACTIVE
-    bne SR_Update_Exit
+    bne STATE_GAME_TRANSITION
+      # could do run logic here if needed
       b SR_Update_Exit
 
+    STATE_GAME_TRANSITION:
+    cmpwi REG_STATE, SRGS_GAME_TRANSITION
+    bne STATE_GAME_CARD_SELECT
+      load r3, stc_blur_amt
+      lfs f1, 0(r3)
+      lfs f0, RTOC_0_015625(rtoc)
+      fadds f1, f1, f0
+      stfs f1, 0(r3) # blur
+      stfs f1, 4(r3) # tint
+
+      lwz r3, SRC_TRANSITION_TIMER(REG_DATA)
+      subi r3, r3, 1
+      stw r3, SRC_TRANSITION_TIMER(REG_DATA)
+      cmpwi r3, 0
+      bgt SR_Update_Exit
+
+      li r3, SRGS_GAME_CARD_SELECT
+      stw r3, SRC_GAME_STATE(REG_DATA)
+      b SR_Update_Exit
+
+    STATE_GAME_CARD_SELECT:
+    cmpwi REG_STATE, SRGS_GAME_CARD_SELECT
+    bne SR_Update_Exit
+      bl SR_ProcessInput
+      b SR_Update_Exit
 
 SR_Update_Exit:
   restore
@@ -377,9 +403,7 @@ SR_ProcessInput:
     stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
 
   CHECK_BUTTON:
-      bl SR_GetCurrentPlayerSlot
-      # li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
-      branchl r12, Inputs_GetPlayerInstantInputs
+      lwz r4, PAD_buttons(REG_PAD)
       andi. r4, r4, PAD_BTN_A
       bne CHOOSE_CARD
       b SR_ProcessInput_Exit
@@ -409,10 +433,9 @@ SR_SelectCard:
   bklr
 
   # check which card we picked
-  bl SR_GetCurrentPlayerSlot
-  mr r9, r3
-  get_port_pad r3
-  lwz r3, PAD_buttons(r3)
+  lwz r9, SRC_ACTIVE_SLOT(REG_DATA)
+  get_active_pad REG_PAD
+  lwz r3, PAD_buttons(REG_PAD)
   li r4, 0
   load r5, PAD_BTN_StickUp
   and. r0, r3, r5
@@ -451,6 +474,10 @@ SR_SelectCard:
 
 
   UPDATE_STATE:
+    lwz r3, SRC_GAME_STATE(REG_DATA)
+    cmpwi r3, SRGS_GAME_CARD_SELECT
+    beq MID_GAME_UPDATE
+
     lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
     addi REG_PICKER, REG_PICKER, 1
     stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
@@ -466,6 +493,26 @@ SR_SelectCard:
     stw r3, SRC_TRANSITION_TIMER(REG_DATA)
     li r3, SRGS_TRANSITION
     stw r3, SRC_GAME_STATE(REG_DATA)
+    b SR_SelectCard_Exit
+
+  MID_GAME_UPDATE:
+    bl SR_EndCardSelect
+    
+    # enable hud
+    load r3, stc_hud_vis
+    li r4, FALSE 
+    stb r4, 0(r3)
+
+    # reset blur
+    load r3, stc_blur_amt
+    li r4, 0
+    stw r4, 0(r3)
+    stw r4, 4(r3) # tint
+
+    # reset game state
+    li r3, SRGS_GAME_ACTIVE
+    stw r3, SRC_GAME_STATE(REG_DATA)
+
 
 SR_SelectCard_Exit:
   rslr
