@@ -17,11 +17,11 @@ CODE_START:
 .set REG_GOBJ, 31
   backup
 
-  mr r3, REG_GOBJ
-  bl FN_FighterThinkBLRL
-  mflr r4
-  li r5, 0
-  branchl r12, GObj_AddProc
+  # mr r3, REG_GOBJ
+  # bl FN_FighterThinkBLRL
+  # mflr r4
+  # li r5, 0
+  # branchl r12, GObj_AddProc
 
   # mr r5, REG_GOBJ
   # logf LOG_LEVEL_ERROR, "Fighter GOBJ: %08x\n"

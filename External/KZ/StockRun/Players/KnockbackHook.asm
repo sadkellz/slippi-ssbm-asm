@@ -21,7 +21,6 @@ CODE_START:
 # floats
 .set FREG_KB, 31
   backup
-  bp
   # init
   lbz REG_SLOT, FT_SLOT(REG_DATA)
   lfs FREG_KB, FT_HIT_KB(REG_DATA)
@@ -36,8 +35,8 @@ CODE_START:
   # beq EXIT # we dont have either flag set
 
   DECREASE_KB_CHECK:
-    li r0, SR_CARD_KBDEC
-    and. r0, r0, REG_FLAGS
+    lwz REG_FLAGS, SRP_CARDS(r3)
+    rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBDEC, 31-SR_CARD_KBDEC
     beq INCREASE_KB_CHECK
     # logf LOG_LEVEL_ERROR, "Decrease KB"
     lfs f1, FT_HIT_KB(REG_DATA)
@@ -52,10 +51,9 @@ CODE_START:
     lwz r3, FT_ATTACKER(REG_DATA)
     mulli r0, r3, SRP_SIZE
     add r3, REG_SRPD, r0
-    lwz REG_FLAGS, SRP_CARDS(r3)
-    li r0, SR_CARD_KBINC
-    and. r0, r0, REG_FLAGS
-    beq EXIT
+    lwz REG_FLAGS, SRP_CARDS(r3)  # load bitfield
+    rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINC, 31-SR_CARD_KBINC
+    beq EXIT                      # branch if bit is NOT set
     # logf LOG_LEVEL_ERROR, "Increase KB"
     lfs f1, FT_HIT_KB(REG_DATA)
     lfs f0, RTOC_1_5(rtoc)

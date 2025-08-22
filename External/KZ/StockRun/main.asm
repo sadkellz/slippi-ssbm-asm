@@ -156,6 +156,10 @@ SR_InitContext:
   stw r3, SRC_CURRENT_PICKER(REG_DATA)
   stw r3, SRC_GAME_STATE(REG_DATA)
   stw r3, SRC_HOVER_STATE(REG_DATA)
+  load r3, stc_sr_plydata
+  li r4, SRP_SIZE
+  mulli r4, r4, 4
+  branchl r12, memzero
 
   logf LOG_LEVEL_ERROR, "SR Data Reset"
 
@@ -319,14 +323,14 @@ SR_ProcessInput:
 
   lwz REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
 
-  lwz r3, SR_GetCurrentPlayerSlot(REG_DATA)
-  cmpwi r3, -1
-  beq SR_ProcessInput_Exit
-
+  # bl SR_GetCurrentPlayerSlot
+  # cmpwi r3, -1
+  # beq SR_ProcessInput_Exit
+  # mr r3, REG_PAD
   # check if we are actually hovering a card
-  li REG_PAD, DEBUG_PAD_UNION # TODO :: use the active players port
-  get_port_pad REG_PAD
-  # get_active_pad r3
+  # li REG_PAD, DEBUG_PAD_UNION # TODO :: use the active players port
+  # get_port_pad REG_PAD
+  get_active_pad REG_PAD
   lfs FREG_STICK_X, PAD_stick_x(REG_PAD)
   lfs FREG_STICK_Y, PAD_stick_y(REG_PAD)
   # create our stick dir
@@ -338,6 +342,8 @@ SR_ProcessInput:
   addi r3, sp, SP_STICK_DIR
   branchl r12, PSVECMag
   fmr FREG_STICK_MAG, f1
+  # fmr f1, FREG_STICK_MAG
+  # logf LOG_LEVEL_ERROR, "Stick magnitude: %f"
 
   lfs f0, RTOC_0_95(rtoc)
   fcmpo cr0, FREG_STICK_MAG, f0
@@ -371,8 +377,8 @@ SR_ProcessInput:
     stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
 
   CHECK_BUTTON:
-      # bl SR_GetCurrentPlayerSlot
-      li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
+      bl SR_GetCurrentPlayerSlot
+      # li r3, DEBUG_PAD_UNION # TODO :: use picker slot instead
       branchl r12, Inputs_GetPlayerInstantInputs
       andi. r4, r4, PAD_BTN_A
       bne CHOOSE_CARD
@@ -404,6 +410,7 @@ SR_SelectCard:
 
   # check which card we picked
   bl SR_GetCurrentPlayerSlot
+  mr r9, r3
   get_port_pad r3
   lwz r3, PAD_buttons(r3)
   li r4, 0
@@ -431,14 +438,16 @@ SR_SelectCard:
     addi r6, r6, SRD_CURRENT_CARDS
     mulli r0, r4, 4
     lwzx r4, r6, r0 # card we selected
-    addi r4, r4, 1
+    # addi r4, r4, 1
 
     load r6, stc_sr_plydata
-    mulli r0, r3, SRP_SIZE
-    add r6, r6, r0 # current player data
-    lwz r0, SRP_CARDS(r6)
-    or r4, r4, r0
-    stw r4, SRP_CARDS(r6) # set the card we selected in the player data
+    mulli r0, r9, SRP_SIZE
+    add r6, r6, r0          # current player data
+    lwz r0, SRP_CARDS(r6)   # r0 = current card bits
+    li r5, 1                # create bitmask
+    slw r5, r5, r4          # shift 1 left by r4 positions (r4 = card to set)
+    or r0, r0, r5           # set the bit
+    stw r0, SRP_CARDS(r6)   # store back
 
 
   UPDATE_STATE:

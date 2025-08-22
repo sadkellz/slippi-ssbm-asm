@@ -624,9 +624,9 @@ FN_CameraProcess:
   beq FN_CameraProcess_Exit
 
   # sticks
-  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
-  get_port_pad r3
-  # get_active_pad r3
+  # li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+  # get_port_pad r3
+  get_active_pad r3
   lfs FREG_X, PAD_stick_x(r3)
   lfs FREG_Y, PAD_stick_y(r3)
   lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
@@ -814,8 +814,9 @@ FN_TextProcess:
   bl TEXT_DATA_BLRL
   mflr REG_DATA
   
-  li r3, DEBUG_PAD_UNION  # or use player port
-  get_port_pad r3
+  # li r3, DEBUG_PAD_UNION  # or use player port
+  # get_port_pad r3
+  get_active_pad r3
   mr REG_PAD, r3
   lfs FREG_STICK_X, PAD_stick_x(r3)
   lfs FREG_STICK_Y, PAD_stick_y(r3)
@@ -828,8 +829,10 @@ FN_TextProcess:
   # stick magnitude
   fmuls f0, FREG_STICK_X, FREG_STICK_X
   fmuls f1, FREG_STICK_Y, FREG_STICK_Y
-  fadds f0, f0, f1
-  fsqrts FREG_STICK_MAG, f0
+  fadds f1, f0, f1
+  branchl r12, 0x8000d5bc
+  fmr FREG_STICK_MAG, f1
+  # fsqrts FREG_STICK_MAG, f0
 
   # fmr f1, FREG_STICK_MAG
   # logf LOG_LEVEL_ERROR, "Stick magnitude: %f"
@@ -980,9 +983,9 @@ blrl
   lwz REG_PANEL, SP_TEMP(sp)
 
   # Get pad input
-  li r3, DEBUG_PAD_UNION # TODO :: use the active players port
-  get_port_pad r3
-  # get_active_pad r3
+  # li r3, DEBUG_PAD_UNION # TODO :: use the active players port
+  # get_port_pad r3
+  get_active_pad r3
   lfs FREG_STICK_X, PAD_stick_x(r3)
   lfs FREG_STICK_Y, PAD_stick_y(r3)
 
