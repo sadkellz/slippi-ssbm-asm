@@ -403,7 +403,6 @@ SR_SelectCard:
   bklr
 
   # check which card we picked
-  bp
   bl SR_GetCurrentPlayerSlot
   get_port_pad r3
   lwz r3, PAD_buttons(r3)
@@ -423,7 +422,7 @@ SR_SelectCard:
   load r5, PAD_BTN_StickLeft
   and. r0, r3, r5
   bne POST_CARD_SELECT
-  b 0x0 # shouldnt get here
+  # b 0x0 # shouldnt get here
 
   POST_CARD_SELECT:
     # mr r5, r4
@@ -432,6 +431,7 @@ SR_SelectCard:
     addi r6, r6, SRD_CURRENT_CARDS
     mulli r0, r4, 4
     lwzx r4, r6, r0 # card we selected
+    addi r4, r4, 1
 
     load r6, stc_sr_plydata
     mulli r0, r3, SRP_SIZE

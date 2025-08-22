@@ -74,10 +74,10 @@
 .set CARD_COUNT, 4 # also the number of replaced SIS entries we've made
 
 # StockRun Cards
-.set SR_CARD_KBINC, 0
-.set SR_CARD_KBDEC, 1
-.set SR_CARD_CRIT, 2
-.set SR_CARD_SHIELDHP, 3
+.set SR_CARD_KBINC, 1
+.set SR_CARD_KBDEC, 2
+.set SR_CARD_CRIT, 3
+.set SR_CARD_SHIELDHP, 4
 
 
 ################################################################################

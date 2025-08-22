@@ -21,6 +21,7 @@ CODE_START:
 # floats
 .set FREG_KB, 31
   backup
+  bp
   # init
   lbz REG_SLOT, FT_SLOT(REG_DATA)
   lfs FREG_KB, FT_HIT_KB(REG_DATA)
@@ -28,23 +29,38 @@ CODE_START:
 
   # this players data
   mulli r0, REG_SLOT, SRP_SIZE
-  add REG_SRPD, REG_SRPD, r0
-  lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
-  li r0, SR_CARD_KBDEC | SR_CARD_KBINC
-  and. r0, r0, REG_FLAGS
-  beq EXIT # we dont have either flag set
+  add r3, REG_SRPD, r0
+  lwz REG_FLAGS, SRP_CARDS(r3)
+  # li r0, SR_CARD_KBDEC | SR_CARD_KBINC
+  # and. r0, r0, REG_FLAGS
+  # beq EXIT # we dont have either flag set
 
-  DECREASE_KB:
+  DECREASE_KB_CHECK:
     li r0, SR_CARD_KBDEC
     and. r0, r0, REG_FLAGS
-    beq INCREASE_KB
-    logf LOG_LEVEL_ERROR, "Decrease KB"
+    beq INCREASE_KB_CHECK
+    # logf LOG_LEVEL_ERROR, "Decrease KB"
+    lfs f1, FT_HIT_KB(REG_DATA)
+    lfs f0, RTOC_0_5(rtoc)
+    fmuls f1, f1, f0
+    stfs f1, FT_HIT_KB(REG_DATA)
 
-  INCREASE_KB:
+    
+
+  INCREASE_KB_CHECK:
+    # check if the attacker has the inc flag
+    lwz r3, FT_ATTACKER(REG_DATA)
+    mulli r0, r3, SRP_SIZE
+    add r3, REG_SRPD, r0
+    lwz REG_FLAGS, SRP_CARDS(r3)
     li r0, SR_CARD_KBINC
     and. r0, r0, REG_FLAGS
     beq EXIT
-    logf LOG_LEVEL_ERROR, "Increase KB"
+    # logf LOG_LEVEL_ERROR, "Increase KB"
+    lfs f1, FT_HIT_KB(REG_DATA)
+    lfs f0, RTOC_1_5(rtoc)
+    fmuls f1, f1, f0
+    stfs f1, FT_HIT_KB(REG_DATA)
 
 EXIT:
   restore
