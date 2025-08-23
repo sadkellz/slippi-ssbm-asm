@@ -11,6 +11,8 @@ b SIS_KBINC
 b SIS_KBDEC
 b SIS_CRIT
 b SIS_SHIELDHP
+b SIS_JUMPHEIGHT
+b SIS_SHIELDDMG
 
 SIS_KBINC: # Armour Pierce
 blrl
@@ -127,4 +129,56 @@ blrl
 .long 0x2F20271A
 .long 0x20112019
 .long 0x20E7190F
+.long 0
+
+SIS_JUMPHEIGHT:
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201620
+.long 0x32203220
+.long 0x311A201C
+.long 0x202B2032
+.long 0x20282036
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x20122031
+.long 0x20262035
+.long 0x20282024
+.long 0x20362028
+.long 0x20271A20
+.long 0x2D203820
+.long 0x3020331A
+.long 0x202B2028
+.long 0x202C202A
+.long 0x202B2037
+.long 0x20E7190F
+.long 0
+
+SIS_SHIELDDMG:
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201C20
+.long 0x2B202C20
+.long 0x28202F20
+.long 0x271A201C
+.long 0x20302024
+.long 0x2036202B
+.long 0x20282035
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x200D2028
+.long 0x2024202F
+.long 0x1A202820
+.long 0x3B203720
+.long 0x3520241A
+.long 0x2036202B
+.long 0x202C2028
+.long 0x202F2027
+.long 0x1A202720
+.long 0x24203020
+.long 0x24202A20
+.long 0x2820E719
+.long 0x0F000000
 .long 0

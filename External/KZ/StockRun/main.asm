@@ -486,6 +486,7 @@ SR_SelectCard:
     load r4, stc_sr_data
     addi REG_CARDS, r4, SRD_CURRENT_CARDS
     mr r4, REG_CARDS
+    lwz r5, SRC_ACTIVE_SLOT(REG_DATA)
     branchl r12, StockRun_RandomizeCards
 
     # set text

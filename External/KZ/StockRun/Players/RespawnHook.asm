@@ -43,6 +43,7 @@ CODE_START:
   li r3, CARD_COUNT
   addi REG_CARDS, REG_SRD, SRD_CURRENT_CARDS
   mr r4, REG_CARDS
+  mr r5, REG_SLOT
   branchl r12, StockRun_RandomizeCards
   
   # set text

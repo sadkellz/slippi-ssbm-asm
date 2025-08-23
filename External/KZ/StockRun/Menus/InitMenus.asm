@@ -430,8 +430,10 @@ CREATE_PANEL_LOOP:
   # random our cards
   li r3, CARD_COUNT
   load r4, stc_sr_data
+  li r5, -1
   addi REG_CARDS, r4, SRD_CURRENT_CARDS
   mr r4, REG_CARDS
+  
   branchl r12, StockRun_RandomizeCards
 
   # get SdTou filename
