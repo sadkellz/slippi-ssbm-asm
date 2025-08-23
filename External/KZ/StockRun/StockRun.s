@@ -81,6 +81,8 @@
 .set SR_CARD_CRIT, 2
 .set SR_CARD_SHIELDHP, 3
 
+.set SR_CRIT_CHANCE, 5 # 5% chance to crit
+
 
 ################################################################################
 # Macros

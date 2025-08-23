@@ -502,7 +502,7 @@ CREATE_PANEL_LOOP:
 
     SPAWN_TEXT_LOOP_CHECK:
       addi REG_COUNT, REG_COUNT, 1
-      cmpwi REG_COUNT, CARD_COUNT
+      cmpwi REG_COUNT, 4
       blt SPAWN_TEXT_LOOP
       mr r5, REG_COUNT
 

@@ -19,6 +19,9 @@
 .set Text_SetFromSIS, 0x803a6368
 .set Text_MemZero, 0x803a594c
 
+.set SFX_PlaySFX, 0x8038cff4
+.set SFX_HitboxSFX, 0x80024184 # (SFX id,int volume,int pitch,int channel)
+
 ################################################################################
 # Structs
 ################################################################################
