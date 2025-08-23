@@ -9,6 +9,8 @@
 
 cmpwi r3, 0x8
 bne- EXIT
+nop
+nop
 
 lbz r3, OFST_R13_APP_STATE(r13)
 cmpwi r3, 0
