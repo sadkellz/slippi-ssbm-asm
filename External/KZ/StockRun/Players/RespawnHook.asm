@@ -101,5 +101,8 @@ CODE_START:
     fneg f1, f1
     stfs f1, 0(r3) # pan/tilt camera right
 
+  # Re-activate cleared cards
+  # ...
+
 EXIT:
   restore

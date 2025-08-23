@@ -73,7 +73,7 @@
 .set MIN_SCALE, RTOC_0_5
 .set MAX_SCALE, RTOC_2
 .set SIS_ID, 3
-.set CARD_COUNT, 6 # also the number of replaced SIS entries we've made
+.set CARD_COUNT, 10 # also the number of replaced SIS entries we've made
 
 # StockRun Cards
 .set SR_CARD_KBINC, 0
