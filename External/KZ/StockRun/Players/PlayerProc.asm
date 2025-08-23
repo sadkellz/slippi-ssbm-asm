@@ -61,14 +61,14 @@ FN_FighterThink:
 
   # check applicable cards
   METAL: # metal first so we dont overwrite the other cards...
-  rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
-  beq SHIELD_HP
-  mr r3, REG_GOBJ
-  load r4, 0x7FFFFFFF
-  mr r5, r4
-  branchl r12, Item_Apply_Metal
-  mr r3, REG_GOBJ
-  branchl r12, Player_InitCharacterStats
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
+    beq SHIELD_HP
+    mr r3, REG_GOBJ
+    load r4, 0x7FFFFFFF
+    mr r5, r4
+    branchl r12, Item_Apply_Metal
+    mr r3, REG_GOBJ
+    branchl r12, Player_InitCharacterStats
 
   SHIELD_HP:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_SHIELDHP, 31-SR_CARD_SHIELDHP

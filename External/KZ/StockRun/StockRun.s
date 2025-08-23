@@ -74,7 +74,6 @@
 .set MIN_SCALE, RTOC_0_5
 .set MAX_SCALE, RTOC_2
 .set SIS_ID, 3
-.set CARD_COUNT, 10 # also the number of replaced SIS entries we've made
 
 # StockRun Cards
 .set SR_CARD_KBINC, 0
@@ -86,10 +85,11 @@
 .set SR_CARD_EXTRAJUMP, 6
 .set SR_CARD_METAL, 7
 .set SR_CARD_CLOAK, 8
-.set SR_CARD_RANDOMDMG, 9
+.set SR_CARD_POWERSHIELD, 9
 .set SR_CARD_SCREWATK, 10
+.set CARD_COUNT, 11 # also the number of replaced SIS entries we've made
 
-.set SR_CRIT_CHANCE, 5 # 5% chance to crit
+.set SR_CRIT_CHANCE, 10 # 10% chance to crit
 
 
 ################################################################################

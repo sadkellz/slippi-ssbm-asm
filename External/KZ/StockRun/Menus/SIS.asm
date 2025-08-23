@@ -256,33 +256,31 @@ blrl
 .long 0x0F000000
 .long 0
 
-SIS_RANDOMDMG: # Scatter Shot
+SIS_RANDOMDMG: # Perfect Shield
 blrl
 .long 0x0E001400
 .long 0x14101618
-.long 0x03201C20
-.long 0x26202420
-.long 0x37203720
-.long 0x2820351A
+.long 0x03201920
+.long 0x28203520
+.long 0x29202820
+.long 0x2620371A
 .long 0x201C202B
-.long 0x20322037
+.long 0x202C2028
+.long 0x202F2027
 .long 0x03030CAA
 .long 0xAAAA1016
-.long 0x2011202C
-.long 0x20372036
-.long 0x1A202B20
-.long 0x24203920
-.long 0x281A2035
-.long 0x20242031
-.long 0x20272032
-.long 0x2030202C
-.long 0x203D2028
+.long 0x20192032
+.long 0x203A2028
+.long 0x20352036
+.long 0x202B202C
+.long 0x2028202F
 .long 0x20271A20
-.long 0x33202820
-.long 0x35202620
-.long 0x28203120
-.long 0x3720E719
-.long 0x0F000000
+.long 0x28203920
+.long 0x28203520
+.long 0x3C203720
+.long 0x2B202C20
+.long 0x31202A20
+.long 0xE7190F00
 .long 0
 
 SIS_SCREWATK: # Screwed

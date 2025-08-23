@@ -133,9 +133,9 @@ CODE_START:
   branchl r12, 0x800138cc
 
   # plco changes
-  loadwz REG_PLCO, stc_plco_ptr
-  lfs f1, RTOC_300(rtoc)
-  stfs f1, 0x260(REG_PLCO) # max shield hp
+  # loadwz REG_PLCO, stc_plco_ptr
+  # lfs f1, RTOC_300(rtoc)
+  # stfs f1, 0x260(REG_PLCO) # max shield hp
 
   b EXIT
 
@@ -480,7 +480,7 @@ SR_SelectCard:
     slw r5, r5, r4          # shift 1 left by r4 positions (r4 = card to set)
     or r0, r0, r5           # set the bit
     stw r0, SRP_CARDS(r6)   # store back
-    bp
+
     # run the card apply callback
     li r3, TRUE
     stw r3, SRP_APPLY_CARD(r6)
