@@ -57,9 +57,10 @@ FN_FighterThink:
   beq FN_FighterThink_Exit
 
   addi REG_STATS, REG_DATA, FT_STATS
+  lwz REG_CARDS, SRP_CARDS(REG_SRPD)
 
   # check applicable cards
-  METAL:
+  METAL: # metal first so we dont overwrite the other cards...
   rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
   beq SHIELD_HP
   mr r3, REG_GOBJ
@@ -70,7 +71,6 @@ FN_FighterThink:
   branchl r12, Player_InitCharacterStats
 
   SHIELD_HP:
-    lwz REG_CARDS, SRP_CARDS(REG_SRPD)
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_SHIELDHP, 31-SR_CARD_SHIELDHP
     beq EXTRA_JUMP
 
@@ -92,7 +92,7 @@ FN_FighterThink:
 
   JUMP_HEIGHT:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_JUMPHEIGHT, 31-SR_CARD_JUMPHEIGHT
-    beq FN_FighterThink_Exit
+    beq CLOAK
     lfs f0, RTOC_1_10(rtoc) # jumpheight * 1.25
     lfs f1, STATS_JUMP_SH_MULT(REG_STATS)
     lfs f2, STATS_JUMP_FH_MULT(REG_STATS)
@@ -103,6 +103,14 @@ FN_FighterThink:
     stfs f1, STATS_JUMP_SH_MULT(REG_STATS)
     stfs f2, STATS_JUMP_FH_MULT(REG_STATS)
     stfs f3, STATS_JUMP_DJ_MULT(REG_STATS)
+
+  CLOAK:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_CLOAK, 31-SR_CARD_CLOAK
+    beq FN_FighterThink_Exit
+    load r4, 0x7FFFFFFF
+    mr r5, r4
+    mr r3, REG_GOBJ
+    branchl r12, Item_Apply_Cloak
 
 
 FN_FighterThink_Exit:

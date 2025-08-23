@@ -65,6 +65,7 @@
 .set GetPlayerCount, 0x8016b558
 
 .set Item_Apply_Metal, 0x800c8348
+.set Item_Apply_Cloak, 0x800c88d4
 
 
 ################################################################################
