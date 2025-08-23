@@ -59,6 +59,16 @@ FN_FighterThink:
   addi REG_STATS, REG_DATA, FT_STATS
 
   # check applicable cards
+  METAL:
+  rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
+  beq SHIELD_HP
+  mr r3, REG_GOBJ
+  load r4, 0x7FFFFFFF
+  mr r5, r4
+  branchl r12, Item_Apply_Metal
+  mr r3, REG_GOBJ
+  branchl r12, Player_InitCharacterStats
+
   SHIELD_HP:
     lwz REG_CARDS, SRP_CARDS(REG_SRPD)
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_SHIELDHP, 31-SR_CARD_SHIELDHP
@@ -93,7 +103,6 @@ FN_FighterThink:
     stfs f1, STATS_JUMP_SH_MULT(REG_STATS)
     stfs f2, STATS_JUMP_FH_MULT(REG_STATS)
     stfs f3, STATS_JUMP_DJ_MULT(REG_STATS)
-
 
 
 FN_FighterThink_Exit:

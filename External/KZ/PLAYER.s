@@ -15,6 +15,7 @@
 .set FT_ATTACKER, 0x18C4
 .set FT_SHIELD_HP, 0x1998
 .set FT_LIGHTSHIELD_HP, 0x199C
+.set FT_CHAR_DATA, 0x10C
 .set FT_STATS, 0x110
 
 .set STATS_JUMPS, 0x58
@@ -56,11 +57,14 @@
 
 .set Player_GetPosition, 0x80086644 # (HSD_GObjPlayer *gobj_player,Vec *vec)
 .set Player_IsDead, 0x8008732c
+.set Player_InitCharacterStats, 0x800d105c
 
 .set Kirby_LoadHatPrefunc, 0x80169c54 # (CharacterKind character,byte costume_id)
 .set Kirby_LoadHat, 0x80031da8 # (CharacterKind character,byte costume_id)
 
 .set GetPlayerCount, 0x8016b558
+
+.set Item_Apply_Metal, 0x800c8348
 
 
 ################################################################################
