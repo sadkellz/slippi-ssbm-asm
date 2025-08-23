@@ -53,7 +53,7 @@
 .set CAM_ZOOM, 0x41200000  # 10.0 as float
 .set SETUP_START_FRAME, 64 # first frame after entry
 .set ALLOW_INPUTS_FRAME, 144 # just as the camera settles
-.set TRANSITION_FRAMES, 80 # 
+.set TRANSITION_FRAMES, 30 # 
 .set MAX_PLAYERS, 2 # not supporting teams/ffa
 .set MAX_PORTS, 4
 .set DEBUG_PAD_UNION, 4  # will return if anyone presses a button

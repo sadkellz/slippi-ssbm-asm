@@ -593,6 +593,8 @@ FN_CameraGX:
   mr REG_GOBJ, r3
 
   get_game_state r3
+  cmpwi r3, SRGS_GAME_INIT
+  beq FN_CameraGX_Exit
   cmpwi r3, SRGS_GAME_ACTIVE
   beq FN_CameraGX_Exit
   cmpwi r3, SRGS_GAME_TRANSITION
@@ -1010,6 +1012,8 @@ blrl
 
   get_game_state r3
   cmpwi r3, SRGS_GAME_ACTIVE
+  beq FN_CameraGX_Exit
+  cmpwi r3, SRGS_INIT
   beq FN_CameraGX_Exit
 
 

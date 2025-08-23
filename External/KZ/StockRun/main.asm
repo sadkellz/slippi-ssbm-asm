@@ -132,11 +132,6 @@ CODE_START:
   load r4, 0x8017fe54
   branchl r12, 0x800138cc
 
-  # plco changes
-  # loadwz REG_PLCO, stc_plco_ptr
-  # lfs f1, RTOC_300(rtoc)
-  # stfs f1, 0x260(REG_PLCO) # max shield hp
-
   b EXIT
 
 #==============================================================================#
@@ -560,6 +555,8 @@ SR_SetupCamera:
   bklr
 
   load r3, stc_mode3_vars
+  lfs f1, RTOC_0_1(rtoc)
+  stfs f1, 0(r3)
   # lerp settings
   lfs f1, OFST_TINT(r3)
   stfs f1, OFST_TEYE(r3)
