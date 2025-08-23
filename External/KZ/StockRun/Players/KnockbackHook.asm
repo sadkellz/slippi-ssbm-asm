@@ -34,7 +34,6 @@ CODE_START:
   # beq EXIT # we dont have either flag set
 
   DECREASE_KB_CHECK:
-    lwz REG_FLAGS, SRP_CARDS(r3)
     rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBDEC, 31-SR_CARD_KBDEC
     beq INCREASE_KB_CHECK
     # logf LOG_LEVEL_ERROR, "Decrease KB"

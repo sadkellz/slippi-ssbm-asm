@@ -39,6 +39,7 @@ CODE_START:
   .set REG_DATA, 30
   .set REG_COUNT, 29
   .set REG_PLY_COUNT, 28
+  .set REG_PLCO, 27
   backup
 
   bl DATA_BLRL
@@ -130,6 +131,11 @@ CODE_START:
   mr r3, REG_GOBJ
   load r4, 0x8017fe54
   branchl r12, 0x800138cc
+
+  # plco changes
+  loadwz REG_PLCO, stc_plco_ptr
+  lfs f1, RTOC_300(rtoc)
+  stfs f1, 0x260(REG_PLCO) # max shield hp
 
   b EXIT
 
@@ -474,6 +480,10 @@ SR_SelectCard:
     slw r5, r5, r4          # shift 1 left by r4 positions (r4 = card to set)
     or r0, r0, r5           # set the bit
     stw r0, SRP_CARDS(r6)   # store back
+
+    # run the card apply callback
+    li r3, TRUE
+    stw r3, SRP_APPLY_CARD(r6)
 
 
   UPDATE_STATE:

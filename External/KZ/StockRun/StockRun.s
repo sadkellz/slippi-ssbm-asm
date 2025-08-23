@@ -27,7 +27,8 @@
 
 # StockRun Player
 .set SRP_CARDS, 0 # int bitfield
-.set SRP_SIZE, SRP_CARDS + 4
+.set SRP_APPLY_CARD, SRP_CARDS + 4 # will get applied by the proc
+.set SRP_SIZE, SRP_APPLY_CARD + 4
 
 ################################################################################
 # Directives
@@ -59,11 +60,11 @@
 .set SR_GOBJ_PRIO, 111
 
 # GX
-.set  COBJ_GXPRI, 8
-.set  MY_GXPRI, 80
-.set  TEXT_GXLINK, 13
-.set  PANEL_GXLINK, 14
-.set  STICK_GXLINK, 18
+.set COBJ_GXPRI, 8
+.set MY_GXPRI, 80
+.set TEXT_GXLINK, 13
+.set PANEL_GXLINK, 14
+.set STICK_GXLINK, 18
 
 # Menus
 .set MENU_START_FRAME, SETUP_START_FRAME - 20 # animate 20 frames before we can input
@@ -80,6 +81,13 @@
 .set SR_CARD_KBDEC, 1
 .set SR_CARD_CRIT, 2
 .set SR_CARD_SHIELDHP, 3
+.set SR_CARD_JUMPHEIGHT, 4
+.set SR_CARD_SHIELDDMG, 5
+.set SR_CARD_EXTRAJUMP, 6
+.set SR_CARD_METAL, 7
+.set SR_CARD_CLOAK, 8
+.set SR_CARD_RANDOMDMG, 9
+.set SR_CARD_SCREWATK, 10
 
 .set SR_CRIT_CHANCE, 5 # 5% chance to crit
 

@@ -497,8 +497,8 @@ CREATE_PANEL_LOOP:
     mulli r0, REG_COUNT, 4
     stwx REG_TEXT, r4, r0
 
-    mr r5, REG_TEXT
-    logf LOG_LEVEL_NOTICE, "text %x"
+    # mr r5, REG_TEXT
+    # logf LOG_LEVEL_NOTICE, "text %x"
 
     SPAWN_TEXT_LOOP_CHECK:
       addi REG_COUNT, REG_COUNT, 1
