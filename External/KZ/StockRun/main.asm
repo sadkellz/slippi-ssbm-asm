@@ -155,6 +155,19 @@ CODE_START:
     cmpwi REG_COUNT, 4
     blt SET_PANEL_COLORS
 
+# set stocks
+  li REG_COUNT, 0
+  SET_STOCKS_LOOP:
+    rlwinm r0, REG_COUNT, 2, 0, 29
+    lwzx r3, REG_DATA, r0
+    li r4, SR_STOCK_COUNT
+    branchl r12, PlayerBlock_SetStocks
+  
+  SET_STOCKS_LOOP_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, 2
+    blt SET_STOCKS_LOOP
+
   b EXIT
 
 #==============================================================================#

@@ -91,6 +91,7 @@
 
 .set PlayerBlock_GetGObj, 0x80034110 # (int slot)
 .set PlayerBlock_GetStocks, 0x80033bd8 # (int slot)
+.set PlayerBlock_SetStocks, 0x80033c60 # (int slot, u8 stocks)
 .set PlayerBlock_GetSlotType, 0x8003241c # (int slot)
 .set PlayerBlock_GetPortColor, 0x80036538 # (int slot)
 
