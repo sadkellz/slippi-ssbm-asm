@@ -18,6 +18,7 @@ b SIS_METAL
 b SIS_CLOAK
 b SIS_RANDOMDMG
 b SIS_SCREWATK
+b SIS_QUICKCHARGE
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -313,4 +314,38 @@ blrl
 .long 0x24202620
 .long 0x2E20E719
 .long 0x0F000000
+.long 0
+
+SIS_QUICKCHARGE: # Quick Charge
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201A20
+.long 0x38202C20
+.long 0x26202E1A
+.long 0x200C202B
+.long 0x20242035
+.long 0x202A2028
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x200C202B
+.long 0x20242035
+.long 0x202A2028
+.long 0x20271A20
+.long 0x24203720
+.long 0x37202420
+.long 0x26202E20
+.long 0x361A2025
+.long 0x20282026
+.long 0x20322030
+.long 0x20281A20
+.long 0x2C203120
+.long 0x36203720
+.long 0x24203120
+.long 0x37202F20
+.long 0x3C1A2026
+.long 0x202B2024
+.long 0x2035202A
+.long 0x20282027
+.long 0x20E7190F
 .long 0
