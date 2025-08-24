@@ -39,7 +39,8 @@ CODE_START:
   .set REG_DATA, 30
   .set REG_COUNT, 29
   .set REG_PLY_COUNT, 28
-  .set REG_PLCO, 27
+  .set REG_COLOR, 27
+  .set REG_PANEL, 26
   backup
 
   bl DATA_BLRL
@@ -131,6 +132,28 @@ CODE_START:
   mr r3, REG_GOBJ
   load r4, 0x8017fe54
   branchl r12, 0x800138cc
+
+# setup panel colours
+  li REG_COUNT, 0
+  get_panel_color REG_COLOR
+  load REG_PANEL, stc_sr_data
+  addi REG_PANEL, REG_PANEL, SRD_JOBJ_PANELS
+  SET_PANEL_COLORS:
+    mulli r0, REG_COUNT, 4
+    lwzx r3, REG_PANEL, r0
+    branchl r12, HSD_JObjGetDObj
+    lwz r3, 0x4(r3)
+    lwz r3, 0x4(r3)
+    lwz r3, 0x8(r3) # mobj
+    lbz r4, R(REG_COLOR)
+    lbz r5, G(REG_COLOR)
+    lbz r6, B(REG_COLOR)
+    lbz r7, A(REG_COLOR)
+    branchl r12, HSD_MObjSetDiffuseColor
+  SET_PANEL_COLORS_CHECK:
+    addi REG_COUNT, REG_COUNT, 1
+    cmpwi REG_COUNT, 4
+    blt SET_PANEL_COLORS
 
   b EXIT
 
@@ -404,7 +427,7 @@ SR_ProcessInput:
     stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
 
   CHECK_BUTTON:
-      lwz r4, PAD_buttons(REG_PAD)
+      lwz r4, PAD_button_pressed(REG_PAD)
       andi. r4, r4, PAD_BTN_A
       bne CHOOSE_CARD
       b SR_ProcessInput_Exit
@@ -434,6 +457,8 @@ SR_SelectCard:
 .set REG_COUNT, 16
 .set REG_CARDS, 17
 .set REG_TEXT, 18
+.set REG_COLOR, 17
+.set REG_PANEL, 18
   backup
 
   # check which card we picked
@@ -514,6 +539,28 @@ SR_SelectCard:
     
     bl SR_UpdateCameraTarget
     bl SR_UpdateCameraPos
+
+    # update color
+    li REG_COUNT, 0
+    get_panel_color REG_COLOR
+    load REG_PANEL, stc_sr_data
+    addi REG_PANEL, REG_PANEL, SRD_JOBJ_PANELS
+    UPDATE_PANEL_COLORS:
+      mulli r0, REG_COUNT, 4
+      lwzx r3, REG_PANEL, r0
+      branchl r12, HSD_JObjGetDObj
+      lwz r3, 0x4(r3)
+      lwz r3, 0x4(r3)
+      lwz r3, 0x8(r3) # mobj
+      lbz r4, R(REG_COLOR)
+      lbz r5, G(REG_COLOR)
+      lbz r6, B(REG_COLOR)
+      lbz r7, A(REG_COLOR)
+      branchl r12, HSD_MObjSetDiffuseColor
+    UPDATE_PANEL_COLORS_CHECK:
+      addi REG_COUNT, REG_COUNT, 1
+      cmpwi REG_COUNT, 4
+      blt UPDATE_PANEL_COLORS
 
     lwz r4, SRC_CURRENT_PICKER(REG_DATA)
     cmpwi r4, MAX_PLAYERS

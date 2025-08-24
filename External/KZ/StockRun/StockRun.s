@@ -109,6 +109,17 @@
   get_port_pad \reg_pad
 .endm
 
+.macro get_panel_color reg_color
+  loadwz \reg_color, stc_sr_data
+  lwz \reg_color, GOBJ_USERDATA(\reg_color)
+  lwz \reg_color, SRC_ACTIVE_SLOT(\reg_color)
+  mr r3, \reg_color
+  branchl r12, 0x80036538 # get port color
+  loadwz r3, SHIELD_COLORS
+  rlwinm \reg_color, \reg_color, 2, 0, 29
+  add \reg_color, r3, \reg_color
+.endm
+
 
 .endif
 .set HEADER_STOCKRUN, 1
