@@ -11,10 +11,10 @@
 
 CODE_START:
 .set REG_FP, 28
-.set REG_ATK_FP, 26
-.set REG_SRPD, 16
-.set REG_FLAGS, 17
-.set REG_RNG, 18
+.set REG_ATKER, 26
+.set REG_SRPD, 20
+.set REG_FLAGS, 21
+.set REG_RNG, 22
 # floats
 .set FREG_DMG_MULT, 20
   backup
@@ -22,9 +22,8 @@ CODE_START:
 
   lfs	FREG_DMG_MULT, 0x182C(REG_FP)
   load REG_SRPD, stc_sr_plydata
-
   # does attacker have crit hits?
-  lwz r3, FT_SLOT(REG_ATK_FP)
+  lbz r3, FT_SLOT(REG_ATKER)
   mulli r0, r3, SRP_SIZE
   add r3, REG_SRPD, r0
   lwz REG_FLAGS, SRP_CARDS(r3)

@@ -28,7 +28,7 @@ CODE_START:
 
   SHIELD_DMG_CHECK:
     # opponent has shield dmg?
-    lwz r3, FT_SLOT(REG_ATKER)
+    lbz r3, FT_SLOT(REG_ATKER)
     mulli r0, r3, SRP_SIZE
     add r3, REG_SRPD, r0
     lwz r3, SRP_CARDS(r3)
