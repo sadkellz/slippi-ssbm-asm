@@ -7,8 +7,6 @@
 
 stb	r0, -0x49AC(r13)
 
-bp
-
 getMinorMajor r3
 cmpwi r3, SCENE_ONLINE_CSS
 bne EXIT

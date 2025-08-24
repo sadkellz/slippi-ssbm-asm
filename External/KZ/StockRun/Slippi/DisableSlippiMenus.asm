@@ -1,16 +1,18 @@
 ################################################################################
-# Address: 0x802299f0
+# Address: 0x802299cc
 # Same as HandleOnlineLockedOptions.asm
-# This code will take precedent over Slippi's if its later in the code list.
 ################################################################################
 
 .include "Common/Common.s"
 .include "Online/Online.s"
 
-cmpwi r3, 0x8
-bne- EXIT
-nop
-nop
+cmpwi r3, 0x3
+bne- CHECK_SLIPPI
+branch r12, 0x802299d4
+
+CHECK_SLIPPI:
+  cmpwi r3, 0x8
+  bne- EXIT
 
 lbz r3, OFST_R13_APP_STATE(r13)
 cmpwi r3, 0
