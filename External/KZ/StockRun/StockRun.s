@@ -120,6 +120,16 @@
   add \reg_color, r3, \reg_color
 .endm
 
+.macro backup_rng reg_seed
+  lis \reg_seed, 0x804D
+  lwz \reg_seed, 0x5F90(\reg_seed)
+.endm
+
+.macro restore_rng reg_seed
+  lis r3, 0x804D
+  stw \reg_seed, 0x5F90(r3)
+.endm
+
 
 .endif
 .set HEADER_STOCKRUN, 1

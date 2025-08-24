@@ -459,6 +459,7 @@ SR_SelectCard:
 .set REG_TEXT, 18
 .set REG_COLOR, 17
 .set REG_PANEL, 18
+.set REG_RNG, 19
   backup
 
   # check which card we picked
@@ -512,12 +513,14 @@ SR_SelectCard:
     beq MID_GAME_UPDATE
 
     # roll cards
+    backup_rng REG_RNG
     li r3, CARD_COUNT
     load r4, stc_sr_data
     addi REG_CARDS, r4, SRD_CURRENT_CARDS
     mr r4, REG_CARDS
     lwz r5, SRC_ACTIVE_SLOT(REG_DATA)
     branchl r12, StockRun_RandomizeCards
+    restore_rng REG_RNG
 
     # set text
     li REG_COUNT, 0
