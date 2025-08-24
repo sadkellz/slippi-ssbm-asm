@@ -19,6 +19,7 @@ b SIS_CLOAK
 b SIS_RANDOMDMG
 b SIS_SCREWATK
 b SIS_QUICKCHARGE
+b SIS_DJARMOUR
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -348,4 +349,29 @@ blrl
 .long 0x2035202A
 .long 0x20282027
 .long 0x20E7190F
+.long 0
+
+SIS_DJARMOUR: # Yoshi's Secret
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03202220
+.long 0x32203620
+.long 0x2B202C20
+.long 0xF320361A
+.long 0x201C2028
+.long 0x20262035
+.long 0x20282037
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x200D2032
+.long 0x20382025
+.long 0x202F2028
+.long 0x1A202D20
+.long 0x38203020
+.long 0x331A2024
+.long 0x20352030
+.long 0x20322038
+.long 0x203520E7
+.long 0x190F0000
 .long 0

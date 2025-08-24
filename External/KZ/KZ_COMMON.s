@@ -32,6 +32,7 @@
 .set RTOC_56, -0x4a6c
 .set RTOC_60, -0x7854
 .set RTOC_100, -0x35e8
+.set RTOC_120, -0x7dc0
 .set RTOC_160, -0x5450
 .set RTOC_190, -0x4f44
 .set RTOC_255, -0x7dd4
