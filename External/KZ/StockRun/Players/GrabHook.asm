@@ -1,0 +1,63 @@
+################################################################################
+# Address: 0x80078b2c
+################################################################################
+
+.include "./StockRun.s"
+.include "Common/Common.s"
+.include "External/KZ/KZ_COMMON.s"
+.include "External/KZ/HSD_GOBJ.s"
+.include "External/KZ/PLAYER.s"
+.include "External/KZ/OS.s"
+
+CODE_START:
+.set REG_HITBOX, 31
+.set REG_FP, 30
+.set REG_SLOT, 29
+.set REG_SRPD, 28
+.set REG_FLAGS, 27
+# floats
+.set FREG_X, 31
+  backup
+  mr REG_HITBOX, r3
+
+  # init
+  lbz REG_SLOT, FT_SLOT(REG_FP)
+  load REG_SRPD, stc_sr_plydata
+
+  # this players data
+  mulli r0, REG_SLOT, SRP_SIZE
+  add r3, REG_SRPD, r0
+  lwz REG_FLAGS, SRP_CARDS(r3)
+
+  rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_EXTGRAB, 31-SR_CARD_EXTGRAB
+  beq EXIT
+  
+  # get our hitbox x pos
+  lfs FREG_X, HITBOX_POS+X(REG_HITBOX)
+  lfs f0, FT_FACING_DIR(REG_FP)
+  lfs f2, RTOC_0(rtoc)
+  lfs f1, RTOC_50(rtoc)
+  fcmpo cr0, f2, f0
+  blt ADD_OFFSET
+
+  SUB_OFFSET:
+    fsubs FREG_X, FREG_X, f1
+    b STORE_OFFSET
+
+  ADD_OFFSET:
+    fadds FREG_X, FREG_X, f1
+
+  STORE_OFFSET:
+    stfs FREG_X, HITBOX_LAST_POS+X(REG_HITBOX)
+
+  # play sound
+  li r3, 0
+  li r4, 94
+  li r5, 90
+  li r6, 64
+  branchl r12, SFX_FighterSFX
+
+EXIT:
+  mr r3, REG_HITBOX
+  restore
+  rlwinm.	r0, r0, 27, 31, 31

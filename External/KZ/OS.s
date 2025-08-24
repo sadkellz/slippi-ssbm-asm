@@ -21,6 +21,7 @@
 
 .set SFX_PlaySFX, 0x8038cff4
 .set SFX_HitboxSFX, 0x80024184 # (SFX id,int volume,int pitch,int channel)
+.set SFX_FighterSFX, 0x80088148 # (Fighter *player,SFX common_id,sbyte volume,sbyte pitch)
 
 ################################################################################
 # Structs

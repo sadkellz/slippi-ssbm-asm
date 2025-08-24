@@ -20,6 +20,7 @@ b SIS_RANDOMDMG
 b SIS_SCREWATK
 b SIS_QUICKCHARGE
 b SIS_DJARMOUR
+b SIS_EXTGRAB
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -336,19 +337,20 @@ blrl
 .long 0x24203720
 .long 0x37202420
 .long 0x26202E20
-.long 0x361A2025
-.long 0x20282026
-.long 0x20322030
-.long 0x20281A20
-.long 0x2C203120
-.long 0x36203720
-.long 0x24203120
-.long 0x37202F20
-.long 0x3C1A2026
-.long 0x202B2024
-.long 0x2035202A
-.long 0x20282027
-.long 0x20E7190F
+.long 0x361A202C
+.long 0x20312036
+.long 0x20372024
+.long 0x20312037
+.long 0x202F203C
+.long 0x1A203520
+.long 0x28202420
+.long 0x26202B1A
+.long 0x20292038
+.long 0x202F202F
+.long 0x1A203320
+.long 0x32203A20
+.long 0x28203520
+.long 0xE7190F00
 .long 0
 
 SIS_DJARMOUR: # Yoshi's Secret
@@ -374,4 +376,32 @@ blrl
 .long 0x20322038
 .long 0x203520E7
 .long 0x190F0000
+.long 0
+
+SIS_EXTGRAB: # Increased Ape Index
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201220
+.long 0x31202620
+.long 0x35202820
+.long 0x24203620
+.long 0x2820271A
+.long 0x200A2033
+.long 0x20281A20
+.long 0x12203120
+.long 0x27202820
+.long 0x3B03030C
+.long 0xAAAAAA10
+.long 0x16200E20
+.long 0x3B203720
+.long 0x28203120
+.long 0x27202820
+.long 0x271A202A
+.long 0x20352024
+.long 0x20251A20
+.long 0x35202420
+.long 0x31202A20
+.long 0x2820E719
+.long 0x0F000000
 .long 0
