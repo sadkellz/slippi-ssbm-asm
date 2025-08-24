@@ -90,9 +90,11 @@
 .set SR_CARD_QUICKCHARGE, 11
 .set SR_CARD_DJARMOUR, 12
 .set SR_CARD_EXTGRAB, 13
-.set CARD_COUNT, 14 # also the number of replaced SIS entries we've made
+.set SR_CARD_GRACE, 14
+.set CARD_COUNT, 15 # also the number of replaced SIS entries we've made
 
 .set SR_CRIT_CHANCE, 10 # 10% chance to crit
+.set SR_RARE_CHANCE, 25
 
 
 ################################################################################

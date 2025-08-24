@@ -21,6 +21,7 @@ b SIS_SCREWATK
 b SIS_QUICKCHARGE
 b SIS_DJARMOUR
 b SIS_EXTGRAB
+b SIS_GRACE
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -404,4 +405,32 @@ blrl
 .long 0x31202A20
 .long 0x2820E719
 .long 0x0F000000
+.long 0
+
+SIS_GRACE: # Grace
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x030CFAD7
+.long 0x3C201020
+.long 0x35202420
+.long 0x26202803
+.long 0x030CFFFF
+.long 0xFF101620
+.long 0x22203220
+.long 0x3820351A
+.long 0x20242026
+.long 0x2037202C
+.long 0x20322031
+.long 0x20361A20
+.long 0x25202820
+.long 0x26203220
+.long 0x3020281A
+.long 0x20282031
+.long 0x202F202C
+.long 0x202A202B
+.long 0x20372028
+.long 0x20312028
+.long 0x202720E7
+.long 0x190F0000
 .long 0
