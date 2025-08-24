@@ -110,11 +110,22 @@ FN_FighterThink:
 
   CLOAK:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_CLOAK, 31-SR_CARD_CLOAK
-    beq FN_FighterThink_Exit
+    beq GRACE
     load r4, 0x7FFFFFFF
     mr r5, r4
     mr r3, REG_GOBJ
     branchl r12, Item_Apply_Cloak
+
+  GRACE:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_GRACE, 31-SR_CARD_GRACE
+    beq FN_FighterThink_Exit
+    lfs f1, RTOC_1(rtoc)
+    stfs f1, STATS_LAG_LAND(REG_STATS)
+    stfs f1, STATS_LAG_NAIR(REG_STATS)
+    stfs f1, STATS_LAG_FAIR(REG_STATS)
+    stfs f1, STATS_LAG_BAIR(REG_STATS)
+    stfs f1, STATS_LAG_UAIR(REG_STATS)
+    stfs f1, STATS_LAG_DAIR(REG_STATS)
 
 
 FN_FighterThink_Exit:

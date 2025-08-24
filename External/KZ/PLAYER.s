@@ -27,6 +27,12 @@
 .set STATS_JUMP_FH_MULT, 0x40
 .set STATS_JUMP_SH_MULT, 0x4C
 .set STATS_JUMP_DJ_MULT, 0x50
+.set STATS_LAG_LAND, 0xE4
+.set STATS_LAG_NAIR, 0xE8
+.set STATS_LAG_FAIR, 0xEC
+.set STATS_LAG_BAIR, 0xF0
+.set STATS_LAG_UAIR, 0xF4
+.set STATS_LAG_DAIR, 0xF8
 
 .set PB_FLAG1, 0xAC
 
@@ -101,6 +107,9 @@
 
 .set Item_Apply_Metal, 0x800c8348
 .set Item_Apply_Cloak, 0x800c88d4
+
+.set AS_TurnRun, 0x800c9d94
+.set AS_SmashTurn, 0x800c9c74
 
 
 ################################################################################
