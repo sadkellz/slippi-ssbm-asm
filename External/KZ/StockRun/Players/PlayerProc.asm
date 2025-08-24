@@ -7,6 +7,7 @@
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_GOBJ.s"
+.include "External/KZ/HSD_JOBJ.s"
 .include "External/KZ/PLAYER.s"
 
 b CODE_START
@@ -40,6 +41,9 @@ blrl
 .set REG_SRPD, 29
 .set REG_CARDS, 28
 .set REG_STATS, 27
+.set REG_COUNT, 28
+.set REG_COLOR, 27
+.set REG_PANEL, 26
 FN_FighterThink:
   backup
 
@@ -116,6 +120,7 @@ FN_FighterThink:
 FN_FighterThink_Exit:
   li r3, 0
   stw r3, SRP_APPLY_CARD(REG_SRPD)
+  
   restore
   blr
 
