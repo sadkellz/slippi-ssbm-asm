@@ -22,6 +22,7 @@ b SIS_QUICKCHARGE
 b SIS_DJARMOUR
 b SIS_EXTGRAB
 b SIS_GRACE
+b SIS_INVERTED_KB
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -433,4 +434,34 @@ blrl
 .long 0x20312028
 .long 0x202720E7
 .long 0x190F0000
+.long 0
+
+SIS_INVERTED_KB: # Broken Compass
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03200B20
+.long 0x35203220
+.long 0x2E202820
+.long 0x311A200C
+.long 0x20322030
+.long 0x20332024
+.long 0x20362036
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x20142031
+.long 0x20322026
+.long 0x202E2025
+.long 0x20242026
+.long 0x202E1A20
+.long 0x24203120
+.long 0x2A202F20
+.long 0x2820361A
+.long 0x20242035
+.long 0x20281A20
+.long 0x2C203120
+.long 0x39202820
+.long 0x35203720
+.long 0x28202720
+.long 0xE7190F00
 .long 0
