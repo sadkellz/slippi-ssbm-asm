@@ -12,9 +12,10 @@
 CODE_START:
 .set REG_HITBOX, 31
 .set REG_FP, 30
-.set REG_SLOT, 29
+.set REG_VFP, 29
 .set REG_SRPD, 28
 .set REG_FLAGS, 27
+.set REG_SLOT, 26
 # floats
 .set FREG_X, 31
   backup
@@ -31,12 +32,16 @@ CODE_START:
 
   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_EXTGRAB, 31-SR_CARD_EXTGRAB
   beq EXIT
+  # lwz REG_VFP, GOBJ_USERDATA(r29)
+  # lbz r0, 0x221A(REG_VFP)
+  # rlwinm. r0, r0, 0, 31, 31 # shielding
+  # beq EXIT
   
   # get our hitbox x pos
   lfs FREG_X, HITBOX_POS+X(REG_HITBOX)
   lfs f0, FT_FACING_DIR(REG_FP)
   lfs f2, RTOC_0(rtoc)
-  lfs f1, RTOC_50(rtoc)
+  lfs f1, RTOC_20(rtoc)
   fcmpo cr0, f2, f0
   blt ADD_OFFSET
 

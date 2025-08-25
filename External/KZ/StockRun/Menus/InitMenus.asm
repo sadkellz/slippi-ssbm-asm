@@ -184,26 +184,6 @@ CODE_START:
   branchl r12, HSD_ArchiveGetSymbol
   stw r3, SP_PROMPT_MODEL_SET(sp)
 
-  # we have to turn on zupdate in the mobj desc before it gets loaded
-  # otherwise it will always draw over our text
-  # lwz r3, SP_PROMPT_MODEL_SET(sp)
-  # lwz r3, DYN_MODEL_JOINT(r3)
-  # # traverse tree
-  # lwz r3, 0x8(r3) # child
-  # lwz r3, 0xC(r3) # next
-  # # dobjdesc
-  # lwz r3, 0x10(r3)
-  # # mobjdesc
-  # lwz r3, 0x8(r3)
-  # # set flags
-  # load r4, 0x40000001
-  # # lwz r5, 0x4(r3) # flags
-  # # or r5, r5, r4
-  # # why does this hide the entire panel?
-  # stw r4, 0x4(r3)
-  # mr r5, r4
-  # logf LOG_LEVEL_ERROR, "flags %08x"
-
   # create 4 panels
   li REG_COUNT, 0
 CREATE_PANEL_LOOP:
@@ -220,12 +200,7 @@ CREATE_PANEL_LOOP:
   lwz r3, DYN_MODEL_JOINT(r3)
   branchl r12, HSD_JObjLoadJoint
   mr REG_JOBJ, r3
-  # store joint
-  # load r4, stc_sr_data
-  # addi r4, r4, SRD_JOBJ_PANELS
-  # mulli r0, REG_COUNT, 4
-  # stwx REG_JOBJ, r4, r0
-
+  
   # add to gobj
   mr r3, REG_GOBJ
   li r4, 3

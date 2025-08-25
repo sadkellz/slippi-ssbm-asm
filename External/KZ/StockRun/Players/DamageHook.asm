@@ -30,6 +30,11 @@ CODE_START:
   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_CRIT, 31-SR_CARD_CRIT
   beq EXIT
 
+  # is attacker in a state to crit
+  lbz r3, FT_FLAGS4(REG_ATKER)
+  rlwinm. r0, r3, 0, 31-2, 31-2
+  bne EXIT
+
   # roll for crit
   li r3, 100
   branchl r12, HSD_Randi
