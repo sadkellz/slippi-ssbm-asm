@@ -56,11 +56,11 @@ CODE_START:
     stfs FREG_X, HITBOX_LAST_POS+X(REG_HITBOX)
 
   # play sound
-  li r3, 0
-  li r4, 94
-  li r5, 90
-  li r6, 64
-  branchl r12, SFX_FighterSFX
+  # li r3, 0
+  # li r4, 94
+  # li r5, 90
+  # li r6, 64
+  # branchl r12, SFX_FighterSFX
 
 EXIT:
   mr r3, REG_HITBOX
