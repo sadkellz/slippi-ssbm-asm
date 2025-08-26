@@ -100,6 +100,22 @@ CODE_START:
     cmpwi REG_COUNT, MAX_PORTS
     blt SET_ACTIVE_SLOTS_LOOP
 
+# store opponent port
+    lwz r3, SRC_SLOT_ORDER(REG_DATA)
+    branchl r12, PlayerBlock_GetGObj
+    lwz r3, GOBJ_USERDATA(r3)
+    addi r3, r3, FT_SRP_OFST
+    lwz r4, SRC_SLOT_ORDER+4(REG_DATA)
+    stw r4, SRP_OPP_SLOT(r3)
+
+    lwz r3, SRC_SLOT_ORDER+4(REG_DATA)
+    branchl r12, PlayerBlock_GetGObj
+    lwz r3, GOBJ_USERDATA(r3)
+    addi r3, r3, FT_SRP_OFST
+    lwz r4, SRC_SLOT_ORDER(REG_DATA)
+    stw r4, SRP_OPP_SLOT(r3)
+    
+
 # setup camera blur
   load r3, 0x80472d28
   li r4, 288
