@@ -13,17 +13,18 @@ lfs	f31, FT_DMG_RECEIVED(r30)
 
 CODE_START:
 .set REG_SLOT, 31
-.set REG_FT, 30
+.set REG_FP, 30
 .set REG_SRPD, 29
 .set REG_FLAGS, 28
   backup
 
   # init
-  lbz REG_SLOT, FT_SLOT(REG_FT)
-  load REG_SRPD, stc_sr_plydata
+  lbz REG_SLOT, FT_SLOT(REG_FP)
+  # load REG_SRPD, stc_sr_plydata
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
 
   # does attacker have random percent?
-  lwz r3, FT_ATTACKER(REG_FT)
+  lwz r3, FT_ATTACKER(REG_FP)
   mulli r0, r3, SRP_SIZE
   add r3, REG_SRPD, r0
   lwz REG_FLAGS, SRP_CARDS(r3)
@@ -41,5 +42,5 @@ CODE_START:
 
 
 EXIT:
-  mr r3, REG_FT
+  mr r3, REG_FP
   restore

@@ -38,9 +38,12 @@ CODE_START:
   beq ALL_CARDS_AVAILABLE
 
   # Load player-specific bitmask
-  load r3, stc_sr_plydata
-  mulli r0, REG_SLOT, SRP_SIZE
-  add r3, r3, r0
+  # load r3, stc_sr_plydata
+  # mulli r0, REG_SLOT, SRP_SIZE
+  mr r3, REG_SLOT
+  branchl r12, PlayerBlock_GetGObj
+  lwz r3, GOBJ_USERDATA(r3)
+  addi r3, r3, FT_SRP_OFST
   lwz REG_BITMASK, SRP_CARDS(r3)
   b BUILD_POOL_LOOP
 

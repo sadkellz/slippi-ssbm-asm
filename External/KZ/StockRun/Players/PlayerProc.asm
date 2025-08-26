@@ -24,8 +24,14 @@ CODE_START:
   li r5, 0
   branchl r12, GObj_AddProc
 
-  # mr r5, REG_GOBJ
-  # logf LOG_LEVEL_ERROR, "Fighter GOBJ: %08x\n"
+  mr r5, REG_GOBJ
+  logf LOG_LEVEL_ERROR, "Fighter GOBJ: %08x\n"
+
+  # zero out our SRP data
+  lwz r3, GOBJ_USERDATA(REG_GOBJ)
+  addi r3, r3, FT_SRP_OFST
+  li r4, SRP_SIZE
+  branchl r12, memzero
 
   b EXIT
 
@@ -37,7 +43,7 @@ CODE_START:
 FN_FighterThinkBLRL:
 blrl
 .set REG_GOBJ, 31
-.set REG_DATA, 30
+.set REG_FP, 30
 .set REG_SRPD, 29
 .set REG_CARDS, 28
 .set REG_STATS, 27
@@ -49,18 +55,19 @@ FN_FighterThink:
 
   # init vars
   mr REG_GOBJ, r3
-  lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
+  lwz REG_FP, GOBJ_USERDATA(REG_GOBJ)
 
   # check if we should apply a card
-  lbz r0, FT_SLOT(REG_DATA)
-  mulli r0, r0, SRP_SIZE
-  load REG_SRPD, stc_sr_plydata
-  add REG_SRPD, REG_SRPD, r0
+  # lbz r0, FT_SLOT(REG_FP)
+  # mulli r0, r0, SRP_SIZE
+  # load REG_SRPD, stc_sr_plydata
+  # add REG_SRPD, REG_SRPD, r0
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
   lwz r3, SRP_APPLY_CARD(REG_SRPD)
   cmpwi r3, FALSE
   beq FN_FighterThink_Exit
 
-  addi REG_STATS, REG_DATA, FT_STATS
+  addi REG_STATS, REG_FP, FT_STATS
   lwz REG_CARDS, SRP_CARDS(REG_SRPD)
 
   # check applicable cards
@@ -80,12 +87,12 @@ FN_FighterThink:
 
     # apply shield hp
     lfs f0, RTOC_2(rtoc) # shield * 2
-    lfs f1, FT_SHIELD_HP(REG_DATA)
-    lfs f2, FT_LIGHTSHIELD_HP(REG_DATA)
+    lfs f1, FT_SHIELD_HP(REG_FP)
+    lfs f2, FT_LIGHTSHIELD_HP(REG_FP)
     fmuls f1, f1, f0
     fmuls f2, f2, f0
-    stfs f1, FT_SHIELD_HP(REG_DATA)
-    stfs f2, FT_LIGHTSHIELD_HP(REG_DATA)
+    stfs f1, FT_SHIELD_HP(REG_FP)
+    stfs f2, FT_LIGHTSHIELD_HP(REG_FP)
 
   EXTRA_JUMP:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_EXTRAJUMP, 31-SR_CARD_EXTRAJUMP

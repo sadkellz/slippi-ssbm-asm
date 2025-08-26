@@ -193,10 +193,10 @@ SR_InitContext:
   stw r3, SRC_CURRENT_PICKER(REG_DATA)
   stw r3, SRC_GAME_STATE(REG_DATA)
   stw r3, SRC_HOVER_STATE(REG_DATA)
-  load r3, stc_sr_plydata
-  li r4, SRP_SIZE
-  mulli r4, r4, 4
-  branchl r12, memzero
+  # load r3, stc_sr_plydata
+  # li r4, SRP_SIZE
+  # mulli r4, r4, 4
+  # branchl r12, memzero
 
   # logf LOG_LEVEL_ERROR, "SR Data Reset"
 
@@ -472,10 +472,14 @@ SR_SelectCard:
 .set REG_CARDS, 17
 .set REG_TEXT, 18
 .set REG_RNG, 19
+.set REG_FP, 20
   backup
+  # get fighter data
+  lwz r3, SRC_ACTIVE_SLOT(REG_DATA)
+  branchl r12, PlayerBlock_GetGObj
+  lwz REG_FP, GOBJ_USERDATA(r3)
 
   # check which card we picked
-  lwz r9, SRC_ACTIVE_SLOT(REG_DATA)
   get_active_pad REG_PAD
   lwz r3, PAD_buttons(REG_PAD)
   li r4, 0
@@ -497,17 +501,12 @@ SR_SelectCard:
   # b 0x0 # shouldnt get here
 
   POST_CARD_SELECT:
-    # mr r5, r4
-    # logf LOG_LEVEL_ERROR, "SELECTED CARD %d"
     load r6, stc_sr_data
     addi r6, r6, SRD_CURRENT_CARDS
     mulli r0, r4, 4
     lwzx r4, r6, r0 # card we selected
-    # addi r4, r4, 1
 
-    load r6, stc_sr_plydata
-    mulli r0, r9, SRP_SIZE
-    add r6, r6, r0          # current player data
+    addi r6, REG_FP, FT_SRP_OFST # current player data 
     lwz r0, SRP_CARDS(r6)   # r0 = current card bits
     li r5, 1                # create bitmask
     slw r5, r5, r4          # shift 1 left by r4 positions (r4 = card to set)

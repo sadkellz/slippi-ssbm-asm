@@ -23,7 +23,8 @@ CODE_START:
 
   # init
   lbz REG_SLOT, FT_SLOT(REG_FP)
-  load REG_SRPD, stc_sr_plydata
+  # load REG_SRPD, stc_sr_plydata
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
 
   # this players data
   mulli r0, REG_SLOT, SRP_SIZE

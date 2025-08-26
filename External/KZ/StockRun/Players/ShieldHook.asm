@@ -10,7 +10,7 @@
 
 CODE_START:
 # vars
-.set REG_DATA, 31
+.set REG_FP, 31
 .set REG_SLOT, 30
 .set REG_ATKER, 29
 .set REG_FLAGS, 28
@@ -19,24 +19,25 @@ CODE_START:
   backup
   
   # init
-  lbz REG_SLOT, FT_SLOT(REG_DATA)
-  load REG_SRPD, stc_sr_plydata
+  # lbz REG_SLOT, FT_SLOT(REG_FP)
+  # load REG_SRPD, stc_sr_plydata
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
 
   # this players data
-  mulli r0, REG_SLOT, SRP_SIZE
-  add r3, REG_SRPD, r0
-  lwz REG_FLAGS, SRP_CARDS(r3)
+  # mulli r0, REG_SLOT, SRP_SIZE
+  # add r3, REG_SRPD, r0
+  lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
-  SHIELD_DMG_CHECK:
-    # opponent has shield dmg?
-    lbz REG_TEMP, FT_SLOT(REG_ATKER)
-    mulli r0, REG_TEMP, SRP_SIZE
-    add REG_TEMP, REG_SRPD, r0
-    lwz REG_TEMP, SRP_CARDS(REG_TEMP)
-    rlwinm. r0, REG_TEMP, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
-    beq POWERSHIELD_CHECK
-    lfs f1, RTOC_1_5(rtoc)
-    stfs f1, 0x19B4(REG_DATA)
+  # SHIELD_DMG_CHECK:
+  #   # opponent has shield dmg?
+  #   lbz REG_TEMP, FT_SLOT(REG_ATKER)
+  #   mulli r0, REG_TEMP, SRP_SIZE
+  #   add REG_TEMP, REG_SRPD, r0
+  #   lwz REG_TEMP, SRP_CARDS(REG_TEMP)
+  #   rlwinm. r0, REG_TEMP, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
+  #   beq POWERSHIELD_CHECK
+  #   lfs f1, RTOC_1_5(rtoc)
+  #   stfs f1, 0x19B4(REG_FP)
 
   POWERSHIELD_CHECK:
     rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_POWERSHIELD, 31-SR_CARD_POWERSHIELD

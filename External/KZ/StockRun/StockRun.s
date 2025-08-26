@@ -27,7 +27,7 @@
 .set SRC_HOVER_STATE, SRC_ACTIVE_SLOT + 4           # int
 
 # StockRun Player
-.set FT_SRP_OFST, 9126
+.set FT_SRP_OFST, 9196
 .set SRP_CARDS, 0 # int bitfield
 .set SRP_APPLY_CARD, SRP_CARDS + 4 # bool4 - whether to apply card
 .set SRP_OPP_SLOT, SRP_APPLY_CARD + 4

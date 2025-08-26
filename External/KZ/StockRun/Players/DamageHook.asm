@@ -21,7 +21,8 @@ CODE_START:
   backup_rng REG_RNG
 
   lfs	FREG_DMG_MULT, 0x182C(REG_FP)
-  load REG_SRPD, stc_sr_plydata
+  # load REG_SRPD, stc_sr_plydata
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
   # does attacker have crit hits?
   lbz r3, FT_SLOT(REG_ATKER)
   mulli r0, r3, SRP_SIZE
