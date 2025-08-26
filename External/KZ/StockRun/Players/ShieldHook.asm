@@ -34,7 +34,7 @@ CODE_START:
     add REG_TEMP, REG_SRPD, r0
     lwz REG_TEMP, SRP_CARDS(REG_TEMP)
     rlwinm. r0, REG_TEMP, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
-    beq EXIT
+    beq POWERSHIELD_CHECK
     lfs f1, RTOC_1_5(rtoc)
     stfs f1, 0x19B4(REG_DATA)
 
