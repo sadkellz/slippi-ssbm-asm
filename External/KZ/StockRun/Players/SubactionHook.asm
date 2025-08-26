@@ -31,12 +31,18 @@ CODE_START:
 .set REG_EVENT, 28
 .set REG_FGP, 27
 .set REG_RNG, 26
+.set REG_SRPD, 25
+.set REG_FLAGS, 24
   backup , 2 # backup f31-30
   backup_rng REG_RNG
+  
+# get our cards
+  addi REG_SRPD, REG_FGP, FT_SRP_OFST
+  lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
   cmpwi REG_EVENT, SA_EVENT_HITBOX_SPAWN
   bne EXIT
-  logf LOG_LEVEL_ERROR, "HITBOX CREATED"
+  
 
 EXIT:
   restore_rng REG_RNG

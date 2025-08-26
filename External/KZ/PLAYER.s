@@ -25,6 +25,9 @@
 .set FT_HIT_DATA, 0x1844
 .set FT_FLAGS4, 0x221B
 
+.set BLOCK_OFFENSE_RATIO, 0x54
+.set BLOCK_DEFENSE_RATIO, 0x58
+
 .set STATS_JUMPS, 0x58
 .set STATS_JUMP_FH_MULT, 0x40
 .set STATS_JUMP_SH_MULT, 0x4C
@@ -121,6 +124,7 @@
 # Constants
 ################################################################################
 
+.set PLAYERBLOCKS, 0x80453080
 .set PLAYERBLOCK_0, 0x80453080
 .set PLAYERBLOCK_1, 0x80453f10
 .set PLAYERBLOCK_2, 0x80454da0
@@ -137,6 +141,7 @@
 .set SZ_BONE, 0x10
 .set SZ_HURTBOX, 0x4C
 .set SZ_HITBOX, 0x138
+.set SZ_PBLOCK, 0xE90
 
 .set P1, 0
 .set P2, 1

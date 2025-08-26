@@ -50,18 +50,15 @@ blrl
 .set REG_COUNT, 28
 .set REG_COLOR, 27
 .set REG_PANEL, 26
+.set REG_BLOCK, 25
 FN_FighterThink:
   backup
 
-  # init vars
+# init vars
   mr REG_GOBJ, r3
   lwz REG_FP, GOBJ_USERDATA(REG_GOBJ)
 
-  # check if we should apply a card
-  # lbz r0, FT_SLOT(REG_FP)
-  # mulli r0, r0, SRP_SIZE
-  # load REG_SRPD, stc_sr_plydata
-  # add REG_SRPD, REG_SRPD, r0
+# check if we should apply a card
   addi REG_SRPD, REG_FP, FT_SRP_OFST
   lwz r3, SRP_APPLY_CARD(REG_SRPD)
   cmpwi r3, FALSE
@@ -70,16 +67,35 @@ FN_FighterThink:
   addi REG_STATS, REG_FP, FT_STATS
   lwz REG_CARDS, SRP_CARDS(REG_SRPD)
 
+  load REG_BLOCK, PLAYERBLOCKS
+  lbz r0, FT_SLOT(REG_FP)
+  mulli r0, r0, SZ_PBLOCK
+  add REG_BLOCK, REG_BLOCK, r0
+
   # check applicable cards
   METAL: # metal first so we dont overwrite the other cards...
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
-    beq SHIELD_HP
+    beq KB_INCREASE
     mr r3, REG_GOBJ
     load r4, 0x7FFFFFFF
     mr r5, r4
     branchl r12, Item_Apply_Metal
     mr r3, REG_GOBJ
     branchl r12, Player_InitCharacterStats
+
+
+  KB_INCREASE:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBINC, 31-SR_CARD_KBINC
+    beq KB_DECREASE
+    lfs f1, RTOC_1_25(rtoc)
+    stfs f1, BLOCK_OFFENSE_RATIO(REG_BLOCK)
+
+  KB_DECREASE:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBDEC, 31-SR_CARD_KBDEC
+    beq SHIELD_HP
+    lfs f1, RTOC_0_8(rtoc)
+    stfs f1, BLOCK_DEFENSE_RATIO(REG_BLOCK)
+
 
   SHIELD_HP:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_SHIELDHP, 31-SR_CARD_SHIELDHP
