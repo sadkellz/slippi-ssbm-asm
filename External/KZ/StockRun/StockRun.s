@@ -27,8 +27,10 @@
 .set SRC_HOVER_STATE, SRC_ACTIVE_SLOT + 4           # int
 
 # StockRun Player
+.set FT_SRP_OFST, 9126
 .set SRP_CARDS, 0 # int bitfield
-.set SRP_APPLY_CARD, SRP_CARDS + 4 # will get applied by the proc
+.set SRP_APPLY_CARD, SRP_CARDS + 4 # bool4 - whether to apply card
+.set SRP_OPP_SLOT, SRP_APPLY_CARD + 4
 .set SRP_SIZE, SRP_APPLY_CARD + 4
 
 ################################################################################
@@ -96,7 +98,7 @@
 .set CARD_COUNT, 16 # also the number of replaced SIS entries we've made
 
 .set SR_STOCK_COUNT, 4
-.set SR_CRIT_CHANCE, 5 # 5% chance to crit
+.set SR_CRIT_CHANCE, 3 # 3% chance to crit
 .set SR_RARE_CHANCE, 25
 
 

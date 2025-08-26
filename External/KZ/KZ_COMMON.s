@@ -4,10 +4,12 @@
 # rtoc constants
 ################################################################################
 
-.set RTOC_DEG2RAD, -0x7b80 # 0.017453292
-.set RTOC_RAD2DEG, -0x76c4 # 57.29578
+.set RTOC_DEG2RAD, -0x7b80 # 0.017453292f
+.set RTOC_RAD2DEG, -0x76c4 # 57.29578f
 .set RTOC_STICKTHRESH, -0x3c98
-.set RTOC_M_PI, -0x7fb0 # pi
+.set RTOC_FLT_MAX, -0x771c
+.set RTOC_SCALE_256, -0x7740 # 1/256 - 0.0039059999f - converts a scaled short to a float
+.set RTOC_M_PI, -0x7fb0
 .set RTOC_N_0_5, -0x7bac
 .set RTOC_N_1_1, -0x125c
 .set RTOC_0, -0x1568

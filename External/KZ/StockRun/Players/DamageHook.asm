@@ -36,7 +36,7 @@ CODE_START:
   bne EXIT
 
   # roll for crit
-  li r3, SR_CRIT_CHANCE
+  li r3, 100
   branchl r12, HSD_Randi
   cmpwi r3, SR_CRIT_CHANCE
   bgt EXIT
