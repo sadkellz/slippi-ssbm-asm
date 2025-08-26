@@ -15,6 +15,7 @@
 .set RTOC_0_01, -0x7ebc
 .set RTOC_0_001, -0x7e88
 .set RTOC_0_015625, -0x7da8
+.set RTOC_0_25, -0x6644
 .set RTOC_0_5, -0x7bb0
 .set RTOC_0_75, -0x7d5c
 .set RTOC_0_95, -0x4a48

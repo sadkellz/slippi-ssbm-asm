@@ -42,7 +42,7 @@ CODE_START:
     beq INCREASE_KB_CHECK
     # logf LOG_LEVEL_ERROR, "Decrease KB"
     lfs f1, FT_HIT_KB(REG_FP)
-    lfs f0, RTOC_0_5(rtoc)
+    lfs f0, RTOC_0_25(rtoc)
     fmuls f1, f1, f0
     stfs f1, FT_HIT_KB(REG_FP)
 
@@ -52,7 +52,7 @@ CODE_START:
     beq DJ_ARMOUR_CHECK                      # branch if bit is NOT set
     # logf LOG_LEVEL_ERROR, "Increase KB"
     lfs f1, FT_HIT_KB(REG_FP)
-    lfs f0, RTOC_1_5(rtoc)
+    lfs f0, RTOC_1_25(rtoc)
     fmuls f1, f1, f0
     stfs f1, FT_HIT_KB(REG_FP)
 
