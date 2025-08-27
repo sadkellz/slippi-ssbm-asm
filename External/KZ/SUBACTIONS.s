@@ -19,17 +19,17 @@
   .set SA_CMD_STATE_SIZE, SA_CMD_STATE_STACK + 20
 
 # Event Scripts
-# Spawn Hitbox 
-.set SA_SCRIPT_HB_SPAWN_COMMAND,    0      # Byte 0: CCCC CCII (Command + Hitbox ID start)
-.set SA_SCRIPT_HB_SPAWN_INFO1,      0      # Bytes 0-3: Command, ID, Unknown-1, Bone, Unknown-2
-.set SA_SCRIPT_HB_SPAWN_DAMAGE,     3      # Byte 3: Damage
-.set SA_SCRIPT_HB_SPAWN_SIZE,       4      # Bytes 4-5: Size (16-bit)
-.set SA_SCRIPT_HB_SPAWN_OFST_Z,     6      # Bytes 6-7: Z-Offset (16-bit)  
-.set SA_SCRIPT_HB_SPAWN_OFST_Y,     8      # Bytes 8-9: Y-Offset (16-bit)
-.set SA_SCRIPT_HB_SPAWN_OFST_X,     10     # Bytes 10-11: X-Offset (16-bit)
-.set SA_SCRIPT_HB_SPAWN_INFO2,      12     # Bytes 12-15: Angle, KB Growth, Weight KB
-.set SA_SCRIPT_HB_SPAWN_INFO3,      16     # Bytes 16-19: Base KB, Element, Shield Dmg, SFX, etc.
-.set SA_SCRIPT_HB_SPAWN_STRUCT_SIZE, 20    # Total size: 20 bytes
+  # Spawn Hitbox 
+  .set SA_SCRIPT_HB_SPAWN_COMMAND,    0      # Byte 0: CCCC CCII (Command + Hitbox ID start)
+  .set SA_SCRIPT_HB_SPAWN_INFO1,      0      # Bytes 0-3: Command, ID, Unknown-1, Bone, Unknown-2
+  .set SA_SCRIPT_HB_SPAWN_DAMAGE,     3      # Byte 3: Damage
+  .set SA_SCRIPT_HB_SPAWN_SIZE,       4      # Bytes 4-5: Size (16-bit)
+  .set SA_SCRIPT_HB_SPAWN_OFST_Z,     6      # Bytes 6-7: Z-Offset (16-bit)  
+  .set SA_SCRIPT_HB_SPAWN_OFST_Y,     8      # Bytes 8-9: Y-Offset (16-bit)
+  .set SA_SCRIPT_HB_SPAWN_OFST_X,     10     # Bytes 10-11: X-Offset (16-bit)
+  .set SA_SCRIPT_HB_SPAWN_INFO2,      12     # Bytes 12-15: Angle, KB Growth, Weight KB
+  .set SA_SCRIPT_HB_SPAWN_INFO3,      16     # Bytes 16-19: Base KB, Element, Shield Dmg, SFX, etc.
+  .set SA_SCRIPT_HB_SPAWN_STRUCT_SIZE, 20    # Total size: 20 bytes
 
 
 ################################################################################

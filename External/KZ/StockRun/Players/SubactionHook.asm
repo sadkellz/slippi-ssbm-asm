@@ -40,7 +40,7 @@ CODE_START:
   backup_rng REG_RNG
 
 # get our cards
-  addi REG_SRPD, REG_FGP, FT_SRP_OFST
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
   lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
   cmpwi REG_EVENT, SA_EVENT_HITBOX_SPAWN
