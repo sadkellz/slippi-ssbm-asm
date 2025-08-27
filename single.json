@@ -8,12 +8,12 @@
   ],
   "codes": [
     {
-      "name": "StockRun - Alpha 2",
+      "name": "Stock Run - Alpha 3",
       "authors": [
         "KELLZ"
       ],
       "description": [
-        "StockRun is 1v1 roguelike mode built for Slippi"
+        "'Stock Run' is 1v1 roguelike mode built for Slippi"
       ],
       "build": [
         {

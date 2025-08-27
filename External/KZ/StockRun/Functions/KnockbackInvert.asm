@@ -45,12 +45,12 @@ CODE_START:
   branchl r12, memcpy
 
   GET_HB_ANGLE REG_ANGLE, REG_DATA
-  # logf LOG_LEVEL_ERROR, "angle: %d"
-  # logf LOG_LEVEL_ERROR, ""
+  mr r5, REG_ANGLE
+  logf LOG_LEVEL_ERROR, "Angle Before: %d"
 
   # sakurai angles need more thought...
   cmpwi REG_ANGLE, 361
-  beq EXIT
+  beq SAKURAI_ANGLE
   
   # add 180 and then normalize
     addi REG_ANGLE, REG_ANGLE, 180
@@ -70,6 +70,16 @@ CODE_START:
   load r3, stc_sr_subaction
   li r0, TRUE
   stw r0, SR_SA_RESTORE(r3)
+
+  b EXIT
+
+  SAKURAI_ANGLE:
+    # lets check if the angle will be 0 or 44.5 (44.5 is a compromise)
+
+
+  # mr r5, REG_ANGLE
+  # logf LOG_LEVEL_ERROR, "Angle After: %d"
+  # logf LOG_LEVEL_ERROR, ""
 
 EXIT:
   restore

@@ -22,7 +22,7 @@ blrl
 .float -8 # y-pos
 .float 0.06 # text size
 .long 0xFFFFFFFF # text color
-.string "Stock Run v0.1a2" # text
+.string "Stock Run v0.1a3" # text
 .set TITLE_SIZE, 16 + 17
 
 .set COPYRIGHT_TEXT_ENTRY, TITLE_TEXT_ENTRY + TITLE_SIZE
@@ -42,8 +42,8 @@ blrl
 .float -4 # y-pos
 .float 0.05 # text size
 .long 0xFF9C00FF # text color
-.string "Warning: Slippi Recording is enabled." # text
-.set TITLE_SIZE, 16 + 38
+.string "Warning: Slippi Recording Code is enabled." # text
+.set TITLE_SIZE, 16 + 43
 .align 2
 
 
