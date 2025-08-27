@@ -14,15 +14,37 @@
 .include "External/KZ/PLAYER.s"
 .include "External/KZ/SUBACTIONS.s"
 
+b CODE_START
+
+SCRIPT_BLRL:
+blrl
+.long 0
+.long 0
+.long 0
+.long 0
+.long 0
+.set SCRIPT_BACKUP, 20
+.long 0
+
 CODE_START:
 .set REG_FP, 31
-.set REG_SCRIPT, 30
+.set REG_CMD_STATE, 30
 .set REG_ANGLE, 29
+.set REG_DATA, 28
   backup
   mr REG_FP, r3
-  lwz REG_SCRIPT, 0x8(r4)
+  mr REG_CMD_STATE, r4
+  bl SCRIPT_BLRL
+  mflr REG_DATA
 
-  GET_HB_ANGLE REG_ANGLE, REG_SCRIPT
+  # copy script data
+  mr r3, REG_DATA
+  lwz r4, 0x8(REG_CMD_STATE) # script
+  stw r4, SCRIPT_BACKUP(REG_DATA)
+  li r5, 20
+  branchl r12, memcpy
+
+  GET_HB_ANGLE REG_ANGLE, REG_DATA
   # logf LOG_LEVEL_ERROR, "angle: %d"
   # logf LOG_LEVEL_ERROR, ""
 
@@ -41,7 +63,13 @@ CODE_START:
     bge SET_HITBOX
     add REG_ANGLE, REG_ANGLE, r4
   SET_HITBOX:
-    SET_HB_ANGLE REG_SCRIPT, REG_ANGLE
+    SET_HB_ANGLE REG_DATA, REG_ANGLE
+
+  # overwrite script
+  stw REG_DATA, 0x8(REG_CMD_STATE) 
+  load r3, stc_sr_subaction
+  li r0, TRUE
+  stw r0, SR_SA_RESTORE(r3)
 
 EXIT:
   restore

@@ -41,6 +41,7 @@
 .set stc_sr_data, 0x804a2f48
 .set stc_sr_sistable, 0x804a3048
 .set stc_sr_plydata, 0x804a304c # this has a size of SRP_SIZE * 4
+.set stc_sr_subaction, 0x804a3080
 
 # StockRun Game State
   .set SRGS_INIT, 0
@@ -103,6 +104,10 @@
   .set SR_STOCK_COUNT, 4
   .set SR_CRIT_CHANCE, 3 # 3% chance to crit
   .set SR_RARE_CHANCE, 25
+
+# Subaction Vars
+  .set SR_SA_RESTORE, 0
+  .set SR_SA_SCRIPT, SR_SA_RESTORE + 4
 
 
 ################################################################################

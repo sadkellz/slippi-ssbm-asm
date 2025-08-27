@@ -48,8 +48,9 @@ CODE_START:
 
   HITBOX_EVENT:
     INVERT_KB:
+    bp
       rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
-      beq EXIT
+      # beq EXIT
       mr r3, REG_FP
       mr r4, REG_CMD
       branchl r12, StockRunCard_KbInvert
