@@ -41,6 +41,7 @@ CODE_START:
   .set REG_PLY_COUNT, 28
   .set REG_COLOR, 27
   .set REG_PANEL, 26
+  .set REG_TEMP, 26
   backup
 
   bl DATA_BLRL
@@ -101,17 +102,32 @@ CODE_START:
     blt SET_ACTIVE_SLOTS_LOOP
 
 # store opponents fighter*
+bp
+  # get first slots fighter
   lwz r3, SRC_SLOT_ORDER(REG_DATA)
   branchl r12, PlayerBlock_GetGObj
-  lwz r3, GOBJ_USERDATA(r3)
-  lwz r4, SRC_SLOT_ORDER+4(REG_DATA)
-  stw r4, SRP_OPP_FP(r3)
+  lwz REG_TEMP, GOBJ_USERDATA(r3)
 
+  # get second slots fighter
   lwz r3, SRC_SLOT_ORDER+4(REG_DATA)
   branchl r12, PlayerBlock_GetGObj
   lwz r3, GOBJ_USERDATA(r3)
-  lwz r4, SRC_SLOT_ORDER(REG_DATA)
-  stw r4, SRP_OPP_FP(r3)
+  # srp offset
+  addi r3, r3, FT_SRP_OFST
+  stw REG_TEMP, SRP_OPP_FP(r3)
+# second slot
+  # get second slots fighter
+  lwz r3, SRC_SLOT_ORDER+4(REG_DATA)
+  branchl r12, PlayerBlock_GetGObj
+  lwz REG_TEMP, GOBJ_USERDATA(r3)
+
+  # get first slots fighter
+  lwz r3, SRC_SLOT_ORDER(REG_DATA)
+  branchl r12, PlayerBlock_GetGObj
+  lwz r3, GOBJ_USERDATA(r3)
+  # srp offset
+  addi r3, r3, FT_SRP_OFST
+  stw REG_TEMP, SRP_OPP_FP(r3)
     
 
 # setup camera blur

@@ -19,13 +19,7 @@ CODE_START:
   backup
   
   # init
-  # lbz REG_SLOT, FT_SLOT(REG_FP)
-  # load REG_SRPD, stc_sr_plydata
   addi REG_SRPD, REG_FP, FT_SRP_OFST
-
-  # this players data
-  # mulli r0, REG_SLOT, SRP_SIZE
-  # add r3, REG_SRPD, r0
   lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
   # SHIELD_DMG_CHECK:

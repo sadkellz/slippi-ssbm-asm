@@ -21,12 +21,11 @@ CODE_START:
   backup_rng REG_RNG
 
   lfs	FREG_DMG_MULT, 0x182C(REG_FP)
-  # load REG_SRPD, stc_sr_plydata
   addi REG_SRPD, REG_FP, FT_SRP_OFST
+
   # does attacker have crit hits?
-  lbz r3, FT_SLOT(REG_ATKER)
-  mulli r0, r3, SRP_SIZE
-  add r3, REG_SRPD, r0
+  lwz r3, SRP_OPP_FP(REG_SRPD)
+  addi r3, r3, FT_SRP_OFST
   lwz REG_FLAGS, SRP_CARDS(r3)
   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_CRIT, 31-SR_CARD_CRIT
   beq EXIT

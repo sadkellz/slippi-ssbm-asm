@@ -15,13 +15,7 @@
 .set REG_FLAGS, 7
 
 # no backup to reduce code size
-# lbz REG_SLOT, FT_SLOT(REG_FP)
-# load REG_SRPD, stc_sr_plydata
 addi REG_SRPD, REG_FP, FT_SRP_OFST
-
-# this players data
-# mulli r0, REG_SLOT, SRP_SIZE
-# add REG_FLAGS, REG_SRPD, r0
 lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
 rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_GRACE, 31-SR_CARD_GRACE

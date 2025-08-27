@@ -12,19 +12,12 @@
 CODE_START:
 # vars
 .set REG_FP, 31
-.set REG_SLOT, 30
-.set REG_SRPD, 29
-.set REG_FLAGS, 28
+.set REG_SRPD, 30
+.set REG_FLAGS, 29
   backup
   mr REG_FP, r3
   # init
-  lbz REG_SLOT, FT_SLOT(REG_FP)
-  # load REG_SRPD, stc_sr_plydata
   addi REG_SRPD, REG_FP, FT_SRP_OFST
-
-  # this players data
-  # mulli r0, REG_SLOT, SRP_SIZE
-  # add r3, REG_SRPD, r0
   lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
   li r3, FALSE
