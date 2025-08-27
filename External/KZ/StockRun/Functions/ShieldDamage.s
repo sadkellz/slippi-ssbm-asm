@@ -1,11 +1,11 @@
 ################################################################################
-# Address: 0x804a3128
+# Address: 0x804a312c
 ################################################################################
 # inputs:
 #   r3 - fp
 #   r4 - ft cmd state
 #------------------------------------------------------------------------------#
-# loops through pending hitboxes and inverts the kb
+# increases shield damage by 10?
 ################################################################################
 
 .include "./StockRun.s"
@@ -29,7 +29,7 @@ blrl
 CODE_START:
 .set REG_FP, 31
 .set REG_CMD_STATE, 30
-.set REG_ANGLE, 29
+.set REG_DMG, 29
 .set REG_DATA, 28
   backup
   mr REG_FP, r3
@@ -44,42 +44,15 @@ CODE_START:
   li r5, 20
   branchl r12, memcpy
 
-  GET_HB_ANGLE REG_ANGLE, REG_DATA
-  # mr r5, REG_ANGLE
-  # logf LOG_LEVEL_ERROR, "Angle Before: %d"
-
-  # sakurai angles need more thought...
-  cmpwi REG_ANGLE, 361
-  beq SAKURAI_ANGLE
-  
-  # add 180 and then normalize
-    addi REG_ANGLE, REG_ANGLE, 180
-    li r4, 360
-    divw r5, REG_ANGLE, r4
-    mullw r5, r5, r4
-    subf REG_ANGLE, r5, REG_ANGLE
-
-    cmpwi REG_ANGLE, 0
-    bge SET_HITBOX
-    add REG_ANGLE, REG_ANGLE, r4
-  SET_HITBOX:
-    SET_HB_ANGLE REG_DATA, REG_ANGLE
+  GET_HB_SHIELD_DAMAGE REG_DMG, REG_DATA
+  addi REG_DMG, REG_DMG, 10
+  SET_HB_SHIELD_DAMAGE REG_DATA, REG_DMG
 
   # overwrite script
   stw REG_DATA, 0x8(REG_CMD_STATE) 
   load r3, stc_sr_subaction
   li r0, TRUE
   stw r0, SR_SA_RESTORE(r3)
-
-  b EXIT
-
-  SAKURAI_ANGLE:
-    # lets check if the angle will be 0 or 44.5 (44.5 is a compromise)
-
-
-  # mr r5, REG_ANGLE
-  # logf LOG_LEVEL_ERROR, "Angle After: %d"
-  # logf LOG_LEVEL_ERROR, ""
 
 EXIT:
   restore

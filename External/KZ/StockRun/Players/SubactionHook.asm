@@ -53,7 +53,13 @@ CODE_START:
       mr r3, REG_FP
       mr r4, REG_CMD
       branchl r12, StockRunCard_KbInvert
-  
+
+    # SHIELD_DMG:
+    #   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
+    #   # beq EXIT
+    #   mr r3, REG_FP
+    #   mr r4, REG_CMD
+    #   branchl r12, StockRunCard_ShieldDmg
 
 EXIT:
   restore_rng REG_RNG

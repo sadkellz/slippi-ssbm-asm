@@ -116,39 +116,16 @@
     stw r0, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
 .endm
 
-.macro GET_HB_KB_GROWTH reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 18, 23, 31       # Extract bits 22-14 (9 bits) - Knockback Growth
+# SA_SCRIPT_HB_SPAWN_INFO3
+.macro GET_HB_SHIELD_DAMAGE reg, data_reg
+    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
+    rlwinm \reg, \reg, 22, 24, 31       # Extract bits 17-10 (8 bits)
 .endm
 
-.macro GET_HB_WEIGHT_KB reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 27, 23, 31       # Extract bits 13-5 (9 bits) - Weight Dependent Set Knockback
-.endm
-
-.macro GET_HB_FLAG_43B7 reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 28, 31, 31       # Extract bit 4 - Corresponds to Hitbox.0x43b7
-.endm
-
-.macro GET_HB_SPAWN_PREVENTABLE reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 29, 31, 31       # Extract bit 3 - Spawn-Preventable Hitbox
-.endm
-
-.macro GET_HB_FLAG_43B6 reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 30, 31, 31       # Extract bit 2 - Corresponds to Hitbox.0x43b6
-.endm
-
-.macro GET_HB_HITS_GROUNDED reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 31, 31, 31       # Extract bit 1 - Hits Grounded Foes
-.endm
-
-.macro GET_HB_HITS_AERIAL reg, data_reg
-    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
-    rlwinm \reg, \reg, 0, 31, 31        # Extract bit 0 - Hits Aerial Foes
+.macro SET_HB_SHIELD_DAMAGE data_reg, value_reg
+    lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
+    rlwimi r0, \value_reg, 10, 14, 21    # Insert 8 bits at position 10
+    stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
 .endm
 
 
