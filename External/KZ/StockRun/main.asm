@@ -100,7 +100,7 @@ CODE_START:
     cmpwi REG_COUNT, MAX_PORTS
     blt SET_ACTIVE_SLOTS_LOOP
 
-# store opponent fighter*
+# store opponents fighter*
   lwz r3, SRC_SLOT_ORDER(REG_DATA)
   branchl r12, PlayerBlock_GetGObj
   lwz r3, GOBJ_USERDATA(r3)

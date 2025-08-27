@@ -59,8 +59,8 @@
 .set HITBOX_STALED_DMG, HITBOX_DMG + 4 
 .set HITBOX_OFFSET, HITBOX_STALED_DMG + 4
 .set HITBOX_RADIUS, HITBOX_OFFSET + 12
-.set HITBOX_ANGLE, HITBOX_RADIUS + 4
-.set HITBOX_KBG, HITBOX_ANGLE + 4
+.set HITBOX_KBANGLE, HITBOX_RADIUS + 4
+.set HITBOX_KBG, HITBOX_KBANGLE + 4
 .set HITBOX_FKV, HITBOX_KBG + 4
 .set HITBOX_BKB, HITBOX_FKV + 4
 .set HITBOX_ELEMENT, HITBOX_BKB + 4
@@ -107,6 +107,7 @@
 .set Player_GetPosition, 0x80086644 # (HSD_GObjPlayer *gobj_player,Vec *vec)
 .set Player_IsDead, 0x8008732c
 .set Player_InitCharacterStats, 0x800d105c
+.set Fighter_SetAngle, 0x8007ac9c # (PlayerHitbox *hitbox,uint angle,HSD_GObjFighter *fgp)
 
 .set Kirby_LoadHatPrefunc, 0x80169c54 # (CharacterKind character,byte costume_id)
 .set Kirby_LoadHat, 0x80031da8 # (CharacterKind character,byte costume_id)

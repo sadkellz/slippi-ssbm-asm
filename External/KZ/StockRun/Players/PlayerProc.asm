@@ -83,19 +83,17 @@ FN_FighterThink:
     mr r3, REG_GOBJ
     branchl r12, Player_InitCharacterStats
 
-
-  KB_INCREASE:
+  KB_INCREASE: # Pak-A-Punch
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBINC, 31-SR_CARD_KBINC
     beq KB_DECREASE
     lfs f1, RTOC_1_25(rtoc)
     stfs f1, BLOCK_OFFENSE_RATIO(REG_BLOCK)
 
-  KB_DECREASE:
+  KB_DECREASE: # Flak Jacket
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBDEC, 31-SR_CARD_KBDEC
     beq SHIELD_HP
     lfs f1, RTOC_0_8(rtoc)
     stfs f1, BLOCK_DEFENSE_RATIO(REG_BLOCK)
-
 
   SHIELD_HP:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_SHIELDHP, 31-SR_CARD_SHIELDHP

@@ -6,7 +6,7 @@
   .set StockRun_RandomizeCards, 0x804a3120
   .set StockRun_DisplayCssText, 0x804a3124
 # Cards
-  .set StockRunCard_KbIncrease, 0x804a3128
+  .set StockRunCard_KbInvert, 0x804a3128
 
 ################################################################################
 # Structs

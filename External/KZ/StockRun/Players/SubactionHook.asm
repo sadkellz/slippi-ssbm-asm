@@ -1,15 +1,15 @@
 ################################################################################
-# Address: 0x8007332c
+# Address: 0x80073324
 ################################################################################
 
 ################################################################################
-# hooking here at the end of every subaction event lets us do a couple things
+# hooking here at the beginning of every subaction event lets us do a couple things
 # more efficiently...
 #   1 - instead of creating a bunch of hooks in across various functions, we can
-#       modify the data here before it gets used at those locations.
+#       modify the script data here before it gets processed at all.
 #   2 - we have immediate access to the fighters gobj.
-# ie: if the event was create hitbox, we could loop through all of the pending
-# hitboxes and modify its data.
+# ie: if the event is create hitbox, we can modify the stream before anything
+# touches it.
 #
 # reg notes:
 # the cmd loop needs r31-27 and f31-30
@@ -20,32 +20,45 @@
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/SUBACTIONS.s"
 
+  # original codeline
+  mtlr	r12
+
 # exit early if we dont have a fighter event
   cmpwi r28, 10
-  blt ORIGINAL_CODELINE
+  blt SKIP_EVENT
 
-b CODE_START
 
 CODE_START:
 .set REG_FP, 30
+.set REG_CMD, 29
 .set REG_EVENT, 28
 .set REG_FGP, 27
 .set REG_RNG, 26
 .set REG_SRPD, 25
 .set REG_FLAGS, 24
-  backup , 2 # backup f31-30
+  backup
   backup_rng REG_RNG
-  
+
 # get our cards
   addi REG_SRPD, REG_FGP, FT_SRP_OFST
   lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
   cmpwi REG_EVENT, SA_EVENT_HITBOX_SPAWN
   bne EXIT
+
+  HITBOX_EVENT:
+    INVERT_KB:
+      rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
+      beq EXIT
+      mr r3, REG_FP
+      mr r4, REG_CMD
+      branchl r12, StockRunCard_KbInvert
   
 
 EXIT:
   restore_rng REG_RNG
-  restore , 2
-  ORIGINAL_CODELINE:
-    lfs	f0, 0(r29)
+  restore
+SKIP_EVENT:
+  # unclobber vars
+  addi	r3, r27, 0
+  addi	r4, r29, 0
