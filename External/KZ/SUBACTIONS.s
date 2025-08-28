@@ -122,6 +122,18 @@
     rlwinm \reg, \reg, 22, 24, 31       # Extract bits 17-10 (8 bits)
 .endm
 
+.macro GET_ITEM_HB_SHIELD_DAMAGE reg, data_reg
+    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
+    rlwinm	\reg, \reg, 15, 0, 8 # (0001ff00)
+    srawi	\reg, \reg, 24
+.endm
+
+.macro SET_ITEM_HB_SHIELD_DAMAGE value_reg, data_reg
+    lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)  # Load current value
+    rlwimi r0, \value_reg, 9, 9, 17              # Insert bits 0-8 of value_reg into bits 9-17 of r0
+    stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)  # Store back
+.endm
+
 .macro SET_HB_SHIELD_DAMAGE data_reg, value_reg
     lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
     rlwimi r0, \value_reg, 10, 14, 21    # Insert 8 bits at position 10

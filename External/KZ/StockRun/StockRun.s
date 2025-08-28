@@ -7,7 +7,7 @@
   .set StockRun_DisplayCssText, 0x804a3124
 # Cards
   .set StockRunCard_HitboxEvent, 0x804a3128
-  .set StockRunCard_ShieldDmg, 0x804a312c
+  .set StockRunCard_ItemHitboxEvent, 0x804a312c
 
 ################################################################################
 # Structs
@@ -42,7 +42,8 @@
 .set stc_sr_data, 0x804a2f48
 .set stc_sr_sistable, 0x804a3048
 .set stc_sr_plydata, 0x804a304c # this has a size of SRP_SIZE * 4
-.set stc_sr_subaction, 0x804a3080
+.set stc_sr_sa_fighter, 0x804a3080
+.set stc_sr_sa_item, 0x804a30c0
 
 # StockRun Game State
   .set SRGS_INIT, 0
@@ -105,6 +106,7 @@
   .set SR_STOCK_COUNT, 4
   .set SR_CRIT_CHANCE, 3 # 3% chance to crit
   .set SR_RARE_CHANCE, 25
+  .set SR_SHIELD_DMG_AMT, 15
 
 # Subaction Vars
   .set SR_SA_RESTORE, 0

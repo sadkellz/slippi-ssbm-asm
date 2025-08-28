@@ -1,5 +1,5 @@
 ################################################################################
-# Address: 0x8007332c
+# Address: 0x80279ad0
 ################################################################################
 
 .include "./StockRun.s"
@@ -10,12 +10,12 @@
 
 CODE_START:
 .set REG_DATA, 31
-.set REG_FP, 30
+.set REG_ITEM, 30
 .set REG_CMD, 29
 .set REG_EVENT, 28
   backup
 
-  load REG_DATA, stc_sr_sa_fighter
+  load REG_DATA, stc_sr_sa_item
   lwz r0, SR_SA_RESTORE(REG_DATA)
   cmpwi r0, FALSE
   beq EXIT
@@ -23,7 +23,7 @@ CODE_START:
   # revert script
   lwz r3, 0x8(REG_CMD)
   lwz r3, 0(r3)
-  addi r3, r3, 20
+  addi r3, r3, 24
   stw r3, 0x8(REG_CMD)
 
   li r0, FALSE
@@ -32,4 +32,4 @@ CODE_START:
 
 EXIT:
   restore
-  lfs	f0, 0(r29)
+  branch r12, 0x80279a50
