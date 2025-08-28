@@ -37,9 +37,11 @@ CODE_START:
 .set REG_FP, 31
 .set REG_CMD_STATE, 30
 .set REG_ANGLE, 29
+.set REG_DMG, 29
 .set REG_DATA, 28
 .set REG_SRPD, 27
 .set REG_FLAGS, 26
+.set REG_CUSTOM, 25
   backup
   mr REG_FP, r3
   mr REG_CMD_STATE, r4
@@ -52,7 +54,7 @@ CODE_START:
 
   INVERT_KB:
     rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
-    beq EXIT
+    beq SHIELD_DMG
 
     # copy script data
     # mr r3, REG_DATA
@@ -61,12 +63,12 @@ CODE_START:
     # li r5, 20
     # branchl r12, memcpy
     COPY_SCRIPT_DATA REG_DATA, REG_CMD_STATE, 20
-
+    li REG_CUSTOM, TRUE
     GET_HB_ANGLE REG_ANGLE, REG_DATA
 
     # sakurai angles need more thought...
     cmpwi REG_ANGLE, 361
-    beq SAKURAI_ANGLE
+    beq SHIELD_DMG
     
     # add 180 and then normalize
       addi REG_ANGLE, REG_ANGLE, 180
@@ -87,10 +89,30 @@ CODE_START:
     li r0, TRUE
     stw r0, SR_SA_RESTORE(r3)
 
-    b EXIT
 
-    SAKURAI_ANGLE:
-      # lets check if the angle will be 0 or 44.5 (44.5 is a compromise)
+  SHIELD_DMG:
+    rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
+    beq EXIT
+
+    cmpwi REG_CUSTOM, TRUE
+    beq SHIELD_DMG_START
+    COPY_SCRIPT_DATA REG_DATA, REG_CMD_STATE, 20
+
+    SHIELD_DMG_START:
+    GET_HB_SHIELD_DAMAGE REG_DMG, REG_DATA
+    addi REG_DMG, REG_DMG, 10
+    SET_HB_SHIELD_DAMAGE REG_DATA, REG_DMG
+
+    cmpwi REG_CUSTOM, TRUE
+    beq SHIELD_DMG_END
+    # overwrite script
+    stw REG_DATA, 0x8(REG_CMD_STATE) 
+    load r3, stc_sr_subaction
+    li r0, TRUE
+    stw r0, SR_SA_RESTORE(r3)
+    SHIELD_DMG_END:
+
+
 
 EXIT:
   restore

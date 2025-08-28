@@ -128,7 +128,7 @@
     stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
 .endm
 
-
+# make sure the destination has room at the end for the original scripts pointer
 .macro COPY_SCRIPT_DATA reg_dest, reg_cmd, script_size
   mr r3, \reg_dest
   lwz r4, 0x8(\reg_cmd) # script
