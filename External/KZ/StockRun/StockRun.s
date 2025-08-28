@@ -148,9 +148,9 @@
   lwz \reg_seed, 0x5F90(\reg_seed)
 .endm
 
-.macro restore_rng reg_seed
-  lis r3, 0x804D
-  stw \reg_seed, 0x5F90(r3)
+.macro restore_rng reg_seed, reg_temp
+  lis \reg_temp, 0x804D
+  stw \reg_seed, 0x5F90(\reg_temp)
 .endm
 
 

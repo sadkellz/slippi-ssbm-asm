@@ -62,7 +62,7 @@ CODE_START:
     #   branchl r12, StockRunCard_ShieldDmg
 
 EXIT:
-  restore_rng REG_RNG
+  restore_rng REG_RNG, r3
   restore
 SKIP_EVENT:
   # unclobber vars

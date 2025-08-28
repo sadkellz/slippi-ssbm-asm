@@ -561,7 +561,7 @@ SR_SelectCard:
     mr r4, REG_CARDS
     lwz r5, SRC_ACTIVE_SLOT(REG_DATA)
     branchl r12, StockRun_RandomizeCards
-    restore_rng REG_RNG
+    restore_rng REG_RNG, r3
 
     # set text
     li REG_COUNT, 0
