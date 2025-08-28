@@ -129,6 +129,14 @@
 .endm
 
 
+.macro COPY_SCRIPT_DATA reg_dest, reg_cmd, script_size
+  mr r3, \reg_dest
+  lwz r4, 0x8(\reg_cmd) # script
+  stw r4, \script_size(\reg_dest)
+  li r5, \script_size
+  branchl r12, memcpy
+.endm
+
 
 .endif
 .set HEADER_SUBACTIONS, 1

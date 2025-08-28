@@ -40,19 +40,15 @@ CODE_START:
   backup_rng REG_RNG
 
 # get our cards
-  addi REG_SRPD, REG_FP, FT_SRP_OFST
-  lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
+
 
   cmpwi REG_EVENT, SA_EVENT_HITBOX_SPAWN
   bne EXIT
 
   HITBOX_EVENT:
-    INVERT_KB:
-      rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
-      beq EXIT
-      mr r3, REG_FP
-      mr r4, REG_CMD
-      branchl r12, StockRunCard_KbInvert
+    mr r3, REG_FP
+    mr r4, REG_CMD
+    branchl r12, StockRunCard_HitboxEvent
 
     # SHIELD_DMG:
     #   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG

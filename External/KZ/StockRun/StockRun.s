@@ -6,7 +6,7 @@
   .set StockRun_RandomizeCards, 0x804a3120
   .set StockRun_DisplayCssText, 0x804a3124
 # Cards
-  .set StockRunCard_KbInvert, 0x804a3128
+  .set StockRunCard_HitboxEvent, 0x804a3128
   .set StockRunCard_ShieldDmg, 0x804a312c
 
 ################################################################################
@@ -108,7 +108,7 @@
 
 # Subaction Vars
   .set SR_SA_RESTORE, 0
-  .set SR_SA_SCRIPT, SR_SA_RESTORE + 4
+  .set SR_SA_SCRIPT_HITBOX, SR_SA_RESTORE + 4
   .set SR_SA_SIZE, SR_SA_SCRIPT + 4
 
   .set SR_SA_TYPE_HITBOX, 0
