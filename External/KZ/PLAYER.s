@@ -10,6 +10,7 @@
 .set FT_SLOT, FT_SPAWNCOUNT + 4
 .set FT_ACTION_STATE, 0x10
 .set FT_FACING_DIR, 0x2C
+.set FT_POS, 0xB0
 .set FT_BONES, 0x5E8
 .set FT_HIT_KB, 0x1850
 .set FT_HURTBOXES, 0x11A0
@@ -25,6 +26,7 @@
 .set FT_HIT_DATA, 0x1844
 .set FT_FLAGS4, 0x221B
 .set FT_CHARGE_AMT, 0x2230
+.set FT_ITEM_TIMERS, 0x2004
 
 .set BLOCK_OFFENSE_RATIO, 0x54
 .set BLOCK_DEFENSE_RATIO, 0x58
@@ -118,6 +120,7 @@
 
 .set Item_Apply_Metal, 0x800c8348
 .set Item_Apply_Cloak, 0x800c88d4
+.set Item_BunnyHood_Apply, 0x8007fa58 # (HSD_GObjFighter *fgp,HSD_GObjItem *igp)
 
 .set AS_TurnRun, 0x800c9d94
 .set AS_SmashTurn, 0x800c9c74

@@ -102,7 +102,6 @@ PROCESS_MODIFICATIONS:
     cmpwi REG_TEMP, SA_HB_TYPE_GRAB
     bne APPLY_MODIFICATIONS
 
-    bp
     li r3, 0
     li r4, ITEM_KIND_KURIBOH
     lwz r5, 0(REG_FP)

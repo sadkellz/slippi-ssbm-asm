@@ -5,6 +5,8 @@
 # r3 - Spawn Position (Vec3*)
 # r4 - Item Kind
 # r5 - Owner (GObj*)
+# Outputs:
+# r3 - Item (GObj*)
 ################################################################################
 
 .include "External/KZ/StockRun/StockRun.s"
@@ -59,5 +61,6 @@ CODE_START:
     stb r0, ITEM_FLAGS6(REG_ITEM)
 
 EXIT:
+  mr r3, REG_IGP
   restore
   blr

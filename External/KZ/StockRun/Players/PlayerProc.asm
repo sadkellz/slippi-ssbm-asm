@@ -85,7 +85,24 @@ FN_FighterThink:
 
 
   # check applicable cards
-  METAL: # metal first so we dont overwrite the other cards...
+  # items first because of InitCharacterStats
+  BUNNYHOOD:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_BUNNYHOOD, 31-SR_CARD_BUNNYHOOD
+    beq METAL
+    # have to spawn the hood first...
+    addi r3, REG_FP, FT_POS
+    li r4, ITEM_KIND_RABBITC
+    branchl r12, StockRunCard_SpawnItem
+    mr r4, r3
+    mr r3, REG_FGP
+    branchl r12, Item_BunnyHood_Apply
+    mr r3, REG_FGP
+    branchl r12, Player_InitCharacterStats
+    addi r3, REG_FP, FT_ITEM_TIMERS
+    load r4, 0x7FFFFFFF
+    stw r4, ITEM_TIMER_BUNNYHOOD(r3)
+
+  METAL:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
     beq KB_INCREASE
     mr r3, REG_FGP
@@ -94,6 +111,7 @@ FN_FighterThink:
     branchl r12, Item_Apply_Metal
     mr r3, REG_FGP
     branchl r12, Player_InitCharacterStats
+  
 
   KB_INCREASE: # Pak-A-Punch
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBINC, 31-SR_CARD_KBINC
