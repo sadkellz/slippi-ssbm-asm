@@ -1,5 +1,5 @@
 ################################################################################
-# Address: 0x804a3124
+# Address: StockRun_DisplayCssText
 ################################################################################
 
 .include "Common/Common.s"
@@ -22,7 +22,7 @@ blrl
 .float -8 # y-pos
 .float 0.06 # text size
 .long 0xFFFFFFFF # text color
-.string "Stock Run v0.1a3" # text
+.string "Stock Run v0.1a4" # text
 .set TITLE_SIZE, 16 + 17
 
 .set COPYRIGHT_TEXT_ENTRY, TITLE_TEXT_ENTRY + TITLE_SIZE

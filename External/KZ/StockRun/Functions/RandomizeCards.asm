@@ -1,5 +1,5 @@
 ################################################################################
-# Address: 0x804a3120
+# Address: StockRun_RandomizeCards
 # r3 = max
 # r4 = int array[4]
 # r5 = player slot
@@ -63,6 +63,14 @@ CODE_START:
     # Rare% × 4 / Card count
     RARE_CARD_CHECK:
       cmpwi REG_I, SR_CARD_GRACE
+      beq RARE_CARD_ROLL
+      cmpwi REG_I, SR_CARD_DARKNESS
+      beq RARE_CARD_ROLL
+      cmpwi REG_I, SR_CARD_ELECTRIC
+      beq RARE_CARD_ROLL
+      cmpwi REG_I, SR_CARD_FIRE
+      beq RARE_CARD_ROLL
+      cmpwi REG_I, SR_CARD_ICE
       beq RARE_CARD_ROLL
       b ADD_TO_POOL               # not rare, add normally
 

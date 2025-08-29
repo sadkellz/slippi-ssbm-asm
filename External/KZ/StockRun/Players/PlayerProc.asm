@@ -8,6 +8,7 @@
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_GOBJ.s"
 .include "External/KZ/HSD_JOBJ.s"
+.include "External/KZ/HSD_ITEM.s"
 .include "External/KZ/PLAYER.s"
 
 b CODE_START
@@ -15,20 +16,20 @@ b CODE_START
 # Init
 #==============================================================================#
 CODE_START:
-.set REG_GOBJ, 31
+.set REG_FGP, 31
   backup
 
-  mr r3, REG_GOBJ
+  mr r3, REG_FGP
   bl FN_FighterThinkBLRL
   mflr r4
   li r5, 0
   branchl r12, GObj_AddProc
 
-  mr r5, REG_GOBJ
+  mr r5, REG_FGP
   logf LOG_LEVEL_ERROR, "Fighter GOBJ: %08x\n"
 
   # zero out our SRP data
-  lwz r3, GOBJ_USERDATA(REG_GOBJ)
+  lwz r3, GOBJ_USERDATA(REG_FGP)
   addi r3, r3, FT_SRP_OFST
   li r4, SRP_SIZE
   branchl r12, memzero
@@ -42,7 +43,7 @@ CODE_START:
 #------------------------------------------------------------------------------#
 FN_FighterThinkBLRL:
 blrl
-.set REG_GOBJ, 31
+.set REG_FGP, 31
 .set REG_FP, 30
 .set REG_SRPD, 29
 .set REG_CARDS, 28
@@ -55,8 +56,8 @@ FN_FighterThink:
   backup
 
 # init vars
-  mr REG_GOBJ, r3
-  lwz REG_FP, GOBJ_USERDATA(REG_GOBJ)
+  mr REG_FGP, r3
+  lwz REG_FP, GOBJ_USERDATA(REG_FGP)
   addi REG_SRPD, REG_FP, FT_SRP_OFST
 
   load REG_BLOCK, PLAYERBLOCKS
@@ -87,11 +88,11 @@ FN_FighterThink:
   METAL: # metal first so we dont overwrite the other cards...
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
     beq KB_INCREASE
-    mr r3, REG_GOBJ
+    mr r3, REG_FGP
     load r4, 0x7FFFFFFF
     mr r5, r4
     branchl r12, Item_Apply_Metal
-    mr r3, REG_GOBJ
+    mr r3, REG_FGP
     branchl r12, Player_InitCharacterStats
 
   KB_INCREASE: # Pak-A-Punch
@@ -145,12 +146,12 @@ FN_FighterThink:
     beq GRACE
     load r4, 0x7FFFFFFF
     mr r5, r4
-    mr r3, REG_GOBJ
+    mr r3, REG_FGP
     branchl r12, Item_Apply_Cloak
 
   GRACE:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_GRACE, 31-SR_CARD_GRACE
-    beq FN_FighterThink_Exit
+    beq ALLIED_GOOMBA
     lfs f1, RTOC_1(rtoc)
     stfs f1, STATS_LAG_LAND(REG_STATS)
     stfs f1, STATS_LAG_NAIR(REG_STATS)
@@ -158,6 +159,17 @@ FN_FighterThink:
     stfs f1, STATS_LAG_BAIR(REG_STATS)
     stfs f1, STATS_LAG_UAIR(REG_STATS)
     stfs f1, STATS_LAG_DAIR(REG_STATS)
+
+  ALLIED_GOOMBA:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_ALLIED_GOOMBA, 31-SR_CARD_ALLIED_GOOMBA
+    beq FN_FighterThink_Exit
+    lwz r3, FT_CID(REG_FP)
+    cmpwi r3, 0xB # Nana shouldnt spawn an item as well...
+    beq FN_FighterThink_Exit
+    li r3, 0
+    li r4, ITEM_KIND_KURIBOH
+    mr r5, REG_FGP
+    branchl r12, StockRunCard_SpawnItem
 
 
 FN_FighterThink_Exit:

@@ -1,5 +1,5 @@
 ################################################################################
-# Address: 0x804a3128
+# Address: StockRunCard_HitboxEvent
 ################################################################################
 # inputs:
 #   r3 - fp
@@ -18,6 +18,7 @@
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/PLAYER.s"
+.include "External/KZ/HSD_ITEM.s"
 .include "External/KZ/SUBACTIONS.s"
 
 b CODE_START
@@ -54,7 +55,7 @@ CODE_START:
   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
   bne PROCESS_MODIFICATIONS
   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
-  beq EXIT
+  # beq EXIT
   
 
 PROCESS_MODIFICATIONS:
@@ -96,10 +97,16 @@ PROCESS_MODIFICATIONS:
     # rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_EXTGRAB, 31-SR_CARD_EXTGRAB
     # beq APPLY_MODIFICATIONS
 
-    # # get element type
-    # GET_HB_ELEMENT REG_TEMP, REG_DATA
-    # cmpwi REG_TEMP, SA_HB_TYPE_GRAB
-    # bne APPLY_MODIFICATIONS
+    # get element type
+    GET_HB_ELEMENT REG_TEMP, REG_DATA
+    cmpwi REG_TEMP, SA_HB_TYPE_GRAB
+    bne APPLY_MODIFICATIONS
+
+    bp
+    li r3, 0
+    li r4, ITEM_KIND_KURIBOH
+    lwz r5, 0(REG_FP)
+    branchl r12, StockRunCard_SpawnItem
 
     # GET_HB_OFFSET_X REG_TEMP, REG_DATA
     # lfs f0, FT_FACING_DIR(REG_FP)

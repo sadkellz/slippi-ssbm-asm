@@ -23,6 +23,14 @@ b SIS_DJARMOUR
 b SIS_EXTGRAB
 b SIS_GRACE
 b SIS_INVERTED_KB
+b SIS_ALLIED_GOOMBA
+b SIS_BUNNYHOOD
+b SIS_LUCKY
+b SIS_AWDI
+b SIS_DARKNESS
+b SIS_ELECTRIC
+b SIS_FIRE
+b SIS_ICE
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -464,4 +472,217 @@ blrl
 .long 0x35203720
 .long 0x28202720
 .long 0xE7190F00
+.long 0
+
+SIS_ALLIED_GOOMBA:
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03200A20
+.long 0x2F202F20
+.long 0x2C202820
+.long 0x271A2010
+.long 0x20322032
+.long 0x20302025
+.long 0x20240303
+.long 0x0CAAAAAA
+.long 0x1016201D
+.long 0x202B2028
+.long 0x1A202B20
+.long 0x32203020
+.long 0x2C202820
+.long 0xE7190F00
+.long 0
+
+SIS_BUNNYHOOD: # The Hare
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201D20
+.long 0x2B20281A
+.long 0x20112024
+.long 0x20352028
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x200B2028
+.long 0x20262032
+.long 0x20302028
+.long 0x1A20241A
+.long 0x20252038
+.long 0x20312031
+.long 0x203C1A20
+.long 0x3220291A
+.long 0x20362032
+.long 0x20352037
+.long 0x203620E7
+.long 0x190F0000
+.long 0
+
+SIS_LUCKY: # Lucky Cat
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201520
+.long 0x38202620
+.long 0x2E203C1A
+.long 0x200C2024
+.long 0x20370303
+.long 0x0CAAAAAA
+.long 0x10162022
+.long 0x20322038
+.long 0x20351A20
+.long 0x26202B20
+.long 0x24203120
+.long 0x26202820
+.long 0x361A2024
+.long 0x20352028
+.long 0x1A202C20
+.long 0x30203320
+.long 0x35203220
+.long 0x39202820
+.long 0x2720E719
+.long 0x0F000000
+.long 0
+
+SIS_AWDI:
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03200A20
+.long 0x20200D20
+.long 0x1203030C
+.long 0xAAAAAA10
+.long 0x16200A20
+.long 0x38203720
+.long 0x32203020
+.long 0x24203720
+.long 0x2C20261A
+.long 0x2020202C
+.long 0x203D203D
+.long 0x20352032
+.long 0x20252028
+.long 0x03200D20
+.long 0x2C203520
+.long 0x28202620
+.long 0x37202C20
+.long 0x32203120
+.long 0x24202F1A
+.long 0x20122031
+.long 0x2029202F
+.long 0x20382028
+.long 0x20312026
+.long 0x2028190F
+.long 0
+
+SIS_DARKNESS: # Gravelord's Mircale
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x030CFAD7
+.long 0x3C201020
+.long 0x35202420
+.long 0x39202820
+.long 0x2F203220
+.long 0x35202720
+.long 0x361A2016
+.long 0x202C2035
+.long 0x20242026
+.long 0x202F2028
+.long 0x03030CFF
+.long 0xFFFF1016
+.long 0x20162032
+.long 0x20392028
+.long 0x20361A20
+.long 0x24203520
+.long 0x281A202C
+.long 0x20302025
+.long 0x20382028
+.long 0x20270320
+.long 0x3A202C20
+.long 0x37202B1A
+.long 0x20272024
+.long 0x2035202E
+.long 0x20312028
+.long 0x20362036
+.long 0x20E7190F
+.long 0
+
+SIS_ELECTRIC: # Shocking
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x030CFAD7
+.long 0x3C201C20
+.long 0x2B203220
+.long 0x26202E20
+.long 0x2C203120
+.long 0x2A03030C
+.long 0xFFFFFF10
+.long 0x16201620
+.long 0x32203920
+.long 0x2820361A
+.long 0x20252028
+.long 0x20262032
+.long 0x20302028
+.long 0x03202820
+.long 0x2F202820
+.long 0x26203720
+.long 0x35202C20
+.long 0x26202420
+.long 0x2F202F20
+.long 0x3C1A2026
+.long 0x202B2024
+.long 0x2035202A
+.long 0x20282027
+.long 0x20E7190F
+.long 0
+
+SIS_FIRE: # Supa Hot
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x030CFAD7
+.long 0x3C201C20
+.long 0x38203320
+.long 0x241A2011
+.long 0x20322037
+.long 0x03030CFF
+.long 0xFFFF1016
+.long 0x20162032
+.long 0x20392028
+.long 0x20361A20
+.long 0x36203320
+.long 0x2C203703
+.long 0x202B2032
+.long 0x20371A20
+.long 0x29202C20
+.long 0x35202820
+.long 0xE7190F00
+.long 0
+
+SIS_ICE: # Bitter
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x030CFAD7
+.long 0x3C200B20
+.long 0x2C203720
+.long 0x37202820
+.long 0x3503030C
+.long 0xFFFFFF10
+.long 0x16201620
+.long 0x32203920
+.long 0x2820361A
+.long 0x202B2024
+.long 0x20392028
+.long 0x1A202403
+.long 0x2026202B
+.long 0x202C202F
+.long 0x202F202C
+.long 0x2031202A
+.long 0x1A202820
+.long 0x29202920
+.long 0x28202620
+.long 0x3720E719
+.long 0x0F000000
 .long 0

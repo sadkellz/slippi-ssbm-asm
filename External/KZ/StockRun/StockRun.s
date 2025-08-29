@@ -8,6 +8,7 @@
 # Cards
   .set StockRunCard_HitboxEvent, 0x804a3128
   .set StockRunCard_ItemHitboxEvent, 0x804a312c
+  .set StockRunCard_SpawnItem, 0x804a3130
 
 ################################################################################
 # Structs
@@ -101,7 +102,15 @@
   .set SR_CARD_EXTGRAB, 13
   .set SR_CARD_GRACE, 14
   .set SR_CARD_KBINV, 15
-  .set CARD_COUNT, 16 # also the number of replaced SIS entries we've made
+  .set SR_CARD_ALLIED_GOOMBA, 16
+  .set SR_CARD_BUNNYHOOD, 17
+  .set SR_CARD_LUCKY, 18
+  .set SR_CARD_AWDI, 19
+  .set SR_CARD_DARKNESS, 20
+  .set SR_CARD_ELECTRIC, 21
+  .set SR_CARD_FIRE, 22
+  .set SR_CARD_ICE, 23
+  .set CARD_COUNT, 24 # also the number of replaced SIS entries we've made
 
 # StockRun Vars
   .set SR_STOCK_COUNT, 4
