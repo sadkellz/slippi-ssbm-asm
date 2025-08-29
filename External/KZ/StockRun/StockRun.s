@@ -104,13 +104,12 @@
   .set SR_CARD_KBINV, 15
   .set SR_CARD_ALLIED_GOOMBA, 16
   .set SR_CARD_BUNNYHOOD, 17
-  .set SR_CARD_LUCKY, 18
-  .set SR_CARD_AWDI, 19
-  .set SR_CARD_DARKNESS, 20
-  .set SR_CARD_ELECTRIC, 21
-  .set SR_CARD_FIRE, 22
-  .set SR_CARD_ICE, 23
-  .set CARD_COUNT, 24 # also the number of replaced SIS entries we've made
+  .set SR_CARD_AWDI, 18
+  .set SR_CARD_DARKNESS, 19
+  .set SR_CARD_ELECTRIC, 20
+  .set SR_CARD_FIRE, 21
+  .set SR_CARD_ICE, 22
+  .set CARD_COUNT, 23 # also the number of replaced SIS entries we've made
 
 # StockRun Vars
   .set SR_STOCK_COUNT, 4
