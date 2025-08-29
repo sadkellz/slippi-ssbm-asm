@@ -31,7 +31,6 @@ b SIS_ELECTRIC
 b SIS_FIRE
 b SIS_ICE
 b SIS_GLASSCANNON
-b SIS_ACTAIRDODGE
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -695,28 +694,4 @@ blrl
 .long 0x2C202820
 .long 0x3620E719
 .long 0x0F000000
-.long 0
-
-SIS_ACTAIRDODGE: # Aetherverse
-blrl
-.long 0x0E001400
-.long 0x14101618
-.long 0x03200A20
-.long 0x28203720
-.long 0x2B202820
-.long 0x35203920
-.long 0x28203520
-.long 0x36202803
-.long 0x030CAAAA
-.long 0xAA101620
-.long 0x0A202620
-.long 0x371A2032
-.long 0x20382037
-.long 0x1A203220
-.long 0x291A2024
-.long 0x202C2035
-.long 0x20272032
-.long 0x2027202A
-.long 0x202820E7
-.long 0x190F0000
 .long 0

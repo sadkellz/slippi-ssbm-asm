@@ -110,8 +110,7 @@
   .set SR_CARD_FIRE, 21
   .set SR_CARD_ICE, 22
   .set SR_CARD_GLASSCANNON, 23
-  .set SR_CARD_ACTAIRDODGE, 24
-  .set CARD_COUNT, 25 # also the number of replaced SIS entries we've made
+  .set CARD_COUNT, 24 # also the number of replaced SIS entries we've made
 
 # StockRun Vars
   .set SR_STOCK_COUNT, 4
