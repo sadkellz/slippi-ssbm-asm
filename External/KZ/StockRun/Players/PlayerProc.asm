@@ -57,9 +57,25 @@ FN_FighterThink:
 # init vars
   mr REG_GOBJ, r3
   lwz REG_FP, GOBJ_USERDATA(REG_GOBJ)
+  addi REG_SRPD, REG_FP, FT_SRP_OFST
+
+  load REG_BLOCK, PLAYERBLOCKS
+  lbz r0, FT_SLOT(REG_FP)
+  mulli r0, r0, SZ_PBLOCK
+  add REG_BLOCK, REG_BLOCK, r0
+
+# copy the cards to the subchar
+bp
+  lwz r3, 0xB4(REG_BLOCK)
+  cmplwi r3, 0
+  beq SKIP_SUBCHAR
+  lwz r3, GOBJ_USERDATA(r3)
+  addi r3, r3, FT_SRP_OFST
+  lwz r0, SRP_CARDS(REG_SRPD)
+  stw r0, SRP_CARDS(r3)
+  SKIP_SUBCHAR:
 
 # check if we should apply a card
-  addi REG_SRPD, REG_FP, FT_SRP_OFST
   lwz r3, SRP_APPLY_CARD(REG_SRPD)
   cmpwi r3, FALSE
   beq FN_FighterThink_Exit
@@ -67,10 +83,6 @@ FN_FighterThink:
   addi REG_STATS, REG_FP, FT_STATS
   lwz REG_CARDS, SRP_CARDS(REG_SRPD)
 
-  load REG_BLOCK, PLAYERBLOCKS
-  lbz r0, FT_SLOT(REG_FP)
-  mulli r0, r0, SZ_PBLOCK
-  add REG_BLOCK, REG_BLOCK, r0
 
   # check applicable cards
   METAL: # metal first so we dont overwrite the other cards...

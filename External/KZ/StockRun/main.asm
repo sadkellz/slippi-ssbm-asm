@@ -496,6 +496,7 @@ SR_SelectCard:
 .set REG_TEXT, 18
 .set REG_RNG, 19
 .set REG_FP, 20
+.set REG_BLOCK, 21
   backup
   # get fighter data
   lwz r3, SRC_ACTIVE_SLOT(REG_DATA)
@@ -544,6 +545,19 @@ SR_SelectCard:
     lwz r3, SRP_NUM_CARDS(r6)
     addi r3, r3, 1
     stw r3, SRP_NUM_CARDS(r6)
+
+    # update subchar if there is one
+    load r3, PLAYERBLOCKS
+    lbz r0, FT_SLOT(REG_FP)
+    mulli r0, r0, SZ_PBLOCK
+    add r3, r3, r0
+    lwz r3, 0xB4(r3)
+    cmplwi r3, 0
+    beq UPDATE_STATE
+    lwz r3, GOBJ_USERDATA(r3)
+    addi r3, r3, FT_SRP_OFST
+    li r0, TRUE
+    stw r0, SRP_APPLY_CARD(r3)
 
 
   UPDATE_STATE:
