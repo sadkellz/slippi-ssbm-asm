@@ -95,9 +95,10 @@ FN_FighterThink:
     branchl r12, StockRunCard_SpawnItem
     mr r4, r3
     mr r3, REG_FGP
-    branchl r12, Item_BunnyHood_Apply
-    mr r3, REG_FGP
-    branchl r12, Player_InitCharacterStats
+    branchl r12, Player_GiveItem
+    # branchl r12, Item_BunnyHood_Apply
+    # mr r3, REG_FGP
+    # branchl r12, Player_InitCharacterStats
     addi r3, REG_FP, FT_ITEM_TIMERS
     load r4, 0x7FFFFFFF
     stw r4, ITEM_TIMER_BUNNYHOOD(r3)

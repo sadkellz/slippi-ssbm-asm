@@ -4,6 +4,8 @@
 ################################################################################
 .set TrainingMenu_CreateItem, 0x8026d258 # (Vec *position,ItemType type) - patched to return item gobj @ r4
 .set Item_GenerateSpawnLocation, 0x80224fdc # (Vec *out)
+.set Items_ApplyInstantItem, 0x8009447c # (HSD_GObjFighter *param_1,HSD_GObjItem *param_2)
+.set Player_GiveItem, 0x800d6f58 # (HSD_GObjFighter *param_1,HSD_GObjItem *param_2)
 
 
 ################################################################################
