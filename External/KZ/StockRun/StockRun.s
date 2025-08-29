@@ -109,13 +109,16 @@
   .set SR_CARD_ELECTRIC, 20
   .set SR_CARD_FIRE, 21
   .set SR_CARD_ICE, 22
-  .set CARD_COUNT, 23 # also the number of replaced SIS entries we've made
+  .set SR_CARD_GLASSCANNON, 23
+  .set SR_CARD_ACTAIRDODGE, 24
+  .set CARD_COUNT, 25 # also the number of replaced SIS entries we've made
 
 # StockRun Vars
   .set SR_STOCK_COUNT, 4
   .set SR_CRIT_CHANCE, 3 # 3% chance to crit
   .set SR_RARE_CHANCE, 25
   .set SR_SHIELD_DMG_AMT, 15
+  .set SR_CRIT_CHANCE_GLASS, 10
 
 # Subaction Vars
   .set SR_SA_RESTORE, 0

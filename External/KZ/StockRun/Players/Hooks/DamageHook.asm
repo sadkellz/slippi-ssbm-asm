@@ -15,6 +15,7 @@ CODE_START:
 .set REG_SRPD, 20
 .set REG_FLAGS, 21
 .set REG_RNG, 22
+.set REG_CRIT_CHANCE, 23
 # floats
 .set FREG_DMG_MULT, 20
   backup
@@ -22,7 +23,25 @@ CODE_START:
 
   lfs	FREG_DMG_MULT, 0x182C(REG_FP)
   addi REG_SRPD, REG_FP, FT_SRP_OFST
+  li REG_CRIT_CHANCE, SR_CRIT_CHANCE
 
+  # glass cannon?
+  lwz r3, SRP_CARDS(REG_SRPD)
+  rlwinm. r0, r3, 0, 31-SR_CARD_GLASSCANNON, 31-SR_CARD_GLASSCANNON
+  beq GLASS_OPP
+    li REG_CRIT_CHANCE, SR_CRIT_CHANCE_GLASS
+    b CRIT_CHECK_STATE
+  GLASS_OPP:
+    lwz r3, SRP_OPP_FP(REG_SRPD)
+    addi r3, r3, FT_SRP_OFST
+    lwz r3, SRP_CARDS(r3)
+    rlwinm. r0, r3, 0, 31-SR_CARD_GLASSCANNON, 31-SR_CARD_GLASSCANNON
+    beq CRIT_CHECK
+      li REG_CRIT_CHANCE, SR_CRIT_CHANCE_GLASS
+      b CRIT_CHECK_STATE
+
+
+CRIT_CHECK:
   # does attacker have crit hits?
   lwz r3, SRP_OPP_FP(REG_SRPD)
   addi r3, r3, FT_SRP_OFST
@@ -31,27 +50,29 @@ CODE_START:
   beq EXIT
 
   # is attacker in a state to crit
-  lbz r3, FT_FLAGS4(REG_ATKER)
-  rlwinm. r0, r3, 0, 31-2, 31-2
-  bne EXIT
+  CRIT_CHECK_STATE:
+    lbz r3, FT_FLAGS4(REG_ATKER)
+    rlwinm. r0, r3, 0, 31-2, 31-2
+    bne EXIT
 
-  # roll for crit
-  li r3, 100
-  branchl r12, HSD_Randi
-  cmpwi r3, SR_CRIT_CHANCE
-  bgt EXIT
+    # roll for crit
+    li r3, 100
+    ROLL:
+      branchl r12, HSD_Randi
+      cmpw r3, REG_CRIT_CHANCE
+      bgt EXIT
 
-  # crit hit
-  lfs f0, RTOC_10(rtoc)
-  fmuls FREG_DMG_MULT, FREG_DMG_MULT, f0
-  stfs FREG_DMG_MULT, 0x182C(REG_FP)
-  
-  # play crit sfx
-  li r3, 223
-  li r4, 127
-  li r5, 64
-  load r6, 0xFFFFFFFF
-  branchl r12, SFX_HitboxSFX
+    # crit hit
+    lfs f0, RTOC_10(rtoc)
+    fmuls FREG_DMG_MULT, FREG_DMG_MULT, f0
+    stfs FREG_DMG_MULT, 0x182C(REG_FP)
+    
+    # play crit sfx
+    li r3, 223
+    li r4, 127
+    li r5, 64
+    load r6, 0xFFFFFFFF
+    branchl r12, SFX_HitboxSFX
 
 
 EXIT:

@@ -30,6 +30,8 @@ b SIS_DARKNESS
 b SIS_ELECTRIC
 b SIS_FIRE
 b SIS_ICE
+b SIS_GLASSCANNON
+b SIS_ACTAIRDODGE
 
 SIS_KBINC: # Pack-A-Punch
 blrl
@@ -658,4 +660,63 @@ blrl
 .long 0x28202620
 .long 0x3720E719
 .long 0x0F000000
+.long 0
+
+SIS_GLASSCANNON:
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03201020
+.long 0x2F202420
+.long 0x3620361A
+.long 0x200C2024
+.long 0x20312031
+.long 0x20322031
+.long 0x03030CAA
+.long 0xAAAA1016
+.long 0x20102032
+.long 0x20322027
+.long 0x1A202620
+.long 0x2B202420
+.long 0x31202620
+.long 0x2820361A
+.long 0x20372032
+.long 0x1A202620
+.long 0x35202C20
+.long 0x3720E603
+.long 0x20252038
+.long 0x20371A20
+.long 0x29203220
+.long 0x351A2025
+.long 0x20322037
+.long 0x202B1A20
+.long 0x33202420
+.long 0x35203720
+.long 0x2C202820
+.long 0x3620E719
+.long 0x0F000000
+.long 0
+
+SIS_ACTAIRDODGE: # Aetherverse
+blrl
+.long 0x0E001400
+.long 0x14101618
+.long 0x03200A20
+.long 0x28203720
+.long 0x2B202820
+.long 0x35203920
+.long 0x28203520
+.long 0x36202803
+.long 0x030CAAAA
+.long 0xAA101620
+.long 0x0A202620
+.long 0x371A2032
+.long 0x20382037
+.long 0x1A203220
+.long 0x291A2024
+.long 0x202C2035
+.long 0x20272032
+.long 0x2027202A
+.long 0x202820E7
+.long 0x190F0000
 .long 0
