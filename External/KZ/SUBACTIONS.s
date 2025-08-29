@@ -100,6 +100,23 @@
     .set SA_EVENT_VIS_CLOAK, 57
     .set SA_EVENT_FX_WIND, 58
 
+# Hitbox Elements
+  .set SA_HB_TYPE_NONE, 0
+  .set SA_HB_TYPE_FIRE, 1
+  .set SA_HB_TYPE_ELECTRIC, 2
+  .set SA_HB_TYPE_x3, 3
+  .set SA_HB_TYPE_x4, 4
+  .set SA_HB_TYPE_ICE, 5
+  .set SA_HB_TYPE_SING, 6
+  .set SA_HB_TYPE_x7, 7
+  .set SA_HB_TYPE_GRAB, 8
+  .set SA_HB_TYPE_BURY, 9
+  .set SA_HB_TYPE_CAPE, 10
+  .set SA_HB_TYPE_TRIGGER, 11
+  .set SA_HB_TYPE_DISABLE, 12
+  .set SA_HB_TYPE_DARKNESS, 13
+  .set SA_HB_TYPE_SCREW, 14
+
 ################################################################################
 # Macros
 ################################################################################
@@ -122,6 +139,42 @@
     rlwinm \reg, \reg, 22, 24, 31       # Extract bits 17-10 (8 bits)
 .endm
 
+.macro SET_HB_SHIELD_DAMAGE data_reg, value_reg
+    lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
+    rlwimi r0, \value_reg, 10, 14, 21    # Insert 8 bits at position 10
+    stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
+.endm
+
+
+
+.macro GET_HB_ELEMENT reg, data_reg
+    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
+    rlwinm \reg, \reg, 14, 27, 31    # Rotate left 14 to move bits 18-22 to bits 0-4, mask bits 27-31 (the low 5 bits)
+.endm
+
+.macro SET_HB_ELEMENT value_reg, data_reg
+    lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)  # Load current value
+    rlwimi r0, \value_reg, 18, 9, 13             # Insert bits 0-4 of value_reg into bits 18-22 (PowerPC bits 9-13)
+    stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)  # Store back
+.endm
+
+
+.macro GET_HB_OFFSET_X_FLOAT freg, data_reg
+    lha r3, SA_SCRIPT_HB_SPAWN_OFST_X(\data_reg)  # Load signed 16-bit
+    branchl r12, FN_IntToFloat
+    fmuls \freg, f0, f1                         # Scale the result
+.endm
+
+.macro GET_HB_OFFSET_X reg, data_reg
+    lha \reg, SA_SCRIPT_HB_SPAWN_OFST_X(\data_reg)
+.endm
+
+.macro SET_HB_OFFSET_X value_reg, data_reg
+    sth \value_reg, SA_SCRIPT_HB_SPAWN_OFST_X(\data_reg)
+.endm
+
+
+# Items
 .macro GET_ITEM_HB_SHIELD_DAMAGE reg, data_reg
     lwz \reg, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
     rlwinm	\reg, \reg, 15, 0, 8 # (0001ff00)
@@ -132,12 +185,6 @@
     lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)  # Load current value
     rlwimi r0, \value_reg, 9, 9, 17              # Insert bits 0-8 of value_reg into bits 9-17 of r0
     stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)  # Store back
-.endm
-
-.macro SET_HB_SHIELD_DAMAGE data_reg, value_reg
-    lwz r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
-    rlwimi r0, \value_reg, 10, 14, 21    # Insert 8 bits at position 10
-    stw r0, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)
 .endm
 
 # make sure the destination has room at the end for the original scripts pointer

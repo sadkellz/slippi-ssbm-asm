@@ -6,7 +6,7 @@
 ################################################################################
 # Fisher-Yates shuffle
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 
 CODE_START:

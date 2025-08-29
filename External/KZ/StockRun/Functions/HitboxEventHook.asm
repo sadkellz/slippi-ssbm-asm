@@ -14,7 +14,7 @@
 # the data, so we are restoring the pointer to where it would be if the
 # original code ran. Making it non-destructive.
 ################################################################################
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/PLAYER.s"
@@ -28,6 +28,7 @@ blrl
 .long 0
 
 CODE_START:
+# vars
 .set REG_FP, 31
 .set REG_CMD_STATE, 30
 .set REG_TEMP, 29
@@ -35,6 +36,8 @@ CODE_START:
 .set REG_SRPD, 27
 .set REG_FLAGS, 26
 .set REG_SCRIPT_COPIED, 25
+# floats
+.set FREG_X, 31
 
   backup
   mr REG_FP, r3
@@ -48,10 +51,12 @@ CODE_START:
   li REG_SCRIPT_COPIED, FALSE
   
   # check cards
-  rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
-  bne PROCESS_MODIFICATIONS
-  rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
-  beq EXIT
+  # rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_KBINV, 31-SR_CARD_KBINV
+  # bne PROCESS_MODIFICATIONS
+  # rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
+  # bne PROCESS_MODIFICATIONS
+  # rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_EXTGRAB, 31-SR_CARD_EXTGRAB
+  # beq EXIT
   
 
 PROCESS_MODIFICATIONS:
@@ -83,12 +88,39 @@ PROCESS_MODIFICATIONS:
 
   PROCESS_SHIELD_DMG:
     rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_SHIELDDMG, 31-SR_CARD_SHIELDDMG
-    beq APPLY_MODIFICATIONS
+    beq PROCESS_EXT_GRAB
     
     GET_HB_SHIELD_DAMAGE REG_TEMP, REG_DATA
     addi REG_TEMP, REG_TEMP, SR_SHIELD_DMG_AMT
     SET_HB_SHIELD_DAMAGE REG_DATA, REG_TEMP
-  
+
+  PROCESS_EXT_GRAB:
+    # rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_EXTGRAB, 31-SR_CARD_EXTGRAB
+    # beq APPLY_MODIFICATIONS
+
+    # # get element type
+    # GET_HB_ELEMENT REG_TEMP, REG_DATA
+    # cmpwi REG_TEMP, SA_HB_TYPE_GRAB
+    # bne APPLY_MODIFICATIONS
+
+    # GET_HB_OFFSET_X REG_TEMP, REG_DATA
+    # lfs f0, FT_FACING_DIR(REG_FP)
+    # lfs f1, RTOC_0(rtoc)
+    # li r0, 20*256
+    # fcmpo cr0, f1, f0
+    # blt ADD_OFFSET
+
+    # SUB_OFFSET:
+    #   subf REG_TEMP, REG_TEMP, r0
+    #   b STORE_OFFSET
+
+    # ADD_OFFSET:
+    #   add REG_TEMP, REG_TEMP, r0
+
+    # STORE_OFFSET:
+    #   SET_HB_OFFSET_X REG_TEMP, REG_DATA
+
+
 
 APPLY_MODIFICATIONS:
   cmpwi REG_SCRIPT_COPIED, TRUE

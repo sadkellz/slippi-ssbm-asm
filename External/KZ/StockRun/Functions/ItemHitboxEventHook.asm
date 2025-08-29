@@ -7,7 +7,7 @@
 #------------------------------------------------------------------------------#
 # same as HitboxEventHook.asm, but for item hitboxes
 ################################################################################
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/PLAYER.s"

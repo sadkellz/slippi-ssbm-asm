@@ -1,8 +1,10 @@
 ################################################################################
 # Address: 0x80078b2c
 ################################################################################
+# This can't be done in the subaction as the hitbox itself only has a point position
 
-.include "./StockRun.s"
+
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_GOBJ.s"
@@ -25,10 +27,6 @@ CODE_START:
 
   rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_EXTGRAB, 31-SR_CARD_EXTGRAB
   beq EXIT
-  # lwz REG_VFP, GOBJ_USERDATA(r29)
-  # lbz r0, 0x221A(REG_VFP)
-  # rlwinm. r0, r0, 0, 31, 31 # shielding
-  # beq EXIT
   
   # get our hitbox x pos
   lfs FREG_X, HITBOX_POS+X(REG_HITBOX)

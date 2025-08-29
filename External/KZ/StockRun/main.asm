@@ -3,7 +3,7 @@
 # StartMelee after InitOnlinePlay has run but before standard Slippi stuff
 ################################################################################
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/HSD_GOBJ.s"
 .include "External/KZ/HSD_COBJ.s"

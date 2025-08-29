@@ -2,7 +2,7 @@
 # Address: 0x8026454c
 ################################################################################
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 
 CODE_START:

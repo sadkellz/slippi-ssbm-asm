@@ -3,7 +3,7 @@
 # creates a fighter proc before any other procs spawn
 ################################################################################
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_GOBJ.s"

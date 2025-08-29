@@ -3,7 +3,7 @@
 ################################################################################
 # cant do this in the subaction hook without it being a massive pain
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/PLAYER.s"

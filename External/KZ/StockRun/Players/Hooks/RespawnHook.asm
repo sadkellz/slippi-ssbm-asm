@@ -2,7 +2,7 @@
 # Address: 0x800d5618 # AS_RebirthWait
 ################################################################################
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_GOBJ.s"

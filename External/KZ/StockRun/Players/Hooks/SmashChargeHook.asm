@@ -1,33 +1,33 @@
 ################################################################################
-# Address: 0x80076dfc
+# Address: 0x800defa0
 ################################################################################
 
-.include "./StockRun.s"
+.include "External/KZ/StockRun/StockRun.s"
 .include "Common/Common.s"
 .include "External/KZ/KZ_COMMON.s"
 .include "External/KZ/HSD_GOBJ.s"
 .include "External/KZ/PLAYER.s"
 
 CODE_START:
-# vars
-.set REG_FP, 31
-.set REG_HITBOX, 30
-.set REG_ATKER, 29
-.set REG_FLAGS, 28
-.set REG_SRPD, 27
+.set REG_SMASH, 31
+.set REG_FP, 30
+.set REG_SLOT, 29
+.set REG_SRPD, 28
+.set REG_FLAGS, 27
   backup
-  
+
   # init
   addi REG_SRPD, REG_FP, FT_SRP_OFST
   lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
-  POWERSHIELD_CHECK:
-    rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_POWERSHIELD, 31-SR_CARD_POWERSHIELD
-    beq EXIT
-    restore
-    branch r12, 0x80076e5c
+  rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_QUICKCHARGE, 31-SR_CARD_QUICKCHARGE
+  beq EXIT
 
+  # set current charge to max charge
+  lfs f0, 0x8(REG_SMASH)
+  stfs f0, 0x4(REG_SMASH)
 
 EXIT:
+  lwz r3, 0(REG_FP)
   restore
-  lbz	r0, 0x221C(r31)
+  lfs	f1, 0x0004(r31)
