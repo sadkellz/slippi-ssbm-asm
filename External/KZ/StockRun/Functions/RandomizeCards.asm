@@ -19,6 +19,7 @@ CODE_START:
 .set REG_TEMP, 25
 .set REG_BITMASK, 24
 .set REG_SLOT, 23
+.set REG_SRPD, 22
   backup
   mr REG_MAX, r3
   mr REG_RESULT, r4
@@ -37,19 +38,39 @@ CODE_START:
   cmpwi REG_SLOT, -1
   beq ALL_CARDS_AVAILABLE
 
-  # Load player-specific bitmask
-  # load r3, stc_sr_plydata
-  # mulli r0, REG_SLOT, SRP_SIZE
   mr r3, REG_SLOT
   branchl r12, PlayerBlock_GetGObj
   lwz r3, GOBJ_USERDATA(r3)
-  addi r3, r3, FT_SRP_OFST
-  lwz REG_BITMASK, SRP_CARDS(r3)
-  b BUILD_POOL_LOOP
+  addi REG_SRPD, r3, FT_SRP_OFST
+  lwz REG_BITMASK, SRP_CARDS(REG_SRPD)
+
+  # Check if any elemental card is already applied
+  ELEMENTAL_EXCLUSION:
+      li r5, 1
+      slwi r6, r5, SR_CARD_DARKNESS     # (1 << SR_CARD_DARKNESS)
+      slwi r7, r5, SR_CARD_ELECTRIC     # (1 << SR_CARD_ELECTRIC) 
+      slwi r8, r5, SR_CARD_FIRE         # (1 << SR_CARD_FIRE)
+      slwi r9, r5, SR_CARD_ICE          # (1 << SR_CARD_ICE)
+      
+      # Create combined elemental mask
+      or r10, r6, r7
+      or r10, r10, r8  
+      or r10, r10, r9                   # r10 = all elemental card bits
+      
+      # Check if player has any elemental card
+      lwz r11, SRP_CARDS(REG_SRPD)
+      and. r0, r11, r10
+      beq BUILD_POOL_LOOP               # no elemental cards, continue normally
+      
+      # Player has an elemental card, exclude all others from pool
+      or REG_BITMASK, REG_BITMASK, r10  # set all elemental bits in exclusion mask
+      # logf LOG_LEVEL_ERROR, "EXCLUDING ELEMENTALS"
+      b BUILD_POOL_LOOP
+
 
   ALL_CARDS_AVAILABLE:
     li REG_BITMASK, 0    # empty bitmask = all cards available
-
+  
   BUILD_POOL_LOOP:
     cmpw REG_I, REG_MAX
     bge BUILD_POOL_DONE

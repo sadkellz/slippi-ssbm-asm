@@ -102,7 +102,6 @@ CODE_START:
     blt SET_ACTIVE_SLOTS_LOOP
 
 # store opponents fighter*
-bp
   # get first slots fighter
   lwz r3, SRC_SLOT_ORDER(REG_DATA)
   branchl r12, PlayerBlock_GetGObj
