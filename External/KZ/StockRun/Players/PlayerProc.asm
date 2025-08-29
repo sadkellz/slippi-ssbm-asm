@@ -65,7 +65,6 @@ FN_FighterThink:
   add REG_BLOCK, REG_BLOCK, r0
 
 # copy the cards to the subchar
-bp
   lwz r3, 0xB4(REG_BLOCK)
   cmplwi r3, 0
   beq SKIP_SUBCHAR
