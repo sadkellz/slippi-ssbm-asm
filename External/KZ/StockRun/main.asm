@@ -417,13 +417,6 @@ SR_ProcessInput:
 
   lwz REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
 
-  # bl SR_GetCurrentPlayerSlot
-  # cmpwi r3, -1
-  # beq SR_ProcessInput_Exit
-  # mr r3, REG_PAD
-  # check if we are actually hovering a card
-  # li REG_PAD, DEBUG_PAD_UNION # TODO :: use the active players port
-  # get_port_pad REG_PAD
   get_active_pad REG_PAD
   lfs FREG_STICK_X, PAD_stick_x(REG_PAD)
   lfs FREG_STICK_Y, PAD_stick_y(REG_PAD)
@@ -546,6 +539,11 @@ SR_SelectCard:
     # run the card apply callback
     li r3, TRUE
     stw r3, SRP_APPLY_CARD(r6)
+
+    # update card amt
+    lwz r3, SRP_NUM_CARDS(r6)
+    addi r3, r3, 1
+    stw r3, SRP_NUM_CARDS(r6)
 
 
   UPDATE_STATE:

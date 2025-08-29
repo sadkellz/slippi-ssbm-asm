@@ -28,6 +28,12 @@ CODE_START:
 
   lbz REG_SLOT, FT_SLOT(REG_FP)
   stw REG_SLOT, SRC_ACTIVE_SLOT(REG_SRCD)
+
+  # IC's logic...
+  lwz r3, FT_CID(REG_FP)
+  cmpwi r3, 0xB # Nana
+  beq EXIT # nana doesnt get to pick...
+
   li r3, SRGS_GAME_TRANSITION
   stw r3, SRC_GAME_STATE(REG_SRCD)
   li r3, TRANSITION_FRAMES
@@ -101,8 +107,7 @@ CODE_START:
     fneg f1, f1
     stfs f1, 0(r3) # pan/tilt camera right
 
-  # Re-activate cleared cards
-  # ...
+  # cleared cards are re-applied in PlayerProc.asm
 
 EXIT:
   restore

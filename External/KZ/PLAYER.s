@@ -98,6 +98,7 @@
 .set PlayerBlock_SetStocks, 0x80033c60 # (int slot, u8 stocks)
 .set PlayerBlock_GetSlotType, 0x8003241c # (int slot)
 .set PlayerBlock_GetPortColor, 0x80036538 # (int slot)
+.set PlayerBlock_GetSubCharGObj, 0x8003418c # (int slot, int subchar)
 
 .set PlayerBlock_SetSpawnTime, 0x80035fdc # (int slot, u8 time)
 .set PlayerBlock_StoreCopiedCharacter, 0x80035df8 # (int slot,CharacterKind character)

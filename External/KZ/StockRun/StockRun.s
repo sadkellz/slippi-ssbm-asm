@@ -34,7 +34,8 @@
   .set SRP_CARDS, 0 # int bitfield
   .set SRP_APPLY_CARD, SRP_CARDS + 4 # bool4 - whether to apply card
   .set SRP_OPP_FP, SRP_APPLY_CARD + 4
-  .set SRP_SIZE, SRP_APPLY_CARD + 4
+  .set SRP_NUM_CARDS, SRP_OPP_FP + 4 # compare against respawns for IC's
+  .set SRP_SIZE, SRP_NUM_CARDS + 4
 
 ################################################################################
 # Directives
