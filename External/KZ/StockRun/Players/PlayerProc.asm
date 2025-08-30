@@ -60,21 +60,6 @@ FN_FighterThink:
   lwz REG_FP, GOBJ_USERDATA(REG_FGP)
   addi REG_SRPD, REG_FP, FT_SRP_OFST
 
-  load REG_BLOCK, PLAYERBLOCKS
-  lbz r0, FT_SLOT(REG_FP)
-  mulli r0, r0, SZ_PBLOCK
-  add REG_BLOCK, REG_BLOCK, r0
-
-# copy the cards to the subchar
-  lwz r3, 0xB4(REG_BLOCK)
-  cmplwi r3, 0
-  beq SKIP_SUBCHAR
-  lwz r3, GOBJ_USERDATA(r3)
-  addi r3, r3, FT_SRP_OFST
-  lwz r0, SRP_CARDS(REG_SRPD)
-  stw r0, SRP_CARDS(r3)
-  SKIP_SUBCHAR:
-
 # check if we should apply a card
   lwz r3, SRP_APPLY_CARD(REG_SRPD)
   cmpwi r3, FALSE
@@ -96,99 +81,24 @@ FN_FighterThink:
     mr r4, r3
     mr r3, REG_FGP
     branchl r12, Player_GiveItem
-    # branchl r12, Item_BunnyHood_Apply
-    # mr r3, REG_FGP
-    # branchl r12, Player_InitCharacterStats
     addi r3, REG_FP, FT_ITEM_TIMERS
     load r4, 0x7FFFFFFF
     stw r4, ITEM_TIMER_BUNNYHOOD(r3)
 
   METAL:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
-    beq KB_INCREASE
-    mr r3, REG_FGP
-    load r4, 0x7FFFFFFF
-    mr r5, r4
-    branchl r12, Item_Apply_Metal
-    mr r3, REG_FGP
-    branchl r12, Player_InitCharacterStats
-  
-
-  KB_INCREASE: # Pak-A-Punch
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBINC, 31-SR_CARD_KBINC
-    beq KB_DECREASE
-    lfs f1, RTOC_1_25(rtoc)
-    stfs f1, BLOCK_OFFENSE_RATIO(REG_BLOCK)
-
-  KB_DECREASE: # Flak Jacket
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_KBDEC, 31-SR_CARD_KBDEC
-    beq SHIELD_HP
-    lfs f1, RTOC_0_8(rtoc)
-    stfs f1, BLOCK_DEFENSE_RATIO(REG_BLOCK)
-
-  SHIELD_HP:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_SHIELDHP, 31-SR_CARD_SHIELDHP
-    beq EXTRA_JUMP
-
-    # apply shield hp
-    lfs f0, RTOC_2(rtoc) # shield * 2
-    lfs f1, FT_SHIELD_HP(REG_FP)
-    lfs f2, FT_LIGHTSHIELD_HP(REG_FP)
-    fmuls f1, f1, f0
-    fmuls f2, f2, f0
-    stfs f1, FT_SHIELD_HP(REG_FP)
-    stfs f2, FT_LIGHTSHIELD_HP(REG_FP)
-
-  EXTRA_JUMP:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_EXTRAJUMP, 31-SR_CARD_EXTRAJUMP
-    beq JUMP_HEIGHT
-    lwz r4, STATS_JUMPS(REG_STATS)
-    addi r4, r4, 1
-    stw r4, STATS_JUMPS(REG_STATS)
-
-  JUMP_HEIGHT:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_JUMPHEIGHT, 31-SR_CARD_JUMPHEIGHT
-    beq CLOAK
-    lfs f0, RTOC_1_10(rtoc) # jumpheight * 1.25
-    lfs f1, STATS_JUMP_SH_MULT(REG_STATS)
-    lfs f2, STATS_JUMP_FH_MULT(REG_STATS)
-    lfs f3, STATS_JUMP_DJ_MULT(REG_STATS)
-    fmuls f1, f1, f0
-    fmuls f2, f2, f0
-    fmuls f3, f3, f0
-    stfs f1, STATS_JUMP_SH_MULT(REG_STATS)
-    stfs f2, STATS_JUMP_FH_MULT(REG_STATS)
-    stfs f3, STATS_JUMP_DJ_MULT(REG_STATS)
-
-  CLOAK:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_CLOAK, 31-SR_CARD_CLOAK
-    beq GRACE
-    load r4, 0x7FFFFFFF
-    mr r5, r4
-    mr r3, REG_FGP
-    branchl r12, Item_Apply_Cloak
-
-  GRACE:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_GRACE, 31-SR_CARD_GRACE
-    beq ALLIED_GOOMBA
-    lfs f1, RTOC_1(rtoc)
-    stfs f1, STATS_LAG_LAND(REG_STATS)
-    stfs f1, STATS_LAG_NAIR(REG_STATS)
-    stfs f1, STATS_LAG_FAIR(REG_STATS)
-    stfs f1, STATS_LAG_BAIR(REG_STATS)
-    stfs f1, STATS_LAG_UAIR(REG_STATS)
-    stfs f1, STATS_LAG_DAIR(REG_STATS)
-
-  ALLIED_GOOMBA:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_ALLIED_GOOMBA, 31-SR_CARD_ALLIED_GOOMBA
-    beq FN_FighterThink_Exit
-    lwz r3, FT_CID(REG_FP)
-    cmpwi r3, 0xB # Nana shouldnt spawn an item as well...
-    beq FN_FighterThink_Exit
-    li r3, 0
-    li r4, ITEM_KIND_KURIBOH
-    mr r5, REG_FGP
+    # beq FN_FighterThink_Exit
+    # spawn metal box
+    addi r3, REG_FP, FT_POS
+    li r4, ITEM_KIND_METALB
     branchl r12, StockRunCard_SpawnItem
+    mr r4, r3
+    mr r3, REG_FGP
+    branchl r12, Player_GiveItem
+    addi r3, REG_FP, FT_ITEM_TIMERS
+    load r4, 0x7FFFFFFF
+    stw r4, ITEM_TIMER_METAL(r3)
+    stw r4, ITEM_TIMER_METAL_HP(r3)
 
 
 FN_FighterThink_Exit:

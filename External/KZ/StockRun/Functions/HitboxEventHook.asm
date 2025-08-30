@@ -112,6 +112,7 @@ PROCESS_MODIFICATIONS:
       beq ELEMENT_ELECTRIC
       li REG_TEMP, SA_HB_TYPE_DARKNESS
       SET_HB_ELEMENT REG_TEMP, REG_DATA
+      # darkness doesnt natively do anything,
       b APPLY_MODIFICATIONS
 
     ELEMENT_ELECTRIC:

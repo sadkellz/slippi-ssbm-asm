@@ -116,6 +116,8 @@
   .set SA_HB_TYPE_DISABLE, 12
   .set SA_HB_TYPE_DARKNESS, 13
   .set SA_HB_TYPE_SCREW, 14
+  .set SA_HB_TYPE_LIPSTICK, 15
+  .set SA_HB_TYPE_FAN, 16
 
 ################################################################################
 # Macros
