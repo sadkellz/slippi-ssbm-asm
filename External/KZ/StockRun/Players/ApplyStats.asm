@@ -10,8 +10,6 @@
 .include "External/KZ/HSD_ITEM.s"
 .include "External/KZ/PLAYER.s"
 
-b CODE_START
-
 CODE_START:
 .set REG_SRPD, 31
 .set REG_FP, 30

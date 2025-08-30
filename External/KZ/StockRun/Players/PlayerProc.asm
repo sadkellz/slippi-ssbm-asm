@@ -11,8 +11,6 @@
 .include "External/KZ/HSD_ITEM.s"
 .include "External/KZ/PLAYER.s"
 
-b CODE_START
-
 # Init
 #==============================================================================#
 CODE_START:
@@ -25,8 +23,8 @@ CODE_START:
   li r5, 0
   branchl r12, GObj_AddProc
 
-  mr r5, REG_FGP
-  logf LOG_LEVEL_ERROR, "Fighter GOBJ: %08x\n"
+  lwz r5, GOBJ_USERDATA(REG_FGP)
+  logf LOG_LEVEL_ERROR, "Fighter: %08x\n"
 
   # zero out our SRP data
   lwz r3, GOBJ_USERDATA(REG_FGP)
@@ -70,7 +68,6 @@ FN_FighterThink:
 
 
   # check applicable cards
-  # items first because of InitCharacterStats
   BUNNYHOOD:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_BUNNYHOOD, 31-SR_CARD_BUNNYHOOD
     beq METAL

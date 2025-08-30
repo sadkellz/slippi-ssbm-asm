@@ -14,6 +14,8 @@
 
 .set ITEM_OWNER, 0x518
 .set ITEM_FLAGS6, 0xDCD
+.set ITEM_DRAW_FLAGS, 0xDAA
+.set ITEM_SFX_ID, 0xD70
 
 ################################################################################
 # Directives
