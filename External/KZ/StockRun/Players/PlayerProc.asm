@@ -39,7 +39,7 @@ CODE_START:
 #==============================================================================#
 
 
-
+# This handles item/monster spawns after card selections
 #------------------------------------------------------------------------------#
 FN_FighterThinkBLRL:
 blrl
@@ -87,7 +87,7 @@ FN_FighterThink:
 
   METAL:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_METAL, 31-SR_CARD_METAL
-    # beq FN_FighterThink_Exit
+    beq CLOAK
     # spawn metal box
     addi r3, REG_FP, FT_POS
     li r4, ITEM_KIND_METALB
@@ -99,6 +99,31 @@ FN_FighterThink:
     load r4, 0x7FFFFFFF
     stw r4, ITEM_TIMER_METAL(r3)
     stw r4, ITEM_TIMER_METAL_HP(r3)
+
+  CLOAK:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_CLOAK, 31-SR_CARD_CLOAK
+    beq ALLIED_GOOMBA
+    # spawn metal box
+    addi r3, REG_FP, FT_POS
+    li r4, ITEM_KIND_SPYCLOAK
+    branchl r12, StockRunCard_SpawnItem
+    mr r4, r3
+    mr r3, REG_FGP
+    branchl r12, Player_GiveItem
+    addi r3, REG_FP, FT_ITEM_TIMERS
+    load r4, 0x7FFFFFFF
+    stw r4, ITEM_TIMER_CLOAK(r3)
+
+  ALLIED_GOOMBA:
+    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_ALLIED_GOOMBA, 31-SR_CARD_ALLIED_GOOMBA
+    beq FN_FighterThink_Exit
+    lwz r3, FT_CID(REG_FP)
+    cmpwi r3, 0xB # Nana shouldnt spawn an item as well...
+    beq FN_FighterThink_Exit
+    li r3, 0
+    li r4, ITEM_KIND_KURIBOH
+    mr r5, REG_FGP
+    branchl r12, StockRunCard_SpawnItem
 
 
 FN_FighterThink_Exit:

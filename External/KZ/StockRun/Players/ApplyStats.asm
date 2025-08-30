@@ -76,7 +76,7 @@ CODE_START:
 
   JUMP_HEIGHT:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_JUMPHEIGHT, 31-SR_CARD_JUMPHEIGHT
-    beq CLOAK
+    beq GRACE
     lfs f0, RTOC_1_10(rtoc) # jumpheight * 1.25
     lfs f1, STATS_JUMP_SH_MULT(REG_STATS)
     lfs f2, STATS_JUMP_FH_MULT(REG_STATS)
@@ -88,17 +88,9 @@ CODE_START:
     stfs f2, STATS_JUMP_FH_MULT(REG_STATS)
     stfs f3, STATS_JUMP_DJ_MULT(REG_STATS)
 
-  CLOAK:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_CLOAK, 31-SR_CARD_CLOAK
-    beq GRACE
-    load r4, 0x7FFFFFFF
-    mr r5, r4
-    mr r3, REG_FGP
-    branchl r12, Item_Apply_Cloak
-
   GRACE:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_GRACE, 31-SR_CARD_GRACE
-    beq ALLIED_GOOMBA
+    beq EXIT
     lfs f1, RTOC_1(rtoc)
     stfs f1, STATS_LAG_LAND(REG_STATS)
     stfs f1, STATS_LAG_NAIR(REG_STATS)
@@ -106,17 +98,6 @@ CODE_START:
     stfs f1, STATS_LAG_BAIR(REG_STATS)
     stfs f1, STATS_LAG_UAIR(REG_STATS)
     stfs f1, STATS_LAG_DAIR(REG_STATS)
-
-  ALLIED_GOOMBA:
-    rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_ALLIED_GOOMBA, 31-SR_CARD_ALLIED_GOOMBA
-    beq EXIT
-    lwz r3, FT_CID(REG_FP)
-    cmpwi r3, 0xB # Nana shouldnt spawn an item as well...
-    beq EXIT
-    li r3, 0
-    li r4, ITEM_KIND_KURIBOH
-    mr r5, REG_FGP
-    branchl r12, StockRunCard_SpawnItem
 
 EXIT:
   restore
