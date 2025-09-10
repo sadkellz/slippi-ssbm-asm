@@ -19,9 +19,9 @@ CODE_START:
   lwz r3, SRP_CARDS(REG_SRPD)
 
   rlwinm. r3, r3, 0, 31-SR_CARD_FIRE, 31-SR_CARD_FIRE
-  # bne EXIT
-  # lfs	f1, RTOC_0(rtoc)
-  # branch r12, 0x8007bc74
+  bne EXIT
+  lfs	f1, RTOC_0(rtoc)
+  branch r12, 0x8007bc74
 
 EXIT:
   lwz	r0, -0x5148 (r13) # original codeline
