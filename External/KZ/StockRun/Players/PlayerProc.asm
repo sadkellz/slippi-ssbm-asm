@@ -50,6 +50,7 @@ blrl
 .set REG_COLOR, 27
 .set REG_PANEL, 26
 .set REG_BLOCK, 25
+.set REG_RNG, 24
 FN_FighterThink:
   backup
 
@@ -66,6 +67,7 @@ FN_FighterThink:
   addi REG_STATS, REG_FP, FT_STATS
   lwz REG_CARDS, SRP_CARDS(REG_SRPD)
 
+  backup_rng REG_RNG
 
   # check applicable cards
   BUNNYHOOD:
@@ -113,20 +115,26 @@ FN_FighterThink:
 
   ALLIED_GOOMBA:
     rlwinm. r0, REG_CARDS, 0, 31-SR_CARD_ALLIED_GOOMBA, 31-SR_CARD_ALLIED_GOOMBA
-    beq FN_FighterThink_Exit
+    beq APPLY_EXIT
     lwz r3, FT_CID(REG_FP)
     cmpwi r3, 0xB # Nana shouldnt spawn an item as well...
-    beq FN_FighterThink_Exit
+    beq APPLY_EXIT
     li r3, 0
     li r4, ITEM_KIND_KURIBOH
     mr r5, REG_FGP
     branchl r12, StockRunCard_SpawnItem
 
+  APPLY_EXIT:
+    li r3, FALSE
+    stw r3, SRP_APPLY_CARD(REG_SRPD)
+
+    # run player stats init
+    mr r3, REG_FGP
+    branchl r12, Player_InitCharacterStats
+
+    restore_rng REG_RNG, r29
 
 FN_FighterThink_Exit:
-  li r3, 0
-  stw r3, SRP_APPLY_CARD(REG_SRPD)
-  
   restore
   blr
 

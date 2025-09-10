@@ -37,9 +37,9 @@ CODE_START:
 .set REG_SRPD, 27
 .set REG_FLAGS, 26
 .set REG_SCRIPT_COPIED, 25
+.set REG_RNG, 24
 # floats
 .set FREG_X, 31
-
   backup
   mr REG_FP, r3
   mr REG_CMD_STATE, r4
@@ -67,6 +67,8 @@ CODE_START:
   beq EXIT
 
 PROCESS_MODIFICATIONS:
+  backup_rng REG_RNG
+
   # copy script data
   COPY_SCRIPT_DATA REG_DATA, REG_CMD_STATE, 20
   li REG_SCRIPT_COPIED, TRUE
@@ -112,7 +114,12 @@ PROCESS_MODIFICATIONS:
       beq ELEMENT_ELECTRIC
       li REG_TEMP, SA_HB_TYPE_DARKNESS
       SET_HB_ELEMENT REG_TEMP, REG_DATA
-      # darkness doesnt natively do anything,
+      # darkness doesnt do anything in vanilla...
+      # lets turn it into a flat damage mult
+      lbz REG_TEMP, SA_SCRIPT_HB_SPAWN_DAMAGE(REG_DATA)
+      mulli REG_TEMP, REG_TEMP, 5         # 
+      srwi REG_TEMP, REG_TEMP, 2          # 5/4 = 1.25
+      stb REG_TEMP, SA_SCRIPT_HB_SPAWN_DAMAGE(REG_DATA)
       b APPLY_MODIFICATIONS
 
     ELEMENT_ELECTRIC:
@@ -132,12 +139,22 @@ PROCESS_MODIFICATIONS:
     ELEMENT_ICE:
       rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_ICE, 31-SR_CARD_ICE
       beq APPLY_MODIFICATIONS
+      # ice is too broken...
+      # lets roll if we change it or not
+      
+      li r3, 100
+      branchl r12, HSD_Randi
+      cmpwi r3, 20
+      bgt APPLY_MODIFICATIONS
+
       li REG_TEMP, SA_HB_TYPE_ICE
       SET_HB_ELEMENT REG_TEMP, REG_DATA
       b APPLY_MODIFICATIONS
     
 
 APPLY_MODIFICATIONS:
+  restore_rng REG_RNG, REG_TEMP
+  
   cmpwi REG_SCRIPT_COPIED, TRUE
   bne EXIT
   

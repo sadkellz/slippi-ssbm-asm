@@ -135,6 +135,18 @@
     stw r0, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
 .endm
 
+# KNOCKBACK GROWTH
+.macro GET_HB_KB_GROWTH reg, data_reg
+    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
+    rlwinm \reg, \reg, 18, 23, 31       # Extract bits 22-14 (9 bits)
+.endm
+
+.macro SET_HB_KB_GROWTH reg, data_reg
+    lwz r0, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
+    rlwimi r0, \reg, 14, 9, 17    # Insert 9 bits at position 14
+    stw r0, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
+.endm
+
 # SA_SCRIPT_HB_SPAWN_INFO3
 .macro GET_HB_SHIELD_DAMAGE reg, data_reg
     lwz \reg, SA_SCRIPT_HB_SPAWN_INFO3(\data_reg)

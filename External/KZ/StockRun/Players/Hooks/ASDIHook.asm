@@ -16,7 +16,7 @@ CODE_START:
   rlwinm. r0, r0, 0, 31-SR_CARD_AWDI, 31-SR_CARD_AWDI
   beq EXIT
 
-  lfs f2, RTOC_9(rtoc)
+  lfs f2, RTOC_20(rtoc)
 
 EXIT:
   fmuls	f1, f1, f2
