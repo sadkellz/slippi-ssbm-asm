@@ -1,5 +1,5 @@
 ################################################################################
-# Address: 0x80076f54
+# Address: 0x8006cc98
 ################################################################################
 
 .include "External/KZ/StockRun/StockRun.s"
@@ -10,72 +10,30 @@
 
 
 CODE_START:
-.set REG_FP, 28
-.set REG_ATKER, 26
+.set REG_FP, 31
 .set REG_SRPD, 20
 .set REG_FLAGS, 21
-.set REG_RNG, 22
-.set REG_CRIT_CHANCE, 23
+.set REG_OPP, 22
 # floats
-.set FREG_DMG_MULT, 20
+.set FREG_DMG, 31
   backup
-  backup_rng REG_RNG
 
-  lfs	FREG_DMG_MULT, 0x182C(REG_FP)
   addi REG_SRPD, REG_FP, FT_SRP_OFST
-  li REG_CRIT_CHANCE, SR_CRIT_CHANCE
+  lwz REG_FLAGS, SRP_CARDS(REG_SRPD)
 
-  # glass cannon?
-  lwz r3, SRP_CARDS(REG_SRPD)
-  rlwinm. r0, r3, 0, 31-SR_CARD_GLASSCANNON, 31-SR_CARD_GLASSCANNON
-  beq GLASS_OPP
-    li REG_CRIT_CHANCE, SR_CRIT_CHANCE_GLASS
-    b CRIT_CHECK_STATE
-  GLASS_OPP:
+  GLASS_CANNON_CHECK:
+    # does our opp have glass cannon?
     lwz r3, SRP_OPP_FP(REG_SRPD)
     addi r3, r3, FT_SRP_OFST
     lwz r3, SRP_CARDS(r3)
     rlwinm. r0, r3, 0, 31-SR_CARD_GLASSCANNON, 31-SR_CARD_GLASSCANNON
-    beq CRIT_CHECK
-      li REG_CRIT_CHANCE, SR_CRIT_CHANCE_GLASS
-      b CRIT_CHECK_STATE
+    beq EXIT
 
-
-CRIT_CHECK:
-  # does attacker have crit hits?
-  lwz r3, SRP_OPP_FP(REG_SRPD)
-  addi r3, r3, FT_SRP_OFST
-  lwz REG_FLAGS, SRP_CARDS(r3)
-  rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_CRIT, 31-SR_CARD_CRIT
-  beq EXIT
-
-  # is attacker in a state to crit
-  CRIT_CHECK_STATE:
-    lbz r3, FT_FLAGS4(REG_ATKER)
-    rlwinm. r0, r3, 0, 31-2, 31-2
-    bne EXIT
-
-    # roll for crit
-    li r3, 100
-    ROLL:
-      branchl r12, HSD_Randi
-      cmpw r3, REG_CRIT_CHANCE
-      bgt EXIT
-
-    # crit hit
-    lfs f0, RTOC_10(rtoc)
-    fmuls FREG_DMG_MULT, FREG_DMG_MULT, f0
-    stfs FREG_DMG_MULT, 0x182C(REG_FP)
-    
-    # play crit sfx
-    li r3, 223
-    li r4, 127
-    li r5, 64
-    load r6, 0xFFFFFFFF
-    branchl r12, SFX_HitboxSFX
+    # double the percent
+    lfs f0, RTOC_2(rtoc)
+    fmuls FREG_DMG, f0, FREG_DMG
 
 
 EXIT:
-  restore_rng REG_RNG, r3
   restore
-  lwz	r3, -0x514C (r13)
+  lbz	r3, 0x2226(REG_FP)

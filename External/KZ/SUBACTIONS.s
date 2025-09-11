@@ -123,6 +123,17 @@
 # Macros
 ################################################################################
 
+.macro GET_HB_BASE_DAMAGE reg, data_reg
+    lwz \reg, SA_SCRIPT_HB_SPAWN_INFO1(\data_reg)
+    rlwinm \reg, \reg, 0, 22, 31        # Extract bits 9-0 (10 bits)
+.endm
+
+.macro SET_HB_BASE_DAMAGE data_reg, value_reg
+    lwz r0, SA_SCRIPT_HB_SPAWN_INFO1(\data_reg)
+    rlwimi r0, \value_reg, 0, 22, 31    # Insert 10 bits at position 0
+    stw r0, SA_SCRIPT_HB_SPAWN_INFO1(\data_reg)
+.endm
+
 # SA_SCRIPT_HB_SPAWN_INFO2
 .macro GET_HB_ANGLE reg, data_reg
     lwz \reg, SA_SCRIPT_HB_SPAWN_INFO2(\data_reg)
