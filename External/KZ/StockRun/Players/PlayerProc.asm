@@ -133,6 +133,25 @@ FN_FighterThink:
     mr r3, REG_FGP
     branchl r12, Player_InitCharacterStats
 
+    # update debug text
+    bp
+    loadwz r3, stc_sr_data # init gobj
+    lwz r3, GOBJ_USERDATA(r3)
+    lwz r16, SRC_SLOT_ORDER(r3)
+    lwz r17, SRC_SLOT_ORDER+4(r3)
+
+    get_port_cards r16, r16
+    get_port_cards r17, r17
+
+    computeBranchTargetAddress r4, StockRun_DisplayCardText
+    lwz r3, 0x8(r4) # text struct
+    lwz r5, 0xC(r4) # string
+    li r4, 0
+    mr r6, r16
+    mr r7, r17
+    branchl r12, Text_UpdateSubtextContents
+    
+
     restore_rng REG_RNG, r29
 
 FN_FighterThink_Exit:

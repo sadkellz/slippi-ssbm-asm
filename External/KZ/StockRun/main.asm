@@ -197,6 +197,9 @@ CODE_START:
     cmpwi REG_COUNT, 2
     blt SET_STOCKS_LOOP
 
+# card display
+  branchl r12, StockRun_DisplayCardText
+
   b EXIT
 
 #==============================================================================#

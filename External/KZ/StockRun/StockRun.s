@@ -2,13 +2,12 @@
 ################################################################################
 # Functions
 ################################################################################
-# Util
   .set StockRun_RandomizeCards, 0x804a3120
   .set StockRun_DisplayCssText, 0x804a3124
-# Cards
   .set StockRunCard_HitboxEvent, 0x804a3128
   .set StockRunCard_ItemHitboxEvent, 0x804a312c
   .set StockRunCard_SpawnItem, 0x804a3130
+  .set StockRun_DisplayCardText, 0x804a3134
 
 ################################################################################
 # Structs
@@ -164,6 +163,14 @@
 .macro restore_rng reg_seed, reg_temp
   lis \reg_temp, 0x804D
   stw \reg_seed, 0x5F90(\reg_temp)
+.endm
+
+.macro get_port_cards reg_port, reg_cards
+  mr r3, \reg_port
+  branchl r12, 0x80034110 # port fgp
+  lwz \reg_cards, 0x2C(r3)
+  addi \reg_cards, \reg_cards, FT_SRP_OFST
+  lwz \reg_cards, SRP_CARDS(\reg_cards)
 .endm
 
 
