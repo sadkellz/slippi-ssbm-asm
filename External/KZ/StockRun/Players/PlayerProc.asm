@@ -97,6 +97,7 @@ FN_FighterThink:
     addi r3, REG_FP, FT_ITEM_TIMERS
     load r4, 0x7FFFFFFF
     stw r4, ITEM_TIMER_METAL(r3)
+    load r4, 100
     stw r4, ITEM_TIMER_METAL_HP(r3)
 
   CLOAK:
