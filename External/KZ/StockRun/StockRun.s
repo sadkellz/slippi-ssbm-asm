@@ -114,7 +114,7 @@
 # StockRun Vars
   .set SR_STOCK_COUNT, 4
   .set SR_CRIT_CHANCE, 3 # 3% chance to crit
-  .set SR_RARE_CHANCE, 5
+  .set SR_RARE_CHANCE, 15
   .set SR_SHIELD_DMG_AMT, 15
   .set SR_CRIT_CHANCE_GLASS, 10
 

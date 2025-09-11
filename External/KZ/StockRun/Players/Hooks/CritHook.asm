@@ -65,7 +65,7 @@ CRIT_CHECK:
     rlwinm. r0, REG_FLAGS, 0, 31-SR_CARD_GLASSCANNON, 31-SR_CARD_GLASSCANNON
     beq EXIT
     lwz r0, HITBOX_BKB(REG_HITBOX)
-    mulli r0, r0, 4
+    mulli r0, r0, 2
     stw r0, HITBOX_BKB(REG_HITBOX)
 
 

@@ -40,6 +40,7 @@
 .set RTOC_100, -0x35e8
 .set RTOC_120, -0x7dc0
 .set RTOC_160, -0x5450
+.set RTOC_180, -0x7494
 .set RTOC_190, -0x4f44
 .set RTOC_255, -0x7dd4
 .set RTOC_300, -0x7ab4
