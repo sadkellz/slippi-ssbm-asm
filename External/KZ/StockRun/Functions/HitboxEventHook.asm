@@ -155,7 +155,7 @@ PROCESS_MODIFICATIONS:
       
       li r3, 100
       branchl r12, HSD_Randi
-      cmpwi r3, 20
+      cmpwi r3, 5
       bgt APPLY_MODIFICATIONS
 
       li REG_TEMP, SA_HB_TYPE_ICE
