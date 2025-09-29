@@ -10,6 +10,7 @@
 .set RTOC_FLT_MAX, -0x771c
 .set RTOC_SCALE_256, -0x7740 # 1/256 - 0.0039059999f - converts a scaled short to a float
 .set RTOC_M_PI, -0x7fb0
+.set RTOC_M_PI_4, -0x70c4 # 0.7853982f
 .set RTOC_N_0_5, -0x7bac
 .set RTOC_N_1_1, -0x125c
 .set RTOC_0, -0x1568
@@ -17,6 +18,7 @@
 .set RTOC_0_01, -0x7ebc
 .set RTOC_0_001, -0x7e88
 .set RTOC_0_015625, -0x7da8
+.set RTOC_0_2, -0x62d4
 .set RTOC_0_25, -0x6644
 .set RTOC_0_5, -0x7bb0
 .set RTOC_0_75, -0x7d5c
@@ -29,6 +31,7 @@
 .set RTOC_1_25, -0x4d70
 .set RTOC_1_5, -0x7a0c
 .set RTOC_2, -0x7a1c
+.set RTOC_2_3561945, -0x4978
 .set RTOC_9, -0x6454
 .set RTOC_10, -0x1e64
 .set RTOC_15, -0x7604
@@ -139,6 +142,7 @@
 ################################################################################
 
 .set stc_matchcam, 0x80452c68
+.set stc_cam_settings, 0x803BCCA0
 .set stc_plco_ptr, 0x804d6554
 
 

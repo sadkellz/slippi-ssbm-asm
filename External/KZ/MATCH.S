@@ -7,6 +7,8 @@
 
 .set MatchInfo_IsTeams, 0x8016b168
 .set SFX_PlayAnnouncerSFX, 0x800243f4
+.set Match_EnableHud, 0x802f36a4
+.set Match_DisableHud, 0x802f3698
 
 
 ################################################################################

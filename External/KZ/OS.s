@@ -15,6 +15,7 @@
 .set HSD_Randi, 0x80380580
 
 .set memzero, 0x8000c160 # (void *buf, uint size)
+.set memset, 0x80003100 # (void *buf, int char, size_t size)
 
 .set Text_SetFromSIS, 0x803a6368
 .set Text_MemZero, 0x803a594c

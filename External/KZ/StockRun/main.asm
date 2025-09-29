@@ -1,6 +1,5 @@
 ################################################################################
 # Address: 0x8016e8c8
-# StartMelee after InitOnlinePlay has run but before standard Slippi stuff
 ################################################################################
 
 .include "External/KZ/StockRun/StockRun.s"
@@ -13,772 +12,1146 @@
 .include "External/KZ/HSD_PAD.s"
 .include "External/KZ/OS.s"
 
-# Initialize Stock Run
-#==============================================================================#
 b CODE_START
 
-DATA_BLRL:
-blrl
-# StockRun Context
-.set SRC_SLOT_ORDER, 0                              # int[2]
-.set SRC_CURRENT_PICKER, SRC_SLOT_ORDER + 8         # int
-.set SRC_TRANSITION_TIMER, SRC_CURRENT_PICKER + 4   # int
-.set SRC_GAME_STATE, SRC_TRANSITION_TIMER + 4       # int
-.set SRC_ACTIVE_SLOT, SRC_GAME_STATE + 4            # int
-.set SRC_HOVER_STATE, SRC_ACTIVE_SLOT + 4           # int
-.long -1
-.long -1
-.long 0
-.long TRANSITION_FRAMES
-.long 0
-.long 0
-.long 0
-
 CODE_START:
-  .set REG_GOBJ, 31
-  .set REG_DATA, 30
-  .set REG_COUNT, 29
-  .set REG_PLY_COUNT, 28
-  .set REG_COLOR, 27
-  .set REG_PANEL, 26
-  .set REG_TEMP, 26
   backup
-
-  bl DATA_BLRL
-  mflr REG_DATA
-
-# create gobj to run our in-game code
-# ui class - so when we freeze players, code still runs
-  gobj_create GOBJ_CLASS_UI, GOBJ_PLINK_UI, SR_GOBJ_PRIO, REG_GOBJ
-  load r3, stc_sr_data
-  stw REG_GOBJ, SRD_GOBJ_INIT(r3)
-
-# add proc
-  mr r3, REG_GOBJ
-  bl StockRun_UpdateBLRL
-  mflr r4
-  li r5, 0
-  branchl r12, GObj_AddProc
-
-# add data
-  mr r3, REG_GOBJ
-  li r4, 0
-  li r5, 0
-  mr r6, REG_DATA
-  branchl r12, GObj_AddUserData
-
-  bl SR_InitContext
-
-# disable pause
-  load r12, stc_match_info
-  addi r12, r12, OFST_RULES
-  lbz r3, OFST_PAUSE(r12)
-  ori r3, r3, PAUSE_BIT_MASK
-  stb r3, OFST_PAUSE(r12)
-
-# disable hud
-  load r3, stc_hud_vis
-  li r4, TRUE 
-  stb r4, 0(r3)
-
-# get slot order
-  li REG_COUNT, 0
-  li REG_PLY_COUNT, 0
-  SET_ACTIVE_SLOTS_LOOP:
-    mr r3, REG_COUNT
-    branchl r12, PlayerBlock_GetSlotType
-    cmpwi r3, 1 # if slot is HMN or CPU
-    bgt SET_ACTIVE_SLOT_LOOP_CHECK
-
-    cmpwi REG_PLY_COUNT, MAX_PLAYERS # we should only be in direct or have two players
-    bgt SET_ACTIVE_SLOT_LOOP_CHECK
-    mulli r4,REG_PLY_COUNT, 4
-    stwx REG_COUNT, r4, REG_DATA # port order
-    addi REG_PLY_COUNT, REG_PLY_COUNT, 1
-
-  SET_ACTIVE_SLOT_LOOP_CHECK:
-    addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, MAX_PORTS
-    blt SET_ACTIVE_SLOTS_LOOP
-
-# store opponents fighter*
-  # get first slots fighter
-  lwz r3, SRC_SLOT_ORDER(REG_DATA)
-  branchl r12, PlayerBlock_GetGObj
-  lwz REG_TEMP, GOBJ_USERDATA(r3)
-
-  # get second slots fighter
-  lwz r3, SRC_SLOT_ORDER+4(REG_DATA)
-  branchl r12, PlayerBlock_GetGObj
-  lwz r3, GOBJ_USERDATA(r3)
-  # srp offset
-  addi r3, r3, FT_SRP_OFST
-  stw REG_TEMP, SRP_OPP_FP(r3)
-# second slot
-  # get second slots fighter
-  lwz r3, SRC_SLOT_ORDER+4(REG_DATA)
-  branchl r12, PlayerBlock_GetGObj
-  lwz REG_TEMP, GOBJ_USERDATA(r3)
-
-  # get first slots fighter
-  lwz r3, SRC_SLOT_ORDER(REG_DATA)
-  branchl r12, PlayerBlock_GetGObj
-  lwz r3, GOBJ_USERDATA(r3)
-  # srp offset
-  addi r3, r3, FT_SRP_OFST
-  stw REG_TEMP, SRP_OPP_FP(r3)
-    
-
-# setup camera blur
-  load r3, 0x80472d28
-  li r4, 288
-  branchl r12, memzero # zero out the imagedesc mem
-  
-  load r3, stc_blur_imagedesc
-  li r4, 640
-  li r5, 480
-  li r6, 5
-  li r7, 0
-  branchl r12, 0x800121fc
-
-  lfs f1, RTOC_0(rtoc)
-  lfs f2, RTOC_0(rtoc)
-  lfs f3, RTOC_1(rtoc)
-  lfs f4, RTOC_1(rtoc)
-  load r3, stc_blur_imagedesc
-  li r4, 0
-  li r5, 2
-  li r6, 50
-  branchl r12, 0x800138ec
-  mr REG_GOBJ, r3
-  load r3, 0x80472d54
-  stw REG_GOBJ, 0(r3)
-
-  mr r3, REG_GOBJ
-  li r4, 1
-  branchl r12, 0x800138d8
-
-  mr r3, REG_GOBJ
-  load r4, 0x8017fe54
-  branchl r12, 0x800138cc
-
-# setup panel colours
-  li REG_COUNT, 0
-  get_panel_color REG_COLOR
-  load REG_PANEL, stc_sr_data
-  addi REG_PANEL, REG_PANEL, SRD_JOBJ_PANELS
-  SET_PANEL_COLORS:
-    mulli r0, REG_COUNT, 4
-    lwzx r3, REG_PANEL, r0
-    branchl r12, HSD_JObjGetDObj
-    lwz r3, 0x4(r3)
-    lwz r3, 0x4(r3)
-    lwz r3, 0x8(r3) # mobj
-    lbz r4, R(REG_COLOR)
-    lbz r5, G(REG_COLOR)
-    lbz r6, B(REG_COLOR)
-    lbz r7, A(REG_COLOR)
-    branchl r12, HSD_MObjSetDiffuseColor
-  SET_PANEL_COLORS_CHECK:
-    addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, 4
-    blt SET_PANEL_COLORS
-
-# set stocks
-  li REG_COUNT, 0
-  SET_STOCKS_LOOP:
-    rlwinm r0, REG_COUNT, 2, 0, 29
-    lwzx r3, REG_DATA, r0
-    li r4, SR_STOCK_COUNT
-    branchl r12, PlayerBlock_SetStocks
-  
-  SET_STOCKS_LOOP_CHECK:
-    addi REG_COUNT, REG_COUNT, 1
-    cmpwi REG_COUNT, 2
-    blt SET_STOCKS_LOOP
-
-# card display
-  branchl r12, StockRun_DisplayCardText
+    li r3, 0xe
+    li r4, 0xf
+    li r5, 0x6f
+    branchl r12, GObj_Create
+    addi r30, r3, 0x0
+    li r3, 0xb8
+    branchl r12, HSD_MemAlloc
+    lis r31, 0x804a
+    stw r3, 0x304c(r31)
+    li r4, 0x0
+    li r5, 0xb8
+    lwz r3, 0x304c(r31)
+    branchl r12, memset
+    lis r3, HSD_Free@ha
+    lwz r6, 0x304c(r31)
+    addi r5, r3, HSD_Free@l
+    addi r3, r30, 0x0
+    li r4, 0x0
+    branchl r12, GObj_AddUserData
+    lwz r4, 0x304c(r31)
+    li r8, 0x0
+    stw r8, 0x8(r4)
+    bl StockRun_Update
+    mflr r4
+    li r5, 0x1
+    lwz r3, 0x304c(r31)
+    li r7, -0x1
+    li r0, 0x1e
+    stw r5, 0xc(r3)
+    mr r3, r30
+    li r5, 0x0
+    lwz r6, 0x304c(r31)
+    stw r7, 0x10(r6)
+    lwz r6, 0x304c(r31)
+    stw r0, 0x18(r6)
+    lwz r6, 0x304c(r31)
+    stw r8, 0x0(r6)
+    lwz r6, 0x304c(r31)
+    stw r8, 0x14(r6)
+    lwz r6, 0x304c(r31)
+    stw r8, 0x1c(r6)
+    lwz r6, 0x304c(r31)
+    stw r7, 0x20(r6)
+    lwz r6, 0x304c(r31)
+    stw r7, 0x78(r6)
+    lwz r6, 0x304c(r31)
+    stw r7, 0x7c(r6)
+    branchl r12, GObj_AddProc
 
   b EXIT
 
 #==============================================================================#
 
-
-################################################################################
-# Functions
-################################################################################
-
-
-# data destructor
-#==============================================================================#
-.set REG_DATA, 30
-SR_InitContext:
-  bklr
-
-  li r3, -1
-  stw r3, SRC_ACTIVE_SLOTS(REG_DATA)
-  stw r3, SRC_ACTIVE_SLOTS+4(REG_DATA)
-  load r3, TRANSITION_FRAMES
-  stw r3, SRC_TRANSITION_FRAMES(REG_DATA)
-  li r3, 0
-  stw r3, SRC_CURRENT_PICKER(REG_DATA)
-  stw r3, SRC_GAME_STATE(REG_DATA)
-  stw r3, SRC_HOVER_STATE(REG_DATA)
-  # load r3, stc_sr_plydata
-  # li r4, SRP_SIZE
-  # mulli r4, r4, 4
-  # branchl r12, memzero
-
-  # logf LOG_LEVEL_ERROR, "SR Data Reset"
-
-SR_InitContext_Exit:
-  rslr
-  blr
-
-
-# Main loop
-#==============================================================================#
-StockRun_UpdateBLRL:
-blrl
-.set REG_GOBJ, 31
-.set REG_DATA, 30
-.set REG_FRAME, 29
-.set REG_STATE, 28
-.set REG_PICKER, 27
-SR_Update:
-  backup
-
-  # init vars
-  mr REG_GOBJ, r3
-  lwz REG_DATA, GOBJ_USERDATA(REG_GOBJ)
-  load_scene_frame REG_FRAME
-  lwz REG_STATE, SRC_GAME_STATE(REG_DATA)
-
-  cmpwi REG_FRAME, SETUP_START_FRAME # first frame after entry
-  blt SR_Update_Exit
-  cmpwi REG_FRAME, ALLOW_INPUTS_FRAME 
-  bgt STATE_SWITCH # this is so we can start our blur
-
-  # add blur until we can input
-  load r3, stc_blur_amt
-  lfs f1, 0(r3)
-  lfs f0, RTOC_0_015625(rtoc)
-  fadds f1, f1, f0
-  stfs f1, 0(r3) # blur
-  stfs f1, 4(r3) # tint
-
-  STATE_SWITCH:
-    STATE_INIT:
-    cmpwi REG_STATE, SRGS_INIT
-    bne STATE_CARD_SELECT
-      bl SR_InitCardSelect
-      # update state
-      li r3, SRGS_TRANSITION
-      stw r3, SRC_GAME_STATE(REG_DATA)
-      b SR_Update_Exit
-    
-    STATE_CARD_SELECT:
-    cmpwi REG_STATE, SRGS_CARD_SELECT
-    bne STATE_TRANSITION
-      bl SR_IsSelectionComplete
-      cmpwi r3, TRUE
-      bne _INPUT
-      bl SR_EndCardSelect
-      b SR_Update_Exit
-      # run input
-      _INPUT:
-      bl SR_ProcessInput
-      b SR_Update_Exit
-
-    STATE_TRANSITION:
-    cmpwi REG_STATE, SRGS_TRANSITION
-    bne STATE_GAME_ACTIVE
-      lwz r3, SRC_TRANSITION_TIMER(REG_DATA)
-      subi r3, r3, 1
-      stw r3, SRC_TRANSITION_TIMER(REG_DATA)
-      cmpwi r3, 0
-      bgt SR_Update_Exit
-      li r3, SRGS_CARD_SELECT
-      stw r3, SRC_GAME_STATE(REG_DATA)
-      b SR_Update_Exit
-
-    STATE_GAME_ACTIVE:
-    cmpwi REG_STATE, SRGS_GAME_ACTIVE
-    bne STATE_GAME_TRANSITION
-      # could do run logic here if needed
-      b SR_Update_Exit
-
-    STATE_GAME_TRANSITION:
-    cmpwi REG_STATE, SRGS_GAME_TRANSITION
-    bne STATE_GAME_CARD_SELECT
-      load r3, stc_blur_amt
-      lfs f1, 0(r3)
-      lfs f0, RTOC_0_015625(rtoc)
-      fadds f1, f1, f0
-      stfs f1, 0(r3) # blur
-      stfs f1, 4(r3) # tint
-
-      lwz r3, SRC_TRANSITION_TIMER(REG_DATA)
-      subi r3, r3, 1
-      stw r3, SRC_TRANSITION_TIMER(REG_DATA)
-      cmpwi r3, 0
-      bgt SR_Update_Exit
-
-      li r3, SRGS_GAME_CARD_SELECT
-      stw r3, SRC_GAME_STATE(REG_DATA)
-      bl SR_UpdatePanelColor
-      b SR_Update_Exit
-
-    STATE_GAME_CARD_SELECT:
-    cmpwi REG_STATE, SRGS_GAME_CARD_SELECT
-    bne SR_Update_Exit
-      bl SR_ProcessInput
-      b SR_Update_Exit
-
-SR_Update_Exit:
-  restore
-  blr
+#----------------------------------------------------------------------------#
+# get_card_from_stick
+#   f1 = x
+#           f2 = y
+#   returns: r3 = int direction
+get_card_from_stick:
+    fmr f4, f1
+    mflr r0
+    stw r0, 0x4(r1)
+    fmuls f1, f2, f2
+    fmuls f3, f4, f4
+    stwu r1, -0x8(r1)
+    fadds f1, f3, f1
+    lfs f0, RTOC_0_95(rtoc)
+    fcmpo cr0, f1, f0
+    bgt label_0x230
+    li r3, -0x1
+    b label_0x2a8
+  label_0x230:
+    fmr f1, f2
+    fmr f2, f4
+    branchl r12, atan2
+    lfs f0, RTOC_M_PI_4(rtoc)
+    fneg f2, f0
+    fcmpo cr0, f1, f2
+    ble label_0x260
+    fcmpo cr0, f1, f0
+    cror eq, lt, eq
+    bne label_0x260
+    li r3, 0x1
+    b label_0x2a8
+  label_0x260:
+    lfs f0, RTOC_M_PI_4(rtoc)
+    fcmpo cr0, f1, f0
+    ble label_0x284
+    lfs f0, RTOC_2_3561945(rtoc)
+    fcmpo cr0, f1, f0
+    cror eq, lt, eq
+    bne label_0x284
+    li r3, 0x0
+    b label_0x2a8
+  label_0x284:
+    fcmpo cr0, f1, f2
+    bge label_0x2a4
+    lfs f0, RTOC_2_3561945(rtoc)
+    fneg f0, f0
+    fcmpo cr0, f1, f0
+    cror eq, gt, eq
+    bne label_0x2a4
+    li r3, 0x2
+    b label_0x2a8
+  label_0x2a4:
+    li r3, 0x3
+  label_0x2a8:
+    lwz r0, 0xc(r1)
+    addi r1, r1, 0x8
+    mtlr r0
+blr
 
 
-# Card Select Functions
-#==============================================================================#
-SR_InitCardSelect:
-  bklr
+#----------------------------------------------------------------------------#
+# apply_blur
+#   f1 = amount
+apply_blur:
+    lis r3, 0x8047
+    lfs f0, RTOC_1(rtoc)
+    lfs f2, 0x2e38(r3)
+    fadds f2, f2, f1
+    fcmpo cr0, f2, f0
+    ble label_0x2d4
+    fmr f2, f0
+  label_0x2d4:
+    lis r3, 0x8047
+    stfs f2, 0x2e38(r3)
+    lfs f2, 0x2e3c(r3)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0x2f4
+    fmr f1, f0
+  label_0x2f4:
+    lis r3, 0x8047
+    stfs f1, 0x2e3c(r3)
+blr
 
-  # pause players
-  li r3, MATCH_FREEZE_FLAG # freezes players but not cameras/ui
-  branchl r12, Scene_SetPauseFlag
 
-  # init camera
-  bl SR_SetupCamera
-  bl SR_UpdateCameraPos
+#----------------------------------------------------------------------------#
+# reset_visuals
+#   f1 = amount
+reset_visuals:
+    mflr r0
+    lis r3, 0x8047
+    stw r0, 0x4(r1)
+    stwu r1, -0x8(r1)
+    lfs f0, RTOC_0(rtoc)
+    stfs f0, 0x2e38(r3)
+    stfs f0, 0x2e3c(r3)
+    branchl r12, Match_EnableHud
+    lwz r0, 0xc(r1)
+    addi r1, r1, 0x8
+    mtlr r0
+blr
 
-SR_InitCardSelect_Exit:
-  rslr
-  blr
 
-#------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------#
+# update_input_state
+#   r3 = stockrun data
+update_input_state:
+    mflr r0
+    stw r0, 0x4(r1)
+    stwu r1, -0x20(r1)
+    stw r31, 0x1c(r1)
+    stw r30, 0x18(r1)
+    addi r30, r3, 0x0
+    lis r3, 0x8003
+    lwz r0, 0x14(r30)
+    subi r12, r3, 0x496c
+    addi r31, r30, 0x58
+    mtlr r12
+    addi r3, r31, 0x0
+    clrlwi r4, r0, 24
+    blrl
+    lwz r0, 0x20(r31)
+    stw r0, 0x24(r31)
+    lfs f1, 0x4(r31)
+    lfs f2, 0x0(r31)
+    fmuls f3, f1, f1
+    lfs f0, RTOC_0_95(rtoc)
+    fmuls f4, f2, f2
+    fadds f3, f4, f3
+    fcmpo cr0, f3, f0
+    bgt label_0x398
+    li r0, -0x1
+    b label_0x408
+  label_0x398:
+    branchl r12, atan2
+    lfs f0, RTOC_M_PI_4(rtoc)
+    fneg f2, f0
+    fcmpo cr0, f1, f2
+    ble label_0x3c0
+    fcmpo cr0, f1, f0
+    cror eq, lt, eq
+    bne label_0x3c0
+    li r0, 0x1
+    b label_0x408
+  label_0x3c0:
+    lfs f0, RTOC_M_PI_4(rtoc)
+    fcmpo cr0, f1, f0
+    ble label_0x3e4
+    lfs f0, RTOC_2_3561945(rtoc)
+    fcmpo cr0, f1, f0
+    cror eq, lt, eq
+    bne label_0x3e4
+    li r0, 0x0
+    b label_0x408
+  label_0x3e4:
+    fcmpo cr0, f1, f2
+    bge label_0x404
+    lfs f0, RTOC_2_3561945(rtoc)
+    fneg f0, f0
+    fcmpo cr0, f1, f0
+    cror eq, gt, eq
+    bne label_0x404
+    li r0, 0x2
+    b label_0x408
+  label_0x404:
+    li r0, 0x3
+  label_0x408:
+    stw r0, 0x20(r31)
+    li r0, 0x0
+    srwi r4, r0, 31
+    lwz r5, 0x20(r31)
+    srawi r3, r5, 31
+    subfc r0, r0, r5
+    adde r0, r3, r4
+    stw r0, 0x1c(r30)
+    lwz r0, 0x20(r31)
+    stw r0, 0x20(r30)
+    lwz r0, 0x24(r1)
+    lwz r31, 0x1c(r1)
+    lwz r30, 0x18(r1)
+    addi r1, r1, 0x20
+    mtlr r0
+blr
 
-SR_IsSelectionComplete:
-  bklr
 
-  li r3, FALSE
-  lwz r4, SRC_CURRENT_PICKER(REG_DATA)
-  cmpwi r4, MAX_PLAYERS - 1
-  ble SR_IsSelectionComplete_Exit
-
-  # enable hud
-  load r3, stc_hud_vis
-  li r4, FALSE 
-  stb r4, 0(r3)
-
-  # reset blur
-  load r3, stc_blur_amt
-  li r4, 0
-  stw r4, 0(r3)
-  stw r4, 4(r3) # tint
-
-  # update state
-  li r3, SRGS_GAME_ACTIVE
-  stw r3, SRC_GAME_STATE(REG_DATA)
-  li r3, TRUE
-
-SR_IsSelectionComplete_Exit:
-  rslr
-  blr
-
-#------------------------------------------------------------------------------#
-
-SR_EndCardSelect:
-  bklr
-
-  # unpause
-  li r3, MATCH_FREEZE_FLAG
-  branchl r12, Scene_ClearPauseFlag
-
-  # reset camera
-  branchl r12, Camera_SetNormal
-
-SR_EndCardSelect_Exit:
-  rslr
-  blr
-
-#------------------------------------------------------------------------------#
-
-SR_ProcessInput:
-.set REG_HOVER_STATE, 16
-.set REG_PAD, 17
-# floats
-.set FREG_STICK_MAG, 15
-.set FREG_STICK_X, 16
-.set FREG_STICK_Y, 17
-# stack
-.set SP_STICK_DIR, BKP_FREE_SPACE_OFFSET
-  backup
-
-  lwz REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
-
-  get_active_pad REG_PAD
-  lfs FREG_STICK_X, PAD_stick_x(REG_PAD)
-  lfs FREG_STICK_Y, PAD_stick_y(REG_PAD)
-  # create our stick dir
-  stfs FREG_STICK_X, SP_STICK_DIR+X(sp)
-  stfs FREG_STICK_Y, SP_STICK_DIR+Y(sp)
-  lfs f0, RTOC_0(rtoc)
-  stfs f0, SP_STICK_DIR+Z(sp)
-  # stick magnitude
-  addi r3, sp, SP_STICK_DIR
-  branchl r12, PSVECMag
-  fmr FREG_STICK_MAG, f1
-  # fmr f1, FREG_STICK_MAG
-  # logf LOG_LEVEL_ERROR, "Stick magnitude: %f"
-
-  lfs f0, RTOC_0_95(rtoc)
-  fcmpo cr0, FREG_STICK_MAG, f0
-  ble ON_UNHOVER
-
-  lwz r3, PAD_buttons(REG_PAD)
-  lwz r4, PAD_last_button(REG_PAD)
-  xor r5, r3, r4
-  load r6, PAD_BTN_StickUp | PAD_BTN_StickDown | PAD_BTN_StickLeft | PAD_BTN_StickRight
-  and r7, r5, r6
-  cmpwi r7, 0
-  bne PLAY_HOVER_SFX
-
-  # check if we werent already hovering
-  cmpwi REG_HOVER_STATE, FALSE
-  bne SKIP_SOUND
-
-  PLAY_HOVER_SFX:
-    li r3, SFX_CMN_SELECT
+#----------------------------------------------------------------------------#
+# handle_hover_sound
+#   r3 = stockrun data
+handle_hover_sound:
+    mflr r0
+    addi r4, r3, 0x58
+    stw r0, 0x4(r1)
+    stwu r1, -0x8(r1)
+    lwz r0, 0x78(r3)
+    cmpwi r0, 0x0
+    blt label_0x47c
+    lwz r3, 0x20(r4)
+    lwz r0, 0x24(r4)
+    cmpw r3, r0
+    beq label_0x47c
+    li r3, 0x1
     branchl r12, SFX_Menu_CommonSound
-
-  SKIP_SOUND:
-    li REG_HOVER_STATE, TRUE
-    stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
-    b CHECK_BUTTON
-
-  ON_UNHOVER:
-    cmpwi REG_HOVER_STATE, TRUE
-    bne CHECK_BUTTON
-    li REG_HOVER_STATE, FALSE
-    stw REG_HOVER_STATE, SRC_HOVER_STATE(REG_DATA)
-
-  CHECK_BUTTON:
-      lwz r4, PAD_button_pressed(REG_PAD)
-      andi. r4, r4, PAD_BTN_A
-      bne CHOOSE_CARD
-      b SR_ProcessInput_Exit
-
-  CHOOSE_CARD:
-    cmpwi REG_HOVER_STATE, FALSE
-    beq NOT_ACTIVE_CARD_SFX
-
-    # success
-    li r3, SFX_CMN_CONFIRM
-    branchl r12, SFX_Menu_CommonSound
-
-    bl SR_SelectCard
-    b SR_ProcessInput_Exit
-
-    NOT_ACTIVE_CARD_SFX:
-      li r3, SFX_CMN_ERROR
-      branchl r12, SFX_Menu_CommonSound
-
-SR_ProcessInput_Exit:
-  restore
-  blr
-
-#------------------------------------------------------------------------------#
-
-SR_SelectCard:
-.set REG_COUNT, 16
-.set REG_CARDS, 17
-.set REG_TEXT, 18
-.set REG_RNG, 19
-.set REG_FP, 20
-.set REG_BLOCK, 21
-  backup
-  # get fighter data
-  lwz r3, SRC_ACTIVE_SLOT(REG_DATA)
-  branchl r12, PlayerBlock_GetGObj
-  lwz REG_FP, GOBJ_USERDATA(r3)
-
-  # check which card we picked
-  get_active_pad REG_PAD
-  lwz r3, PAD_buttons(REG_PAD)
-  li r4, 0
-  load r5, PAD_BTN_StickUp
-  and. r0, r3, r5
-  bne POST_CARD_SELECT
-  li r4, 1
-  load r5, PAD_BTN_StickRight
-  and. r0, r3, r5
-  bne POST_CARD_SELECT
-  li r4, 2
-  load r5, PAD_BTN_StickDown
-  and. r0, r3, r5
-  bne POST_CARD_SELECT
-  li r4, 3
-  load r5, PAD_BTN_StickLeft
-  and. r0, r3, r5
-  bne POST_CARD_SELECT
-  # b 0x0 # shouldnt get here
-
-  POST_CARD_SELECT:
-    load r6, stc_sr_data
-    addi r6, r6, SRD_CURRENT_CARDS
-    mulli r0, r4, 4
-    lwzx r4, r6, r0 # card we selected
-
-    addi r6, REG_FP, FT_SRP_OFST # current player data 
-    lwz r0, SRP_CARDS(r6)   # r0 = current card bits
-    li r5, 1                # create bitmask
-    slw r5, r5, r4          # shift 1 left by r4 positions (r4 = card to set)
-    or r0, r0, r5           # set the bit
-    stw r0, SRP_CARDS(r6)   # store back
-
-    # run the card apply callback
-    li r3, TRUE
-    stw r3, SRP_APPLY_CARD(r6)
-
-    # update card amt
-    lwz r3, SRP_NUM_CARDS(r6)
-    addi r3, r3, 1
-    stw r3, SRP_NUM_CARDS(r6)
-
-    # update subchar if there is one
-    load r3, PLAYERBLOCKS
-    lbz r0, FT_SLOT(REG_FP)
-    mulli r0, r0, SZ_PBLOCK
-    add r3, r3, r0
-    lwz r3, 0xB4(r3)
-    cmplwi r3, 0
-    beq UPDATE_STATE
-    lwz r3, GOBJ_USERDATA(r3)
-    addi r3, r3, FT_SRP_OFST
-    li r0, TRUE
-    stw r0, SRP_APPLY_CARD(r3)
+  label_0x47c:
+    lwz r0, 0xc(r1)
+    addi r1, r1, 0x8
+    mtlr r0
+blr
 
 
-  UPDATE_STATE:
-    lwz r3, SRC_GAME_STATE(REG_DATA)
-    cmpwi r3, SRGS_GAME_CARD_SELECT
-    beq MID_GAME_UPDATE
-
-    # roll cards
-    backup_rng REG_RNG
-    li r3, CARD_COUNT
-    load r4, stc_sr_data
-    addi REG_CARDS, r4, SRD_CURRENT_CARDS
-    mr r4, REG_CARDS
-    lwz r5, SRC_ACTIVE_SLOT(REG_DATA)
-    branchl r12, StockRun_RandomizeCards
-    restore_rng REG_RNG, r3
-
-    # set text
-    li REG_COUNT, 0
-    load r5, stc_sr_data
-    addi REG_TEXT, r5, SRD_TEXTS
-    SET_TEXT_LOOP:
-      rlwinm r0, REG_COUNT, 2, 0, 29
-      lwzx r3, REG_TEXT, r0
-      lwzx r4, REG_CARDS, r0
-      branchl r12, Text_SetFromSIS
-    SET_TEXT_LOOP_CHECK:
-      addi REG_COUNT, REG_COUNT, 1
-      cmpwi REG_COUNT, 4
-      blt SET_TEXT_LOOP
-
-    lwz REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
-    addi REG_PICKER, REG_PICKER, 1
-    stw REG_PICKER, SRC_CURRENT_PICKER(REG_DATA)
-    
-    bl SR_UpdateCameraTarget
-    bl SR_UpdateCameraPos
-    bl SR_UpdatePanelColor
-
-    lwz r4, SRC_CURRENT_PICKER(REG_DATA)
-    cmpwi r4, MAX_PLAYERS
-    beq SR_SelectCard_Exit
-
-    li r3, TRANSITION_FRAMES
-    stw r3, SRC_TRANSITION_TIMER(REG_DATA)
-    li r3, SRGS_TRANSITION
-    stw r3, SRC_GAME_STATE(REG_DATA)
-    b SR_SelectCard_Exit
-
-  MID_GAME_UPDATE:
-    bl SR_EndCardSelect
-
-    # enable hud
-    load r3, stc_hud_vis
-    li r4, FALSE 
-    stb r4, 0(r3)
-
-    # reset blur
-    load r3, stc_blur_amt
-    li r4, 0
-    stw r4, 0(r3)
-    stw r4, 4(r3) # tint
-
-    # reset game state
-    li r3, SRGS_GAME_ACTIVE
-    stw r3, SRC_GAME_STATE(REG_DATA)
+#----------------------------------------------------------------------------#
+# setup_camera_for_player
+#   r3 = stockrun data
+#   r4 = slot
+setup_camera_for_player:
+    mflr r0
+    lis r6, stc_matchcam@ha
+    stw r0, 0x4(r1)
+    lis r5, stc_cam_settings@ha
+    stwu r1, -0x30(r1)
+    stw r31, 0x2c(r1)
+    addi r31, r5, stc_matchcam@l
+    stw r30, 0x28(r1)
+    addi r30, r6, stc_cam_settings0@l
+    stw r29, 0x24(r1)
+    addi r29, r4, 0x0
+    stw r28, 0x20(r1)
+    addi r28, r3, 0x0
+    addi r3, r29, 0x0
+    branchl r12, PlayerBlock_GetGObj
+    addi r4, r1, 0x10
+    branchl r12, Player_GetPosition
+    extsb r3, r29
+    branchl r12, Camera_SetMode3
+    lfs f0, RTOC_0_1(rtoc)
+    stfs f0, 0x1cc(r31)
+    stfs f0, 0x1d0(r31)
+    lfs f0, RTOC_10(rtoc)
+    stfs f0, 0x1d4(r31)
+    lfs f1, 0x10(r1)
+    lfs f0, RTOC_0(rtoc)
+    fcmpo cr0, f1, f0
+    cror eq, gt, eq
+    bne label_0x508
+    lfs f0, RTOC_N_0_5(rtoc)
+    b label_0x50c
+  label_0x508:
+    lfs f0, RTOC_0_5(rtoc)
+  label_0x50c:
+    stfs f0, 0xb0(r28)
+    lfs f0, RTOC_0_2(rtoc)
+    stfs f0, 0xb4(r28)
+    lfs f0, 0xb0(r28)
+    stfs f0, 0x2c8(r30)
+    lfs f0, 0xb4(r28)
+    stfs f0, 0x2cc(r30)
+    stw r29, 0x293c(r30)
+    lwz r0, 0x34(r1)
+    lwz r31, 0x2c(r1)
+    lwz r30, 0x28(r1)
+    lwz r29, 0x24(r1)
+    lwz r28, 0x20(r1)
+    addi r1, r1, 0x30
+    mtlr r0
+blr
 
 
-SR_SelectCard_Exit:
-  restore
-  blr
+#----------------------------------------------------------------------------#
+# refresh_cards
+#   r3 = stockrun data
+refresh_cards:
+blr
 
 
-# Camera Functions
-#==============================================================================#
-SR_SetupCamera:
-  bklr
-
-  load r3, stc_mode3_vars
-  lfs f1, RTOC_0_1(rtoc)
-  stfs f1, 0(r3)
-  # lerp settings
-  lfs f1, OFST_TINT(r3)
-  stfs f1, OFST_TEYE(r3)
-  load r4, CAM_ZOOM # 10.0
-  stw r4, OFST_FOV(r3)
-  
-  lwz r3, SRC_SLOT_ORDER(REG_DATA) # lowest port goes first
-  branchl r12, Camera_SetMode3
-
-  lwz r3, SRC_SLOT_ORDER(REG_DATA)
-  load r4, stc_pause_data
-  stw r3, PAUSE_UI_SLOT(r4)
-
-SR_SetupCamera_Exit:
-  rslr
-  blr
-
-#------------------------------------------------------------------------------#
-
-SR_UpdateCameraPos:
-  backup
-
-  # get the current player
-  bl SR_GetCurrentPlayerSlot
-  cmpwi r3, -1
-  beq SR_UpdateCameraPos_Exit
-
-  # get the pos
-  branchl r12, PlayerBlock_GetGObj
-  addi r4, sp, BKP_FREE_SPACE_OFFSET
-  branchl r12, Player_GetPosition
-
-  # set pan/tilt based on where the player is
-  load r3, 0x80452f30 # offset y
-  lfs f1, RTOC_STICKTHRESH(rtoc) # 0.2
-  stfs f1, 0(r3)
-
-  lfs f1, BKP_FREE_SPACE_OFFSET(sp) # x
-  lfs f0, RTOC_0(rtoc)
-  fcmpo cr0, f1, f0
-  bge RIGHT_SIDE
-
-  LEFT_SIDE:
-    load r3, 0x80452f34 # offset x
-    lfs f1, RTOC_0_5(rtoc)
-    stfs f1, 0(r3) # pan/tilt camera left
-    b SR_UpdateCameraPos_Exit
-
-  RIGHT_SIDE:
-    load r3, 0x80452f34
-    lfs f1, RTOC_0_5(rtoc)
-    fneg f1, f1
-    stfs f1, 0(r3) # pan/tilt camera right
-
-SR_UpdateCameraPos_Exit:
-  restore
-  blr
-
-#------------------------------------------------------------------------------#
-
-SR_UpdateCameraTarget:
-  bklr
-
-  # get current player
-  bl SR_GetCurrentPlayerSlot
-  cmpwi r3, -1
-  beq SR_UpdateCameraTarget_Exit
-
-  load r4, 0x80452f2c # mode 3 slot
-  stb r3, 0(r4)
-  load r4, stc_pause_data
-  stw r3, PAUSE_UI_SLOT(r4)
-
-SR_UpdateCameraTarget_Exit:
-  rslr
-  blr
+#----------------------------------------------------------------------------#
+# update_card_panels
+#   r3 = stockrun data
+update_card_panels:
+blr
 
 
-# Utility Functions
-#==============================================================================#
-SR_GetCurrentPlayerSlot:
-# return r3 = current player
-  bklr
+#----------------------------------------------------------------------------#
+# apply_card_to_player
+#   r3 = stockrun data
+#   r4 = card idx
+apply_card_to_player:
+    cmpwi r4, 0x0
+    bltlr
+    cmpwi r4, 0x4
+    blt label_0x568
+    blr
+  label_0x568:
+    lwz r5, 0x14(r3)
+    slwi r0, r4, 2
+    add r4, r3, r0
+    mulli r5, r5, 0xc
+    lwz r0, 0x24(r4)
+    addi r5, r5, 0x80
+    add r5, r3, r5
+    li r4, 0x1
+    lwz r3, 0x0(r5)
+    slw r0, r4, r0
+    or r0, r3, r0
+    stw r0, 0x0(r5)
+    lbz r3, 0x4(r5)
+    addi r0, r3, 0x1
+    stb r0, 0x4(r5)
+    stw r4, 0x8(r5)
+blr
 
-  lwz r3, SRC_CURRENT_PICKER(REG_DATA)
-  cmpwi r3, MAX_PLAYERS
-  bge INVALID_CURR_PICKER
 
-  mulli r4, r3, 4
-  lwzx r3, r4, REG_DATA # SRC_SLOT_ORDER
-  stw r3, SRC_ACTIVE_SLOT(REG_DATA)
-  b SR_GetCurrentPlayerSlot_Exit
-
-  INVALID_CURR_PICKER:
-    li r3, -1
-    rslr
+#----------------------------------------------------------------------------#
+# start_transition
+#   r3 = stockrun data
+#   r4 = GAME_STATE
+#   r5 = frames
+start_transition:
+    stw r4, 0x4(r3)
+    li r0, 0x2
+    stw r5, 0x18(r3)
+    stw r0, 0x0(r3)
     blr
 
-SR_GetCurrentPlayerSlot_Exit:
-  rslr
+
+#----------------------------------------------------------------------------#
+# advance_to_next_player
+#   r3 = stockrun data
+advance_to_next_player:
+    mflr r0
+    lis r5, stc_matchcam@ha
+    stw r0, 0x4(r1)
+    lis r4, stc_cam_settings0@ha
+    stwu r1, -0x28(r1)
+    stw r31, 0x24(r1)
+    mr r31, r3
+    stw r30, 0x20(r1)
+    addi r30, r4, stc_cam_settings@l
+    stw r29, 0x1c(r1)
+    addi r29, r5, stc_matchcam@l
+    stw r28, 0x18(r1)
+    lwz r3, 0x10(r3)
+    addi r0, r3, 0x1
+    stw r0, 0x10(r31)
+    lwz r0, 0x10(r31)
+    cmpwi r0, 0x2
+    blt label_0x634
+    li r3, 0x4
+    branchl r12,  Scene_ClearPauseFlag
+    branchl r12,  Camera_SetNormal
+    lfs f0, RTOC_0(rtoc)
+    lis r3, 0x8047
+    stfs f0, 0x2e38(r3)
+    stfs f0, 0x2e3c(r3)
+    branchl r12, Match_EnableHud
+    li r0, 0x3
+    stw r0, 0x0(r31)
+    b label_0x6cc
+  label_0x634:
+    slwi r0, r0, 2
+    add r3, r31, r0
+    lwz r0, 0x8(r3)
+    stw r0, 0x14(r31)
+    lwz r28, 0x14(r31)
+    mr r3, r28
+    branchl r12, PlayerBlock_GetGObj
+    addi r4, r1, 0xc
+    branchl r12, Player_GetPosition
+    extsb r3, r28
+    branchl r12, Camera_SetMode3
+    lfs f0, RTOC_0_1(rtoc)
+    stfs f0, 0x1cc(r30)
+    stfs f0, 0x1d0(r30)
+    lfs f0, RTOC_10(rtoc)
+    stfs f0, 0x1d4(r30)
+    lfs f1, 0xc(r1)
+    lfs f0, RTOC_0(rtoc)
+    fcmpo cr0, f1, f0
+    cror eq, gt, eq
+    bne label_0x690
+    lfs f0, RTOC_N_0_5(rtoc)
+    b label_0x694
+  label_0x690:
+    lfs f0, RTOC_0_5(rtoc)
+  label_0x694:
+    stfs f0, 0xb0(r31)
+    li r4, 0x1
+    li r3, 0x1e
+    lfs f0, RTOC_0_2(rtoc)
+    li r0, 0x2
+    stfs f0, 0xb4(r31)
+    lfs f0, 0xb0(r31)
+    stfs f0, 0x2c8(r29)
+    lfs f0, 0xb4(r31)
+    stfs f0, 0x2cc(r29)
+    stw r28, 0x293c(r29)
+    stw r4, 0x4(r31)
+    stw r3, 0x18(r31)
+    stw r0, 0x0(r31)
+  label_0x6cc:
+    lwz r0, 0x2c(r1)
+    lwz r31, 0x24(r1)
+    lwz r30, 0x20(r1)
+    lwz r29, 0x1c(r1)
+    lwz r28, 0x18(r1)
+    addi r1, r1, 0x28
+    mtlr r0
+blr
+
+
+#----------------------------------------------------------------------------#
+# handle_init_state
+#   r3 = stockrun data
+    mflr r0
+    lis r5, stc_matchcam@ha
+    stw r0, 0x4(r1)
+    lis r4, stc_cam_settings@ha
+    stwu r1, -0x28(r1)
+    stw r31, 0x24(r1)
+    addi r31, r4, stc_cam_settings@l
+    stw r30, 0x20(r1)
+    addi r30, r5, stc_matchcam@l
+    stw r29, 0x1c(r1)
+    stw r28, 0x18(r1)
+    addi r28, r3, 0x0
+    li r3, 0x4
+    branchl r12, Scene_SetPauseFlag
+    li r0, 0x0
+    stw r0, 0x10(r28)
+    lwz r0, 0x8(r28)
+    stw r0, 0x14(r28)
+    lwz r29, 0x14(r28)
+    mr r3, r29
+    branchl r12, PlayerBlock_GetGObj
+    addi r4, r1, 0xc
+    branchl r12, Player_GetPosition
+    extsb r3, r29
+    branchl r12, Camera_SetMode3
+    lfs f0, RTOC_0_1(rtoc)
+    stfs f0, 0x1cc(r31)
+    stfs f0, 0x1d0(r31)
+    lfs f0, RTOC_10(rtoc)
+    stfs f0, 0x1d4(r31)
+    lfs f1, 0xc(r1)
+    lfs f0, RTOC_0(rtoc)
+    fcmpo cr0, f1, f0
+    cror eq, gt, eq
+    bne label_0x780
+    lfs f0, RTOC_N_0_5(rtoc)
+    b label_0x784
+  label_0x780:
+    lfs f0, RTOC_0_5(rtoc)
+  label_0x784:
+    stfs f0, 0xb0(r28)
+    li r4, 0x1
+    li r3, 0x1e
+    lfs f0, RTOC_0_2(rtoc)
+    li r0, 0x2
+    stfs f0, 0xb4(r28)
+    lfs f0, 0xb0(r28)
+    stfs f0, 0x2c8(r30)
+    lfs f0, 0xb4(r28)
+    stfs f0, 0x2cc(r30)
+    stw r29, 0x293c(r30)
+    stw r4, 0x4(r28)
+    stw r3, 0x18(r28)
+    stw r0, 0x0(r28)
+    lwz r0, 0x2c(r1)
+    lwz r31, 0x24(r1)
+    lwz r30, 0x20(r1)
+    lwz r29, 0x1c(r1)
+    lwz r28, 0x18(r1)
+    addi r1, r1, 0x28
+    mtlr r0
+blr
+
+
+#----------------------------------------------------------------------------#
+# handle_card_select_state
+#   r3 = stockrun data
+handle_card_select_state:
+    mflr r0
+    stw r0, 0x4(r1)
+    stwu r1, -0x18(r1)
+    stw r31, 0x14(r1)
+    addi r31, r3, 0x0
+    lis r3, 0x8003
+    stw r30, 0x10(r1)
+    subi r12, r3, 0x496c
+    addi r30, r31, 0x58
+    mtlr r12
+    lwz r0, 0x14(r31)
+    addi r3, r30, 0x0
+    clrlwi r4, r0, 24
+    blrl
+    lwz r0, 0x20(r30)
+    stw r0, 0x24(r30)
+    lfs f1, 0x0(r30)
+    lfs f2, 0x4(r30)
+    bl get_card_from_stick
+    stw r3, 0x20(r30)
+    li r0, 0x0
+    srwi r4, r0, 31
+    lwz r5, 0x20(r30)
+    srawi r3, r5, 31
+    subfc r0, r0, r5
+    adde r0, r3, r4
+    stw r0, 0x1c(r31)
+    lwz r0, 0x20(r30)
+    stw r0, 0x20(r31)
+    lwz r0, 0x78(r31)
+    cmpwi r0, 0x0
+    blt label_0x874
+    lwz r3, 0x20(r30)
+    lwz r0, 0x24(r30)
+    cmpw r3, r0
+    beq label_0x874
+    li r3, 0x1
+    branchl r12, SFX_Menu_CommonSound
+  label_0x874:
+    lwz r0, 0x70(r31)
+    li r4, 0x0
+    lwz r5, 0x74(r31)
+    li r3, 0x100
+    and r0, r0, r4
+    and r3, r5, r3
+    xor r3, r3, r4
+    xor r0, r0, r4
+    or. r0, r3, r0
+    beq label_0x988
+    lwz r0, 0x1c(r31)
+    cmpwi r0, 0x0
+    beq label_0x980
+    li r3, 0x2
+    branchl r12, SFX_Menu_CommonSound
+    lwz r0, 0x20(r31)
+    cmpwi r0, 0x0
+    blt label_0x904
+    cmpwi r0, 0x4
+    bge label_0x904
+    lwz r4, 0x14(r31)
+    slwi r0, r0, 2
+    add r3, r31, r0
+    mulli r4, r4, 0xc
+    lwz r0, 0x24(r3)
+    addi r5, r4, 0x80
+    add r5, r31, r5
+    li r4, 0x1
+    lwz r3, 0x0(r5)
+    slw r0, r4, r0
+    or r0, r3, r0
+    stw r0, 0x0(r5)
+    lbz r3, 0x4(r5)
+    addi r0, r3, 0x1
+    stb r0, 0x4(r5)
+    stw r4, 0x8(r5)
+  label_0x904:
+    lwz r3, 0x10(r31)
+    addi r0, r3, 0x1
+    stw r0, 0x10(r31)
+    lwz r0, 0x10(r31)
+    cmpwi r0, 0x2
+    blt label_0x948
+    li r3, 0x4
+    branchl r12, Scene_ClearPauseFlag
+    branchl r12, Camera_SetNormal
+    lfs f0, RTOC_0(rtoc)
+    lis r3, 0x8047
+    stfs f0, 0x2e38(r3)
+    stfs f0, 0x2e3c(r3)
+    branchl r12, Match_EnableHud
+    li r0, 0x3
+    stw r0, 0x0(r31)
+    b label_0x988
+  label_0x948:
+    slwi r0, r0, 2
+    add r3, r31, r0
+    lwz r0, 0x8(r3)
+    mr r3, r31
+    stw r0, 0x14(r31)
+    lwz r4, 0x14(r31)
+    bl setup_camera_for_player
+    li r0, 0x1
+    stw r0, 0x4(r31)
+    li r3, 0x1e
+    li r0, 0x2
+    stw r3, 0x18(r31)
+    stw r0, 0x0(r31)
+    b label_0x988
+  label_0x980:
+    li r3, 0x3
+    branchl r12, SFX_Menu_CommonSound
+  label_0x988:
+    lwz r0, 0x1c(r1)
+    lwz r31, 0x14(r1)
+    lwz r30, 0x10(r1)
+    addi r1, r1, 0x18
+    mtlr r0
+blr
+
+
+#----------------------------------------------------------------------------#
+# handle_transition_state
+#   r3 = stockrun data
+handle_transition_state:
+    lwz r4, 0x18(r3)
+    subi r0, r4, 0x1
+    stw r0, 0x18(r3)
+    lwz r0, 0x18(r3)
+    cmpwi r0, 0x0
+    bgtlr
+    lwz r0, 0x4(r3)
+    stw r0, 0x0(r3)
+blr
+
+
+#----------------------------------------------------------------------------#
+# handle_vs_state
+#   r3 = stockrun data
+handle_vs_state:
+blr
+
+
+#----------------------------------------------------------------------------#
+# handle_vs_transition_state
+#   r3 = stockrun data
+handle_vs_transition_state:
+    lis r4, 0x8047
+    lfs f0, RTOC_0_015625(rtoc)
+    lfs f2, 0x2e38(r4)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0x9e8
+    fmr f1, f0
+  label_0x9e8:
+    lis r4, 0x8047
+    stfs f1, 0x2e38(r4)
+    lfs f2, 0x2e3c(r4)
+    lfs f0, RTOC_0_015625(rtoc)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0xa0c
+    fmr f1, f0
+  label_0xa0c:
+    lis r4, 0x8047
+    stfs f1, 0x2e3c(r4)
+    lwz r4, 0x18(r3)
+    subi r0, r4, 0x1
+    stw r0, 0x18(r3)
+    lwz r0, 0x18(r3)
+    cmpwi r0, 0x0
+    bgtlr
+    li r0, 0x5
+    stw r0, 0x0(r3)
+blr
+
+
+#----------------------------------------------------------------------------#
+# handle_vs_card_select_state
+#   r3 = stockrun data
+handle_vs_card_select_state:
+    mflr r0
+    stw r0, 0x4(r1)
+    stwu r1, -0x18(r1)
+    stw r31, 0x14(r1)
+    addi r31, r3, 0x0
+    lis r3, 0x8003
+    stw r30, 0x10(r1)
+    subi r12, r3, 0x496c
+    addi r30, r31, 0x58
+    mtlr r12
+    lwz r0, 0x14(r31)
+    addi r3, r30, 0x0
+    clrlwi r4, r0, 24
+    blrl
+    lwz r0, 0x20(r30)
+    stw r0, 0x24(r30)
+    lfs f1, 0x0(r30)
+    lfs f2, 0x4(r30)
+    bl get_card_from_stick
+    stw r3, 0x20(r30)
+    li r0, 0x0
+    srwi r4, r0, 31
+    lwz r5, 0x20(r30)
+    srawi r3, r5, 31
+    subfc r0, r0, r5
+    adde r0, r3, r4
+    stw r0, 0x1c(r31)
+    lwz r0, 0x20(r30)
+    stw r0, 0x20(r31)
+    lwz r0, 0x78(r31)
+    cmpwi r0, 0x0
+    blt label_0xad0
+    lwz r3, 0x20(r30)
+    lwz r0, 0x24(r30)
+    cmpw r3, r0
+    beq label_0xad0
+    li r3, 0x1
+    branchl r12, SFX_Menu_CommonSound
+  label_0xad0:
+    lwz r0, 0x70(r31)
+    li r4, 0x0
+    lwz r5, 0x74(r31)
+    li r3, 0x100
+    and r0, r0, r4
+    and r3, r5, r3
+    xor r3, r3, r4
+    xor r0, r0, r4
+    or. r0, r3, r0
+    beq label_0xb94
+    lwz r0, 0x1c(r31)
+    cmpwi r0, 0x0
+    beq label_0xb8c
+    li r3, 0x2
+    branchl r12, SFX_Menu_CommonSound
+    lwz r0, 0x20(r31)
+    cmpwi r0, 0x0
+    blt label_0xb60
+    cmpwi r0, 0x4
+    bge label_0xb60
+    lwz r4, 0x14(r31)
+    slwi r0, r0, 2
+    add r3, r31, r0
+    mulli r4, r4, 0xc
+    lwz r0, 0x24(r3)
+    addi r5, r4, 0x80
+    add r5, r31, r5
+    li r4, 0x1
+    lwz r3, 0x0(r5)
+    slw r0, r4, r0
+    or r0, r3, r0
+    stw r0, 0x0(r5)
+    lbz r3, 0x4(r5)
+    addi r0, r3, 0x1
+    stb r0, 0x4(r5)
+    stw r4, 0x8(r5)
+  label_0xb60:
+    li r3, 0x4
+    branchl r12, Scene_ClearPauseFlag
+    branchl r12, Camera_SetNormal
+    lfs f0, RTOC_0(rtoc)
+    lis r3, 0x8047
+    stfs f0, 0x2e38(r3)
+    stfs f0, 0x2e3c(r3)
+    branchl r12, Match_EnableHud
+    li r0, 0x3
+    stw r0, 0x0(r31)
+    b label_0xb94
+  label_0xb8c:
+    li r3, 0x3
+    branchl r12, SFX_Menu_CommonSound
+  label_0xb94:
+    lwz r0, 0x1c(r1)
+    lwz r31, 0x14(r1)
+    lwz r30, 0x10(r1)
+    addi r1, r1, 0x18
+    mtlr r0
   blr
 
-#------------------------------------------------------------------------------#
 
-SR_UpdatePanelColor:
-.set REG_COUNT, 31
-.set REG_COLOR, 30
-.set REG_PANEL, 29
-  backup
+#----------------------------------------------------------------------------#
+# StockRun_Update
+#   r3 = gobj
+StockRun_Update:
+blrl
+    mflr r0
+    lis r4, 0x8048
+    stw r0, 0x4(r1)
+    stwu r1, -0x28(r1)
+    stw r31, 0x24(r1)
+    stw r30, 0x20(r1)
+    lwz r0, -0x62a4(r4)
+    lwz r31, 0x2c(r3)
+    cmpwi r0, 0x40
+    blt label_0xf10
+    cmpwi r0, 0x90
+    bgt label_0xc28
+    lis r3, 0x8047
+    lfs f0, RTOC_0_015625(rtoc)
+    lfs f2, 0x2e38(r3)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0xbfc
+    fmr f1, f0
+  label_0xbfc:
+    lis r3, 0x8047
+    stfs f1, 0x2e38(r3)
+    lfs f2, 0x2e3c(r3)
+    lfs f0, RTOC_0_015625(rtoc)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0xc20
+    fmr f1, f0
+  label_0xc20:
+    lis r3, 0x8047
+    stfs f1, 0x2e3c(r3)
+  label_0xc28:
+    lwz r0, 0x0(r31)
+    cmpwi r0, 0x3
+    beq label_0xf10
+    bge label_0xc50
+    cmpwi r0, 0x1
+    beq label_0xca0
+    bge label_0xd80
+    cmpwi r0, 0x0
+    bge label_0xc60
+    b label_0xf10
+  label_0xc50:
+    cmpwi r0, 0x5
+    beq label_0xe14
+    bge label_0xf10
+    b label_0xda4
+  label_0xc60:
+    li r3, 0x4
+    branchl r12, Scene_SetPauseFlag
+    li r0, 0x0
+    stw r0, 0x10(r31)
+    mr r3, r31
+    lwz r0, 0x8(r31)
+    stw r0, 0x14(r31)
+    lwz r4, 0x14(r31)
+    bl setup_camera_for_player
+    li r0, 0x1
+    stw r0, 0x4(r31)
+    li r3, 0x1e
+    li r0, 0x2
+    stw r3, 0x18(r31)
+    stw r0, 0x0(r31)
+    b label_0xf10
+  label_0xca0:
+    lis r3, 0x8003
+    lwz r0, 0x14(r31)
+    subi r12, r3, 0x496c
+    addi r30, r31, 0x58
+    mtlr r12
+    addi r3, r30, 0x0
+    clrlwi r4, r0, 24
+    blrl
+    lwz r0, 0x20(r30)
+    stw r0, 0x24(r30)
+    lfs f1, 0x0(r30)
+    lfs f2, 0x4(r30)
+    bl get_card_from_stick
+    stw r3, 0x20(r30)
+    li r0, 0x0
+    srwi r4, r0, 31
+    lwz r5, 0x20(r30)
+    srawi r3, r5, 31
+    subfc r0, r0, r5
+    adde r0, r3, r4
+    stw r0, 0x1c(r31)
+    lwz r0, 0x20(r30)
+    stw r0, 0x20(r31)
+    lwz r0, 0x78(r31)
+    cmpwi r0, 0x0
+    blt label_0xd20
+    lwz r3, 0x20(r30)
+    lwz r0, 0x24(r30)
+    cmpw r3, r0
+    beq label_0xd20
+    li r3, 0x1
+    branchl r12, SFX_Menu_CommonSound
+  label_0xd20:
+    lwz r0, 0x70(r31)
+    li r4, 0x0
+    lwz r5, 0x74(r31)
+    li r3, 0x100
+    and r0, r0, r4
+    and r3, r5, r3
+    xor r3, r3, r4
+    xor r0, r0, r4
+    or. r0, r3, r0
+    beq label_0xf10
+    lwz r0, 0x1c(r31)
+    cmpwi r0, 0x0
+    beq label_0xd74
+    li r3, 0x2
+    branchl r12, SFX_Menu_CommonSound
+    mr r3, r31
+    lwz r4, 0x20(r31)
+    bl apply_card_to_player
+    mr r3, r31
+    bl advance_to_next_player
+    b label_0xf10
+  label_0xd74:
+    li r3, 0x3
+    branchl r12, SFX_Menu_CommonSound
+    b label_0xf10
+  label_0xd80:
+    lwz r3, 0x18(r31)
+    subi r0, r3, 0x1
+    stw r0, 0x18(r31)
+    lwz r0, 0x18(r31)
+    cmpwi r0, 0x0
+    bgt label_0xf10
+    lwz r0, 0x4(r31)
+    stw r0, 0x0(r31)
+    b label_0xf10
+  label_0xda4:
+    lis r3, 0x8047
+    lfs f0, RTOC_0_015625(rtoc)
+    lfs f2, 0x2e38(r3)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0xdc4
+    fmr f1, f0
+  label_0xdc4:
+    lis r3, 0x8047
+    stfs f1, 0x2e38(r3)
+    lfs f2, 0x2e3c(r3)
+    lfs f0, RTOC_0_015625(rtoc)
+    lfs f0, RTOC_1(rtoc)
+    fadds f1, f2, f1
+    fcmpo cr0, f1, f0
+    ble label_0xde8
+    fmr f1, f0
+  label_0xde8:
+    lis r3, 0x8047
+    stfs f1, 0x2e3c(r3)
+    lwz r3, 0x18(r31)
+    subi r0, r3, 0x1
+    stw r0, 0x18(r31)
+    lwz r0, 0x18(r31)
+    cmpwi r0, 0x0
+    bgt label_0xf10
+    li r0, 0x5
+    stw r0, 0x0(r31)
+    b label_0xf10
+  label_0xe14:
+    lis r3, 0x8003
+    lwz r0, 0x14(r31)
+    subi r12, r3, 0x496c
+    addi r30, r31, 0x58
+    mtlr r12
+    addi r3, r30, 0x0
+    clrlwi r4, r0, 24
+    blrl
+    lwz r0, 0x20(r30)
+    stw r0, 0x24(r30)
+    lfs f1, 0x0(r30)
+    lfs f2, 0x4(r30)
+    bl get_card_from_stick
+    stw r3, 0x20(r30)
+    li r0, 0x0
+    srwi r4, r0, 31
+    lwz r5, 0x20(r30)
+    srawi r3, r5, 31
+    subfc r0, r0, r5
+    adde r0, r3, r4
+    stw r0, 0x1c(r31)
+    lwz r0, 0x20(r30)
+    stw r0, 0x20(r31)
+    lwz r0, 0x78(r31)
+    cmpwi r0, 0x0
+    blt label_0xe94
+    lwz r3, 0x20(r30)
+    lwz r0, 0x24(r30)
+    cmpw r3, r0
+    beq label_0xe94
+    li r3, 0x1
+    branchl r12, SFX_Menu_CommonSound
+  label_0xe94:
+    lwz r0, 0x70(r31)
+    li r4, 0x0
+    lwz r5, 0x74(r31)
+    li r3, 0x100
+    and r0, r0, r4
+    and r3, r5, r3
+    xor r3, r3, r4
+    xor r0, r0, r4
+    or. r0, r3, r0
+    beq label_0xf10
+    lwz r0, 0x1c(r31)
+    cmpwi r0, 0x0
+    beq label_0xf08
+    li r3, 0x2
+    branchl r12, SFX_Menu_CommonSound
+    mr r3, r31
+    lwz r4, 0x20(r31)
+    bl apply_card_to_player
+    li r3, 0x4
+    branchl r12, Scene_ClearPauseFlag
+    branchl r12, Camera_SetNormal
+    lfs f0, RTOC_0(rtoc)
+    lis r3, 0x8047
+    stfs f0, 0x2e38(r3)
+    stfs f0, 0x2e3c(r3)
+    branchl r12, Match_EnableHud
+    li r0, 0x3
+    stw r0, 0x0(r31)
+    b label_0xf10
+  label_0xf08:
+    li r3, 0x3
+    branchl r12, SFX_Menu_CommonSound
+  label_0xf10:
+    lwz r0, 0x2c(r1)
+    lwz r31, 0x24(r1)
+    lwz r30, 0x20(r1)
+    addi r1, r1, 0x28
+    mtlr r0
+blr
 
-    li REG_COUNT, 0
-    get_panel_color REG_COLOR
-    load REG_PANEL, stc_sr_data
-    addi REG_PANEL, REG_PANEL, SRD_JOBJ_PANELS
-    UPDATE_PANEL_COLORS:
-      mulli r0, REG_COUNT, 4
-      lwzx r3, REG_PANEL, r0
-      branchl r12, HSD_JObjGetDObj
-      lwz r3, 0x4(r3)
-      lwz r3, 0x4(r3)
-      lwz r3, 0x8(r3) # mobj
-      lbz r4, R(REG_COLOR)
-      lbz r5, G(REG_COLOR)
-      lbz r6, B(REG_COLOR)
-      lbz r7, A(REG_COLOR)
-      branchl r12, HSD_MObjSetDiffuseColor
-    UPDATE_PANEL_COLORS_CHECK:
-      addi REG_COUNT, REG_COUNT, 1
-      cmpwi REG_COUNT, 4
-      blt UPDATE_PANEL_COLORS
 
-SR_UpdatePanelColor_Exit:
-  restore
-  blr
+#----------------------------------------------------------------------------#
+# StockRun_TriggerMidGameSelect
+#   r3 = slot
+StockRun_TriggerMidGameSelect:
+    mflr r0
+    lis r5, stc_matchcam@ha
+    stw r0, 0x4(r1)
+    lis r4, stc_cam_settings@ha
+    stwu r1, -0x28(r1)
+    stw r31, 0x24(r1)
+    lis r31, 0x804a
+    stw r30, 0x20(r1)
+    addi r30, r4, stc_cam_settings@l
+    stw r29, 0x1c(r1)
+    addi r29, r5, stc_matchcam@l
+    stw r28, 0x18(r1)
+    addi r28, r3, 0x0
+    lwz r6, 0x304c(r31)
+    cmplwi r6, 0x0
+    beq label_0x1100
+    lwz r0, 0x0(r6)
+    cmpwi r0, 0x3
+    beq label_0x1064
+    b label_0x1100
+  label_0x1064:
+    stw r28, 0x14(r6)
+    li r3, 0x4
+    branchl r12, Scene_SetPauseFlag
+    lwz r31, 0x304c(r31)
+    mr r3, r28
+    branchl r12, PlayerBlock_GetGObj
+    addi r4, r1, 0xc
+    branchl r12, Player_GetPosition
+    extsb r3, r28
+    branchl r12, Camera_SetMode3
+    lfs f0, RTOC_0_1(rtoc)
+    stfs f0, 0x1cc(r30)
+    stfs f0, 0x1d0(r30)
+    lfs f0, RTOC_10(rtoc)
+    stfs f0, 0x1d4(r30)
+    lfs f1, 0xc(r1)
+    lfs f0, RTOC_0(rtoc)
+    fcmpo cr0, f1, f0
+    cror eq, gt, eq
+    bne label_0x10bc
+    lfs f0, RTOC_N_0_5(rtoc)
+    b label_0x10c0
+  label_0x10bc:
+    lfs f0, RTOC_0_5(rtoc)
+  label_0x10c0:
+    stfs f0, 0xb0(r31)
+    lis r5, 0x804a
+    li r4, 0x5
+    lfs f0, RTOC_0_2(rtoc)
+    li r3, 0x1e
+    li r0, 0x2
+    stfs f0, 0xb4(r31)
+    lfs f0, 0xb0(r31)
+    stfs f0, 0x2c8(r29)
+    lfs f0, 0xb4(r31)
+    stfs f0, 0x2cc(r29)
+    stw r28, 0x293c(r29)
+    lwz r5, 0x304c(r5)
+    stw r4, 0x4(r5)
+    stw r3, 0x18(r5)
+    stw r0, 0x0(r5)
+  label_0x1100:
+    lwz r0, 0x2c(r1)
+    lwz r31, 0x24(r1)
+    lwz r30, 0x20(r1)
+    lwz r29, 0x1c(r1)
+    lwz r28, 0x18(r1)
+    addi r1, r1, 0x28
+    mtlr r0
+blr
 
-#==============================================================================#
-# Main Exit
-#==============================================================================#
 
 EXIT:
   restore
