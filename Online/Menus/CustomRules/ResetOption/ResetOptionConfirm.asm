@@ -33,6 +33,10 @@ CODE_START:
     # and will kick us back to the scene we were in
     branchl r12, Menu_ExitRulesMenu
 
+    # play sfx
+    li r3, 0
+    branchl r12, SFX_Menu_CommonSound
+
     branch r12, 0x80232438
 
 EXIT:
