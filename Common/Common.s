@@ -505,6 +505,7 @@ add \reg, r3, r4
 .set PadAlarmCheck,0x80019894
 .set Event_StoreSceneNumber,0x80229860
 .set EventMatch_Store,0x801beb74
+.set Scene_SetMinorCurPrev, 0x801a428c
 .set PadRead,0x8034da00
 
 ## Miscellenia/Unsorted
@@ -617,6 +618,20 @@ add \reg, r3, r4
 .set MFD_ENTERING_MENU, MFD_OFST_0x10 + 1 # bool
 .set MFD_LIGHT_LERP_FRAMES, MFD_ENTERING_MENU + 1 # u8
 .set MFD_LIGHT_COLOR, MFD_LIGHT_LERP_FRAMES + 2 # u32 - GXColor
+
+# Menu Scene Data
+.set MenuEnterData, 0x804d68b8
+.set MenuExitData, 0x804d68bc
+# Enter
+.set METD_MENU_KIND, 0
+.set METD_HOVERED_OPTION, MET_MENU_KIND + 1
+.set METD_LOAD_ASSETS, MET_HOVERED_OPTION + 2
+.set METD_OFST_0x4, MET_LOAD_ASSETS + 1
+# Exit
+.set MEXD_PENDING_MAJOR, 0
+.set MEXD_OFST_0x2, MEXD_PENDING_MAJOR + 1
+.set MEXD_OFST_0x3, MEXD_OFST_0x2 + 1
+.set MEXD_OFST_0x4, MEXD_OFST_0x3 + 1
 
 ################################################################################
 # Offsets from r13

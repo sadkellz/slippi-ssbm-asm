@@ -319,7 +319,7 @@ li r3, ONLINE_MODE_UNRANKED
 b FN_OnlineSubmenuThink_GO_TO_CSS
 
 FN_OnlineSubmenuThink_HANDLE_DIRECT:
-li r3, ONLINE_MODE_DIRECT
+li r3, ONLINE_MODE_LOBBY
 b FN_OnlineSubmenuThink_GO_TO_CSS
 
 FN_OnlineSubmenuThink_HANDLE_TEAMS:

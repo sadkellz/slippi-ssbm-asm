@@ -148,52 +148,63 @@ MajorSceneLoad:
 blrl
 backup
 
-# Set the proper 1p port for CSS
-load r4, 0x8045abf0
-lbz r3, -0x5108(r13) # player index
-stb r3, 0x6(r4)
+# Handle directly going to a minor
+lbz r3, OFST_R13_ONLINE_MODE(r13)
+cmpwi r3, ONLINE_MODE_LOBBY
+bne MinorSceneCSS
 
-# Set the callback to determine winner at the end of the match
-bl GamePrepData_BLRL
-mflr r4
-bl SinglesDetermineWinner_BLRL
-mflr r3
-stw r3, GPDO_FN_COMPUTE_RANKED_WINNER(r4)
+MinorSceneLobby:
+  li r3, MINOR_ONLINE_LOBBY
+  branchl r12, Scene_SetMinorCurPrev
+  b MajorSceneLoad_Exit
 
-################################################################################
-# Set up Zelda to select Sheik as default
-################################################################################
-.set REG_IconData, 20
-.set REG_IconNum, 21
-.set REG_Count, 22
+MinorSceneCSS:
+  # Set the proper 1p port for CSS
+  load r4, 0x8045abf0
+  lbz r3, -0x5108(r13) # player index
+  stb r3, 0x6(r4)
 
-# get CSS icon data
-  branchl r12,FN_GetCSSIconData
-  mr REG_IconData,r3
-# get icon num
-  branchl r12,FN_GetCSSIconNum
-  mr REG_IconNum,r3
-# init search
-  li REG_Count, 0
-  b ZeldaSearch_Check
-ZeldaSearch_Loop:
-# check for zelda
-  lbz	r3, 0x00DD (REG_IconData) # char id
-  cmpwi r3,0x12
-  bne ZeldaSearch_Inc
-# store sheik's ID
-  li r3,0x13
-  stb	r3, 0x00DD (REG_IconData) # char id
-  b ZeldaSearch_End
-ZeldaSearch_Inc:
-  addi REG_Count,REG_Count,1
-  addi REG_IconData,REG_IconData,28
-ZeldaSearch_Check:
-  cmpw REG_Count,REG_IconNum
-  blt ZeldaSearch_Loop
-ZeldaSearch_End:
+  # Set the callback to determine winner at the end of the match
+  bl GamePrepData_BLRL
+  mflr r4
+  bl SinglesDetermineWinner_BLRL
+  mflr r3
+  stw r3, GPDO_FN_COMPUTE_RANKED_WINNER(r4)
 
+  ################################################################################
+  # Set up Zelda to select Sheik as default
+  ################################################################################
+  .set REG_IconData, 20
+  .set REG_IconNum, 21
+  .set REG_Count, 22
 
+  # get CSS icon data
+    branchl r12,FN_GetCSSIconData
+    mr REG_IconData,r3
+  # get icon num
+    branchl r12,FN_GetCSSIconNum
+    mr REG_IconNum,r3
+  # init search
+    li REG_Count, 0
+    b ZeldaSearch_Check
+  ZeldaSearch_Loop:
+  # check for zelda
+    lbz	r3, 0x00DD (REG_IconData) # char id
+    cmpwi r3,0x12
+    bne ZeldaSearch_Inc
+  # store sheik's ID
+    li r3,0x13
+    stb	r3, 0x00DD (REG_IconData) # char id
+    b ZeldaSearch_End
+  ZeldaSearch_Inc:
+    addi REG_Count,REG_Count,1
+    addi REG_IconData,REG_IconData,28
+  ZeldaSearch_Check:
+    cmpw REG_Count,REG_IconNum
+    blt ZeldaSearch_Loop
+  ZeldaSearch_End:
+
+MajorSceneLoad_Exit:
 restore
 blr
 
@@ -215,18 +226,18 @@ blr
 Slippi_MinorSceneStruct:
 blrl
 #CSS
-.byte 0                     #Minor Scene ID
+.byte MINOR_ONLINE_CSS     #Minor Scene ID
 .byte 3                    #Amount of persistent heaps
 .align 2
-bl CSSScenePrep             #ScenePrep (event css prep), prev 0x801baa60
-bl CSSSceneDecide        #SceneDecide, previously 0x801baad0
-.byte 8                     #Common Minor ID (CSS)
+bl CSSScenePrep            #ScenePrep (event css prep), prev 0x801baa60
+bl CSSSceneDecide          #SceneDecide, previously 0x801baad0
+.byte 8                    #Common Minor ID (CSS)
 .align 2
 .long 0x80497758           #Minor Data 1
 .long 0x80497758           #Minor Data 2
 #SSS
-.byte 1                     #Minor Scene ID
-.byte 3                    #Amount of persistent heaps
+.byte MINOR_ONLINE_SSS      #Minor Scene ID
+.byte 3                     #Amount of persistent heaps
 .align 2
 bl  SSSScenePrep            #ScenePrep, prev 0x801b1514
 bl  SSSSceneDecide          #SceneDecide, prev 0x801b154c
@@ -235,28 +246,28 @@ bl  SSSSceneDecide          #SceneDecide, prev 0x801b154c
 .long 0x80480668            #Minor Data 1
 .long 0x80480668            #Minor Data 2
 #VS
-.byte 2                     #Minor Scene ID
-.byte 3                    #Amount of persistent heaps
+.byte MINOR_ONLINE_VS       #Minor Scene ID
+.byte 3                     #Amount of persistent heaps
 .align 2
 .long 0x801b1588            #ScenePrep
-bl  VSSceneDecide          #SceneDecide, previously 0x801b15c8
-.byte 2                    #Common Minor ID (VS Mode)
+bl  VSSceneDecide           #SceneDecide, previously 0x801b15c8
+.byte 2                     #Common Minor ID (VS Mode)
 .align 2
 .long 0x80480530            #Minor Data 1
 .long 0x80479d98            #Minor Data 2
 #Results
-.byte 3                     #Minor Scene ID
-.byte 3                    #Amount of persistent heaps
+.byte MINOR_ONLINE_RESULTS  #Minor Scene ID
+.byte 3                     #Amount of persistent heaps
 .align 2
 .long 0x00000000            #ScenePrep
 .long 0x00000000            #SceneDecide
-.byte 5                    #Common Minor ID (Results)
+.byte 5                     #Common Minor ID (Results)
 .align 2
 .long 0x00000000            #Minor Data 1
 .long 0x00000000            #Minor Data 2
 #Splash
-.byte 4                     #Minor Scene ID
-.byte 3                    #Amount of persistent heaps
+.byte MINOR_ONLINE_SPLASH   #Minor Scene ID
+.byte 3                     #Amount of persistent heaps
 .align 2
 bl SplashScenePrep          #ScenePrep, previously 0x801b3500
 bl SplashSceneDecide
@@ -265,15 +276,25 @@ bl SplashSceneDecide
 .long 0x80490880            #Minor Data 1
 .long 0x804d68d0            #Minor Data 2
 #GameSetup
-.byte 5                     #Minor Scene ID
-.byte 3                    #Amount of persistent heaps
+.byte MINOR_ONLINE_GAME_SETUP #Minor Scene ID
+.byte 3                     #Amount of persistent heaps
 .align 2
-bl GamePrepScenePrep      #ScenePrep
-bl GamePrepSceneDecide    #SceneDecide
-.byte 80                  #Common Minor ID (Game Preparation)
+bl GamePrepScenePrep        #ScenePrep
+bl GamePrepSceneDecide      #SceneDecide
+.byte 80                    #Common Minor ID (Game Preparation)
 .align 2
-bl GamePrepData           #Minor Data 1
-bl GamePrepData           #Minor Data 2
+bl GamePrepData             #Minor Data 1
+bl GamePrepData             #Minor Data 2
+#CustomLobbies
+.byte MINOR_ONLINE_LOBBY    #Minor Scene ID
+.byte 3
+.align 2
+bl CustomLobbyScenePrep
+bl CustomLobbySceneDecide
+.byte 81
+.align 2
+.long 0x80497758
+.long 0x80497758
 #End
 .byte -1
 .align 2
@@ -440,7 +461,7 @@ stb r3, GPDO_COLOR_BAN_ACTIVE(REG_GAME_PREP_DATA)
 
 # Set next scene as game prep
 load r4, 0x80479d30
-li r3, 0x06
+li r3, MINOR_ONLINE_GAME_SETUP + 1
 stb r3, 0x5(r4)
 b CSSSceneDecide_Exit
 
@@ -474,7 +495,7 @@ bl  SplashSceneInit
 
 # Set next scene as Splash
 load r4, 0x80479d30
-li r3, 0x05
+li r3, MINOR_ONLINE_SPLASH + 1
 stb r3, 0x5(r4)
 b CSSSceneDecide_Exit
 
@@ -484,7 +505,7 @@ b CSSSceneDecide_Exit
 CSSSceneDecide_LoadSSS:
 # Set next scene as SSS
 load r4, 0x80479d30
-li r3, 2
+li r3, MINOR_ONLINE_SSS + 1
 stb r3, 0x5(r4)
 b CSSSceneDecide_Exit
 
@@ -544,7 +565,7 @@ SSSSceneDecide_Advance_IsReady:
 bl  SplashSceneInit         #init splash screen
 # Set next scene as Splash
 load r4, 0x80479d30
-li r3, 0x05
+li r3, MINOR_ONLINE_SPLASH + 1
 stb r3, 0x5(r4)
 b SSSSceneDecide_Exit
 
@@ -687,7 +708,7 @@ stb r3, GPDO_TIEBREAK_GAME_NUM(REG_GPD)
 VSSceneDecide_MoveToGamePrep:
 # Go back to game prep, there are more games
 load r4, 0x80479d30
-li r3, 0x06
+li r3, MINOR_ONLINE_GAME_SETUP + 1
 stb r3, 0x5(r4)
 b VSSceneDecide_ModeHandlerEnd
 
@@ -721,7 +742,7 @@ branchl r12, HSD_Free
 VSSceneDecide_SkipRankedHandler:
 # Go back to CSS
 load r4, 0x80479d30
-li r3, 0x01
+li r3, MINOR_ONLINE_CSS + 1
 stb r3, 0x5(r4)
 
 VSSceneDecide_ModeHandlerEnd:
@@ -1129,7 +1150,7 @@ backup
 
 # This will cause the next scene to be VS mode
 load r4, 0x80479d30
-li r3, 0x03
+li r3, MINOR_ONLINE_VS + 1
 stb r3, 0x5(r4)
 
 restore
@@ -1409,7 +1430,7 @@ bl FN_ReportSetCompletion
 
 # Go back to CSS
 load r4, 0x80479d30
-li r3, 0x01
+li r3, MINOR_ONLINE_CSS + 1
 stb r3, 0x5(r4)
 b GamePrepSceneDecide_RestoreAndExit
 
@@ -1421,7 +1442,7 @@ beq GamePrepSceneDecide_DisplaySplash
 
 # On tiebreak, go right back into VS scene
 load r4, 0x80479d30
-li r3, 0x03
+li r3, MINOR_ONLINE_VS + 1
 stb r3, 0x5(r4)
 b GamePrepSceneDecide_RestoreAndExit
 
@@ -1430,12 +1451,26 @@ bl  SplashSceneInit
 
 # This will cause the next scene to be the splash screen
 load r4, 0x80479d30
-li r3, 0x05
+li r3, MINOR_ONLINE_SPLASH + 1
 stb r3, 0x5(r4)
 
 GamePrepSceneDecide_RestoreAndExit:
 restore
 blr
+
+# Custom Lobby
+CustomLobbyScenePrep:
+backup
+
+restore
+blr
+
+CustomLobbySceneDecide:
+backup
+restore
+blr
+
+
 
 Injection_Exit:
 #Exit Scene
