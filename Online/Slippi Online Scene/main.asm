@@ -285,16 +285,26 @@ bl GamePrepSceneDecide      #SceneDecide
 .align 2
 bl GamePrepData             #Minor Data 1
 bl GamePrepData             #Minor Data 2
-#CustomLobbies
+#OnlineLobby
 .byte MINOR_ONLINE_LOBBY    #Minor Scene ID
-.byte 3
+.byte 3                     #Amount of persistent heaps
 .align 2
-bl CustomLobbyScenePrep
-bl CustomLobbySceneDecide
-.byte 81
+bl LobbyScenePrep
+bl LobbySceneDecide
+.byte 81                    #Common Minor ID (Lobbies)
 .align 2
-.long 0x80497758
-.long 0x80497758
+.long 0x80497758            #Minor Data 1
+.long 0x80497758            #Minor Data 2
+#NameEntry
+.byte MINOR_ONLINE_NAME_ENTRY #Minor Scene ID
+.byte 3                     #Amount of persistent heaps
+.align 2
+bl NameEntryScenePrep
+bl NameEntrySceneDecide
+.byte 82                    #Common Minor ID (Name Entry)
+.align 2
+bl NameEntryData       #Minor Data 1
+bl NameEntryData            #Minor Data 2
 #End
 .byte -1
 .align 2
@@ -1458,17 +1468,49 @@ GamePrepSceneDecide_RestoreAndExit:
 restore
 blr
 
-# Custom Lobby
-CustomLobbyScenePrep:
+# Lobby
+LobbyScenePrep:
 backup
+
+# Invalidate pre-load cache so new fighters get loaded
+branchl r12, 0x800174bc
 
 restore
 blr
 
-CustomLobbySceneDecide:
+
+LobbySceneDecide:
+backup
+
+# Check if next minor is Splash (set by C code via Scene_SetNextMinor)
+# load r4, 0x80479d30
+# lbz r3, 0x5(r4)
+# cmpwi r3, MINOR_ONLINE_SPLASH + 1
+# bne LobbySceneDecide_Exit
+
+# Populate VS_SSS_DATA from Dolphin match state before entering splash
+bl SplashSceneInit
+
+LobbySceneDecide_Exit:
+restore
+blr
+
+
+# Name Entry
+NameEntryScenePrep:
 backup
 restore
 blr
+
+NameEntrySceneDecide:
+backup
+restore
+blr
+
+NameEntryData_BLRL:
+blrl
+NameEntryData:
+createNameEntryStaticBlock
 
 
 

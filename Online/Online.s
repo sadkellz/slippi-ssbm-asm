@@ -90,6 +90,8 @@
 .set SCENE_ONLINE_SSS, 0x0108
 .set SCENE_ONLINE_IN_GAME, 0x0208
 .set SCENE_ONLINE_VS, 0x0408
+.set SCENE_ONLINE_LOBBY, 0x0608
+.set SCENE_ONLINE_NAME_ENTRY, 0x0708
 
 .set MINOR_ONLINE_CSS, 0x0
 .set MINOR_ONLINE_SSS, 0x1
@@ -98,6 +100,7 @@
 .set MINOR_ONLINE_SPLASH, 0x4
 .set MINOR_ONLINE_GAME_SETUP, 0x5
 .set MINOR_ONLINE_LOBBY, 0x6
+.set MINOR_ONLINE_NAME_ENTRY, 0x7
 
 /*
 -each is 0xC long
@@ -529,6 +532,20 @@
 .byte 0x0 # GPDO_COLOR_BAN_COLOR
 .byte 0x0 # GPDO_LAST_GAME_END_MODE
 .long 0x0 # GPDO_FN_COMPUTE_RANKED_WINNER
+.align 2
+.endm
+
+################################################################################
+# Define name entry data and include macro to create static data
+################################################################################
+.set NE_PREV_SCENE, 0
+.set NE_NEXT_SCENE, NE_PREV_SCENE + 1
+.set NE_EXIT_TYPE, NE_NEXT_SCENE + 1
+
+.macro createNameEntryStaticBlock
+.byte 0xFF # NE_PREV_SCENE
+.byte 0xFF # NE_NEXT_SCENE
+.byte 0x0 # NE_EXIT_TYPE
 .align 2
 .endm
 
