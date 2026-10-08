@@ -186,8 +186,8 @@
 .set MAX_SOUNDS_PER_FRAME, 0x10
 
 # The entry is the data needed to keep track of for a given sound every frame
-.set SFXS_ENTRY_SOUND_ID, 0 # u16, ID of the sound played
-.set SFXS_ENTRY_INSTANCE_ID, SFXS_ENTRY_SOUND_ID + 2 # u32
+.set SFXS_ENTRY_SOUND_ID, 0 # u32, ID of the sound played
+.set SFXS_ENTRY_INSTANCE_ID, SFXS_ENTRY_SOUND_ID + 4 # u32
 .set SFXS_ENTRY_SIZE, SFXS_ENTRY_INSTANCE_ID + 4
 
 # A log keeps tracks of sounds on a given frame, the index is effectively how
@@ -549,6 +549,44 @@
 .byte 0xFF # NE_NEXT_SCENE
 .byte 0x0 # NE_EXIT_TYPE
 .align 2
+.endm
+
+################################################################################
+# Define name entry data and include macro to create static data
+################################################################################
+.set NE_PREV_SCENE, 0
+.set NE_NEXT_SCENE, NE_PREV_SCENE + 1
+.set NE_EXIT_TYPE, NE_NEXT_SCENE + 1
+
+.macro createNameEntryStaticBlock
+.byte 0xFF # NE_PREV_SCENE
+.byte 0xFF # NE_NEXT_SCENE
+.byte 0x0 # NE_EXIT_TYPE
+.align 2
+.endm
+
+################################################################################
+# Define online static data (OSD) and include macro to create static data
+################################################################################
+.set OSD_LOCAL_PLAYER_INDEX, 0 # u8
+
+################################################################################
+# Create space for the defined offsets above
+################################################################################
+.macro createOnlineStaticDataBlock
+# OSD_LOCAL_PLAYER_INDEX stores local player index at the start of a game so
+# that it can be used on the results screen or any scene following the in game
+# vs scene
+.byte 0 # OSD_LOCAL_PLAYER_INDEX
+.align 2
+.endm
+
+################################################################################
+# Simple macro to fetch static data into a register
+################################################################################
+.macro fetchOnlineStaticDataPtr reg
+branchl \reg, FN_OnlineStaticDataBlrl
+mflr \reg
 .endm
 
 ################################################################################
